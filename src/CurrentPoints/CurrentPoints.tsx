@@ -1,8 +1,8 @@
 import {FunctionComponent} from "react";
-import {IPointsBlockProps, PointsBlock, PointsVec} from "./PointsBlock";
+import {IPointsBlockProps, PointsBlock} from "../PointsBlock";
 import {useDrop} from "react-dnd";
-import {ItemTypes, PointsPreviewData} from "./drag";
-import {classSet} from "./ClassSet";
+import {ItemTypes, PointsPreviewData} from "../drag";
+import {classSet} from "../ClassSet";
 import './CurrentPoints.css';
 
 export interface ICurrentPointsProps extends IPointsBlockProps {

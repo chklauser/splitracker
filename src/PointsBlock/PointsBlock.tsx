@@ -1,5 +1,5 @@
 import {FunctionComponent, ReactElement} from "react";
-import {Point, PointDisplay} from "./PointDisplay";
+import {Point, PointDisplay} from "../PointDisplay";
 import './PointsBlock.css';
 
 export interface PointsVec {

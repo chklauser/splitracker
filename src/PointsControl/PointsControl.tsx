@@ -1,10 +1,10 @@
 import React, {ChangeEventHandler, FunctionComponent, useRef} from 'react';
-import {PointsVec} from "./PointsBlock";
-import {PointsEditor} from "./PointsEditor";
-import {CurrentPoints} from "./CurrentPoints";
-import {ShortRest} from "./ShortRest";
-import {StopChanneling} from "./StopChanneling";
-import {PointsPreviewData} from "./drag";
+import {PointsVec} from "../PointsBlock";
+import {PointsEditor} from "../PointsEditor";
+import {CurrentPoints} from "../CurrentPoints";
+import {ShortRest} from "../ShortRest";
+import {StopChanneling} from "../StopChanneling";
+import {PointsPreviewData} from "../drag";
 
 export interface IPointsControlProps {
   title: string;

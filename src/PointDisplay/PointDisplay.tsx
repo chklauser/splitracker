@@ -1,5 +1,5 @@
 import {Fragment, FunctionComponent} from "react";
-import {classSet} from "./ClassSet";
+import {classSet} from "../ClassSet";
 
 export const enum Point {
   Channeled = 'K',

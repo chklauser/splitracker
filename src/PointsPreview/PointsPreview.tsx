@@ -1,8 +1,8 @@
 import {FunctionComponent} from "react";
-import {PointsBlock, PointsVec} from "./PointsBlock";
+import {PointsBlock, PointsVec} from "../PointsBlock";
 import {useDrag} from "react-dnd";
-import {ItemTypes, PointsPreviewData} from "./drag";
-import {classSet} from "./ClassSet";
+import {ItemTypes, PointsPreviewData} from "../drag";
+import {classSet} from "../ClassSet";
 import './PointsPreview.css';
 
 export interface IPointsPreviewProps {

@@ -1,7 +1,7 @@
 import {Fragment, FunctionComponent, ReactElement, useState} from "react";
-import {Point} from "./PointDisplay";
-import {PointsVec} from "./PointsBlock";
-import {PointsPreview} from "./PointsPreview";
+import {Point} from "../PointDisplay";
+import {PointsVec} from "../PointsBlock";
+import {PointsPreview} from "../PointsPreview";
 
 interface IPointsEditorProps {
   baseCapacity: number;

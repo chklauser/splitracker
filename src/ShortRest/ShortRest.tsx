@@ -1,8 +1,8 @@
 import {FunctionComponent} from "react";
-import {PointsVec} from "./PointsBlock";
+import {PointsVec} from "../PointsBlock";
 import {useDrag} from "react-dnd";
-import {ItemTypes, PointsPreviewData} from "./drag";
-import {classSet} from "./ClassSet";
+import {ItemTypes, PointsPreviewData} from "../drag";
+import {classSet} from "../ClassSet";
 
 export interface IShortRestProps {
   currentPoints: PointsVec;

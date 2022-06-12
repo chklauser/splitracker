@@ -1,10 +1,10 @@
 import React, {FunctionComponent, useState} from 'react';
 import './App.css';
-import {PointsControl} from "./PointsControl";
+import {PointsControl} from "../PointsControl";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {PointsVec} from "./PointsBlock";
-import {PointsPreviewData} from "./drag";
+import {PointsVec} from "../PointsBlock";
+import {PointsPreviewData} from "../drag";
 
 function applyPointsReceived(
   updatePoints: (transform: (points: PointsVec) => PointsVec) => void,
@@ -32,12 +32,6 @@ function applyPointsReceived(
 }
 
 type UpdateChannelings = (transform: (channelings: number[]) => number[]) => void;
-
-function applyChannelingUsed(updateChannelings: UpdateChannelings, channelingIndex: number): void {
-  updateChannelings((channelings: number[]): number[] => {
-    return channelings.filter((_, i) => i !== channelingIndex);
-  });
-}
 
 const App: FunctionComponent = () => {
   const [lp, setLp] = useState(8);
