@@ -59,6 +59,7 @@ const App: FunctionComponent = () => {
       enableHoverOutsideTarget: true
     }}>
       <div className="App">
+        <p className="App-title">Splitracker</p>
         <PointsControl points={lPoints} baseCapacity={lp}
                        onBaseCapacityChanged={setLp}
                        baseCapacityLabel="LP" title="Lebenspunkte 💖"
@@ -78,6 +79,7 @@ const App: FunctionComponent = () => {
                        onReceivePoints={(points) => applyPointsReceived(setfPoints, setfChannelings, points)}
                        channellings={fChannelings}
         />
+        <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
       </div>
     </DndProvider>
   );

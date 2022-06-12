@@ -2,6 +2,7 @@ import {Fragment, FunctionComponent, ReactElement, useState} from "react";
 import {Point} from "../PointDisplay";
 import {PointsVec} from "../PointsBlock";
 import {PointsPreview} from "../PointsPreview";
+import "./PointsEditor.css";
 
 interface IPointsEditorProps {
   baseCapacity: number;
@@ -96,14 +97,16 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
   const preview = calculatePreview(type, value, currentPoints, baseCapacity);
 
   return <div className="PointsEditor">
-    <button type="button" onClick={toggleType}><p>{preview.currentTypeDisplay}</p><p>(wechseln)</p></button>
+    <div className="PointsEditor-controls">
+      <button type="button" className="PointsEditor-switch" onClick={toggleType}><p>{preview.currentTypeDisplay}</p><p>(wechseln)</p></button>
+      <input type="range" className="PointsEditor-range" min={preview.minAmount} max={preview.maxAmount} value={value}
+             onChange={e => setValue(e.target.valueAsNumber)}
+             step={1}/>
+      <input type="number" className="PointsEditor-edit" min={preview.minAmount} max={preview.maxAmount} value={value}
+           onChange={e => setValue(e.target.valueAsNumber)}/>
+    </div>
     <PointsPreview {...{baseCapacity, totalCurrentPoints, showPenalties}}
                    points={preview.points}
                    onAppliedPoints={_ => setValue(_ => 0)}/>
-    <input type="range" min={preview.minAmount} max={preview.maxAmount} value={value}
-           onChange={e => setValue(e.target.valueAsNumber)}
-           step={1}/>
-    <input type="number" min={preview.minAmount} max={preview.maxAmount} value={value}
-           onChange={e => setValue(e.target.valueAsNumber)}/>
   </div>;
 };

@@ -3,6 +3,7 @@ import {PointsVec} from "../PointsBlock";
 import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
+import "./ShortRest.css";
 
 export interface IShortRestProps {
   currentPoints: PointsVec;

@@ -1,0 +1,25 @@
+.PointsEditor {
+  margin-top: 1em;
+}
+
+.PointsEditor-switch {
+  display: inline-block;
+  width: 9em;
+}
+.PointsEditor-switch p {
+  margin: 0
+}
+
+.PointsEditor-range {
+  width: 13em;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.PointsEditor-edit {
+  width: 4em;
+}
+
+.PointsEditor-controls {
+  margin-bottom: 0.5em;
+}

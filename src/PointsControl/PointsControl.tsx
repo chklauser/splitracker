@@ -5,6 +5,7 @@ import {CurrentPoints} from "../CurrentPoints";
 import {ShortRest} from "../ShortRest";
 import {StopChanneling} from "../StopChanneling";
 import {PointsPreviewData} from "../drag";
+import "./PointsControl.css";
 
 export interface IPointsControlProps {
   title: string;
@@ -54,10 +55,10 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
         <span
           className="PointsControl-value">{baseCapacity * 5 - (points.exhausted + points.consumed + points.channeled)}</span>
         {showPenalties ?
-          <span className="PointsControl-penalty">Wundabzüge: {penalty > 0 ? '-' : '±'}{penalty}</span> : null}
-        <label style={{display: expanded ? undefined : 'none'}}>
+          <abbr title="Wundabzüge" className="PointsControl-penalty">({penalty > 0 ? '-' : '±'}{penalty})</abbr> : <span className="PointsControl-penalty"/> }
+        <label style={{display: expanded ? undefined : 'none'}} className="PointsControl-baseCapacity">
           <span>{baseCapacityLabel}</span>
-          <input type="number" className="PointsControl-baseCapacity" value={baseCapacity}
+          <input type="number" value={baseCapacity}
                  onChange={onBaseCapacityChangedInternal}/>
         </label>
       </summary>

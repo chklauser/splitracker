@@ -1,10 +1,11 @@
 import {Fragment, FunctionComponent} from "react";
 import {classSet} from "../ClassSet";
+import "./PointDisplay.css";
 
 export const enum Point {
-  Channeled = 'K',
-  Exhausted = 'E',
-  Consumed = 'V',
+  Channeled = '∕',
+  Exhausted = '⨉',
+  Consumed = '※',
   Free = ' '
 }
 
@@ -23,6 +24,6 @@ export const PointDisplay: FunctionComponent<IPointDisplayProps> = ({point, valu
       "PointDisplay-channeled": point === Point.Channeled,
       "PointDisplay-exhausted": point === Point.Exhausted,
       "PointDisplay-consumed": point === Point.Consumed,
-    })}>{point != Point.Free ? point : '_'}</span>
+    })}>{point != Point.Free ? point : <Fragment>&nbsp;</Fragment>}</span>
   </Fragment>
 };

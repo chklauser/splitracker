@@ -1,0 +1,17 @@
+
+.PointDisplay {
+
+}
+
+.PointDisplay-heal {
+  color: #1f4b28;
+}
+
+.PointDisplay-harm {
+  color: #540d0d;
+}
+
+.PointDisplay-channeled,
+.PointDisplay-consumed {
+  font-size: 1.1em;
+}

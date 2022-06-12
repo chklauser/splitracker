@@ -33,12 +33,8 @@ export const PointsPreview: FunctionComponent<IPointsPreviewProps> = ({
       isDragging: monitor.isDragging()
     })
   }), [points, onAppliedPoints]);
-  const hasHealing = points.consumed < 0 || points.exhausted < 0 || points.channeled < 0;
-  const hasDamage = points.consumed > 0 || points.exhausted > 0 || points.channeled > 0;
   return <div ref={drag} className={classSet({PointsPreview: true, "PointsPreview-dragging": isDragging})}>
     <PointsBlock baseCapacity={baseCapacity} points={points} showPenalties={showPenalties}
                  numSkip={totalCurrentPoints} hideEmptyLines={true}/>
-    {hasHealing && <div className="PointsPreview-healing">➕</div>}
-    {hasDamage && <div className="PointsPreview-damage">➖</div>}
   </div>;
 };

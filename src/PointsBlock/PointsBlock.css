@@ -5,4 +5,11 @@
 .PointsBlock th {
   font-weight: normal;
   text-align: right;
+  width: 9em;
+}
+
+.PointsBlock td {
+  text-align: center;
+  width: 1.5em;
+  height: 1.5em;
 }

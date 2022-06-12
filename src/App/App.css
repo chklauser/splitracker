@@ -1,3 +1,10 @@
 .App {
+  padding-left: 1em;
+  padding-right: 0.5em;
+}
 
+.App-title {
+  font-weight: bolder;
+  font-variant: small-caps;
+  font-size: 1.2em;
 }

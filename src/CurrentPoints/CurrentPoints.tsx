@@ -10,12 +10,12 @@ export interface ICurrentPointsProps extends IPointsBlockProps {
 }
 
 export const CurrentPoints: FunctionComponent<ICurrentPointsProps> = (props) => {
-  const [{isOver}, drop] = useDrop<PointsPreviewData,object,{isOver: boolean}>({
+  const [{isOver, canDrop}, drop] = useDrop<PointsPreviewData, object, { isOver: boolean, canDrop: boolean }>({
     accept: ItemTypes.PointsPreview,
     canDrop: (item: PointsPreviewData) => {
       let delta = item.points.consumed + item.points.exhausted + item.points.channeled;
       return delta != 0
-        && delta > 0 ? props.points.consumed + props.points.exhausted + props.points.channeled < props.baseCapacity * 5
+      && delta > 0 ? props.points.consumed + props.points.exhausted + props.points.channeled < props.baseCapacity * 5
         : props.points.consumed + props.points.exhausted + props.points.channeled > 0;
     },
     drop: (incomingPoints: PointsPreviewData) => {
@@ -23,14 +23,20 @@ export const CurrentPoints: FunctionComponent<ICurrentPointsProps> = (props) => 
       return undefined;
     },
     collect: monitor => ({
-      isOver: monitor.isOver()
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop()
     })
   }, [props.points, props.onReceivePoints]);
-  return <div ref={drop} className={classSet({CurrentPoints: true, "CurrentPoints-over": isOver})}>
+  return <div ref={drop} className={classSet({
+    CurrentPoints: true
+  })}>
     <PointsBlock {...props} />
-    {isOver && (
-      <div className="CurrentPoints-dropOverlay">
-
+    {(isOver||canDrop) && (
+      <div className={classSet({"CurrentPoints-dropOverlay": true,
+        "CurrentPoints-dropOverlay-over": isOver && canDrop,
+        "CurrentPoints-dropOverlay-canDrop": !isOver && canDrop,
+        "CurrentPoints-dropOverlay-cannotDrop": isOver && !canDrop})}>
+        <p>👉 Hierhin ziehen! 👈</p>
       </div>
     )}
   </div>;
