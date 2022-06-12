@@ -1,0 +1,6 @@
+*                       input
+*.png                   binary
+*.jpg                   binary
+*.jpeg                  binary
+*.gif                   binary
+/.pnp.*                 text=auto linguist-generated
