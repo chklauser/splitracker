@@ -1,0 +1,8 @@
+.PointsBlock th.PointsBlock-active {
+  font-weight: bold;
+}
+
+.PointsBlock th {
+  font-weight: normal;
+  text-align: right;
+}
