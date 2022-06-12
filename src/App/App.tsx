@@ -5,6 +5,7 @@ import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {PointsVec} from "../PointsBlock";
 import {PointsPreviewData} from "../drag";
+import {TouchBackend} from "react-dnd-touch-backend";
 
 function applyPointsReceived(
   updatePoints: (transform: (points: PointsVec) => PointsVec) => void,
@@ -45,7 +46,7 @@ const App: FunctionComponent = () => {
   const [focusOn, setFocusOn] = useState(null as 'fp' | 'lp' | null);
 
   return (
-    <DndProvider backend={HTML5Backend} options={{
+    <DndProvider backend={TouchBackend} options={{
       enableTouchEvents: true,
       enableMouseEvents: true, // This is buggy due to the difference in touchstart/touchend event propagation compared to mousedown/mouseup/click.
       touchSlop: 25,
@@ -53,8 +54,7 @@ const App: FunctionComponent = () => {
       scrollAngleRanges: [
         // dragging between these angles is ignored
         // degrees move clockwise, 0/360 pointing to the left.
-        {start: 30, end: 150},
-        {start: 210, end: 330}
+        {start: 315, end: 225},
       ],
       enableHoverOutsideTarget: true
     }}>
