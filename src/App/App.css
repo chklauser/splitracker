@@ -8,3 +8,8 @@
   font-variant: small-caps;
   font-size: 1.2em;
 }
+
+.App-modeToggle {
+  float: right;
+  cursor: pointer;
+}

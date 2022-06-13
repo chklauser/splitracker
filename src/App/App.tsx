@@ -6,6 +6,7 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 import {PointsVec} from "../PointsBlock";
 import {PointsPreviewData} from "../drag";
 import {TouchBackend} from "react-dnd-touch-backend";
+import {loadMouseEnabled, updateMouseEnabled} from "../preferences";
 
 function applyPointsReceived(
   updatePoints: (transform: (points: PointsVec) => PointsVec) => void,
@@ -35,6 +36,8 @@ function applyPointsReceived(
 type UpdateChannelings = (transform: (channelings: number[]) => number[]) => void;
 
 const App: FunctionComponent = () => {
+  const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
+
   const [lp, setLp] = useState(8);
   const [lPoints, setlPoints] = useState<PointsVec>({exhausted: 3, consumed: 7, channeled: 2});
   const [lChannelings, setlChannelings] = useState<number[]>([2]);
@@ -45,8 +48,12 @@ const App: FunctionComponent = () => {
 
   const [focusOn, setFocusOn] = useState(null as 'fp' | 'lp' | null);
 
+  function toggleMouseEnabled() {
+    setMouseEnabled(prevState => updateMouseEnabled(_ => !prevState));
+  }
+
   return (
-    <DndProvider backend={TouchBackend} options={{
+    <DndProvider backend={mouseEnabled ? HTML5Backend : TouchBackend} options={{
       enableTouchEvents: true,
       enableMouseEvents: true, // This is buggy due to the difference in touchstart/touchend event propagation compared to mousedown/mouseup/click.
       touchSlop: 25,
@@ -59,7 +66,10 @@ const App: FunctionComponent = () => {
       enableHoverOutsideTarget: true
     }}>
       <div className="App">
-        <p className="App-title">Splitracker</p>
+        <div>
+        <p className="App-title">Splitracker <span className="App-modeToggle" onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></p>
+        </div>
+
         <PointsControl points={lPoints} baseCapacity={lp}
                        onBaseCapacityChanged={setLp}
                        baseCapacityLabel="LP" title="Lebenspunkte 💖"
