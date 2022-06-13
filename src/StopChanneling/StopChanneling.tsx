@@ -22,7 +22,7 @@ export const StopChanneling: FunctionComponent<IStopChannelingProps> = ({channel
     <span className="StopChanneling-title">⚡</span>
     {
       channeled == 1
-        ? <span>Ein kanalisierter Punkt in einen erschöpften Punkt umwandeln.</span>
+        ? <span>Einen kanalisierten Punkt in einen erschöpften Punkt umwandeln.</span>
         : <span>{channeled} kanalisierte Punkte in {channeled} erschöpfte Punkte umwandeln.</span>
     }
   </div>;
