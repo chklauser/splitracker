@@ -1,5 +1,5 @@
 import React, {ChangeEventHandler, FunctionComponent, useRef} from 'react';
-import {PointsVec} from "../PointsBlock";
+import {PointsVec} from "../char";
 import {PointsEditor} from "../PointsEditor";
 import {CurrentPoints} from "../CurrentPoints";
 import {ShortRest} from "../ShortRest";

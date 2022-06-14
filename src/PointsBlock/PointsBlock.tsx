@@ -1,12 +1,7 @@
 import {FunctionComponent, ReactElement} from "react";
 import {Point, PointDisplay} from "../PointDisplay";
 import './PointsBlock.css';
-
-export interface PointsVec {
-  channeled: number;
-  exhausted: number;
-  consumed: number;
-}
+import {PointsVec} from "../char";
 
 export interface IPointsBlockProps {
   baseCapacity: number;

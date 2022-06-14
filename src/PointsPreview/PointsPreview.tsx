@@ -1,5 +1,6 @@
 import {FunctionComponent} from "react";
-import {PointsBlock, PointsVec} from "../PointsBlock";
+import {PointsBlock} from "../PointsBlock";
+import {PointsVec} from "../char";
 import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";

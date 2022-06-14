@@ -1,6 +1,6 @@
 import {Fragment, FunctionComponent, ReactElement, useState} from "react";
 import {Point} from "../PointDisplay";
-import {PointsVec} from "../PointsBlock";
+import {PointsVec} from "../char";
 import {PointsPreview} from "../PointsPreview";
 import "./PointsEditor.css";
 

@@ -1,56 +1,81 @@
-import React, {FunctionComponent, useState} from 'react';
+import React, {FunctionComponent, ReactElement, useState} from 'react';
 import './App.css';
 import {PointsControl} from "../PointsControl";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {PointsVec} from "../PointsBlock";
 import {PointsPreviewData} from "../drag";
 import {TouchBackend} from "react-dnd-touch-backend";
 import {loadMouseEnabled, updateMouseEnabled} from "../preferences";
+import {Character, loadCharacters, persistCharacter, Pool} from "../char";
+import cloneDeep from "lodash.clonedeep";
 
-function applyPointsReceived(
-  updatePoints: (transform: (points: PointsVec) => PointsVec) => void,
-  updateChannelings: UpdateChannelings,
-  data: PointsPreviewData): void {
-  const receivedPoints = data.points;
-  updatePoints((currentPoints: PointsVec): PointsVec => {
-    console.log("updatePoints", currentPoints, receivedPoints);
-    return ({
-      exhausted: Math.max(0, currentPoints.exhausted + receivedPoints.exhausted),
-      consumed: Math.max(0, currentPoints.consumed + receivedPoints.consumed),
-      channeled: Math.max(0, currentPoints.channeled + receivedPoints.channeled)
-    });
-  });
 
-  if (receivedPoints.channeled > 0) {
-    console.log("remember channeling of ", receivedPoints.channeled);
-    updateChannelings((channelings: number[]) => channelings.concat([receivedPoints.channeled]));
-  }
-
-  if(data.channelingIndex) {
-    console.log("remove channeling index ", data.channelingIndex);
-    updateChannelings((channelings: number[]) => channelings.filter(c => c != data.channelingIndex));
+function copyWith<T>(update: (value: T) => void): (value: T) => T {
+  return (value: T) => {
+    const copy = cloneDeep(value);
+    update(copy);
+    return copy;
   }
 }
 
-type UpdateChannelings = (transform: (channelings: number[]) => number[]) => void;
+function useCharacter(): [Character, React.Dispatch<React.SetStateAction<Character>>] {
+  const [char, setChar] = useState(() => {
+    const chars = loadCharacters();
+    return chars[Object.keys(chars)[0]];
+  });
+
+  return [char, (newValue) => {
+    const effectiveValue = newValue instanceof Function ? newValue(char) : newValue;
+    persistCharacter(effectiveValue);
+    setChar(effectiveValue);
+  }];
+}
 
 const App: FunctionComponent = () => {
   const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
-
-  const [lp, setLp] = useState(8);
-  const [lPoints, setlPoints] = useState<PointsVec>({exhausted: 3, consumed: 7, channeled: 2});
-  const [lChannelings, setlChannelings] = useState<number[]>([2]);
-
-  const [fo, setFo] = useState(6);
-  const [fPoints, setfPoints] = useState<PointsVec>({exhausted: 2, consumed: 5, channeled: 6});
-  const [fChannelings, setfChannelings] = useState<number[]>([3, 1, 2]);
-
+  const [char, setChar] = useCharacter();
   const [focusOn, setFocusOn] = useState(null as 'fp' | 'lp' | null);
 
   function toggleMouseEnabled() {
     setMouseEnabled(prevState => updateMouseEnabled(_ => !prevState));
   }
+
+  function applyPointsReceived(poolOf: (char: Character) => Pool, data: PointsPreviewData): void {
+    const receivedPoints = data.points;
+    setChar(copyWith(char => {
+      const pool = poolOf(char);
+      const currentPoints = pool.points;
+      pool.points = {
+        exhausted: Math.max(0, currentPoints.exhausted + receivedPoints.exhausted),
+        consumed: Math.max(0, currentPoints.consumed + receivedPoints.consumed),
+        channeled: Math.max(0, currentPoints.channeled + receivedPoints.channeled)
+      };
+
+      if (receivedPoints.channeled > 0) {
+        console.log("remember channeling of ", receivedPoints.channeled);
+        pool.channellings.push(receivedPoints.channeled);
+      }
+
+      if (data.channelingIndex) {
+        console.log("remove channeling index ", data.channelingIndex);
+        pool.channellings = pool.channellings.filter(c => c != data.channelingIndex);
+      }
+    }));
+  }
+
+  function pointsControl(poolOf: (char: Character) => Pool, title: string, baseCapacityLabel: string, showPenalties: boolean, focus: "lp"|"fp", otherFocus: "lp"|"fp"): ReactElement {
+    const pool = poolOf(char);
+    return <PointsControl points={pool.points} baseCapacity={pool.baseCapacity} channellings={pool.channellings}
+                   onBaseCapacityChanged={newCap => setChar(copyWith(char => { poolOf(char).baseCapacity = newCap;}))}
+                   baseCapacityLabel={baseCapacityLabel} title={title}
+                   expanded={focusOn == focus}
+                   onToggleExapanded={(expanded) => setFocusOn(focusOn => expanded ? focus : focusOn != otherFocus ? null : otherFocus)}
+                   showPenalties={showPenalties}
+                   onReceivePoints={(points) => applyPointsReceived(poolOf, points)}
+    />;
+  }
+
+
 
   return (
     <DndProvider backend={mouseEnabled ? HTML5Backend : TouchBackend} options={{
@@ -67,28 +92,13 @@ const App: FunctionComponent = () => {
     }}>
       <div className="App">
         <div>
-        <p className="App-title">Splitracker <span className="App-modeToggle" onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></p>
+          <p className="App-title">Splitracker <span className="App-modeToggle"
+                                                     onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span>
+          </p>
         </div>
 
-        <PointsControl points={lPoints} baseCapacity={lp}
-                       onBaseCapacityChanged={setLp}
-                       baseCapacityLabel="LP" title="Lebenspunkte 💖"
-                       expanded={focusOn == 'lp'}
-                       onToggleExapanded={(expanded) => setFocusOn(focusOn => expanded ? 'lp' : focusOn != 'fp' ? null : 'fp')}
-                       showPenalties={true}
-                       onReceivePoints={(points) => applyPointsReceived(setlPoints, setlChannelings, points)}
-                       channellings={lChannelings}
-
-        />
-        <PointsControl title="Fokuspunkte ✨" baseCapacityLabel="FP" onBaseCapacityChanged={setFo}
-                       baseCapacity={fo}
-                       points={fPoints}
-                       expanded={focusOn == 'fp'}
-                       onToggleExapanded={(expanded) => setFocusOn(focusOn => expanded ? 'fp' : focusOn != 'lp' ? null : 'lp')}
-                       showPenalties={false}
-                       onReceivePoints={(points) => applyPointsReceived(setfPoints, setfChannelings, points)}
-                       channellings={fChannelings}
-        />
+        {pointsControl(c => c.lp, "Lebenspunkte 💖", "LP", true, "lp", "fp")}
+        {pointsControl(c => c.fo, "Fokuspunkte ✨", "FP", false, "fp", "lp")}
         <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
       </div>
     </DndProvider>

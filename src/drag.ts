@@ -1,5 +1,5 @@
-import {PointsVec} from "./PointsBlock";
 import "./drag.css"
+import {PointsVec} from "./char";
 
 export const enum ItemTypes {
   PointsPreview = 'PointsPreview'
