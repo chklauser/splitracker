@@ -8,6 +8,7 @@
 
 * 🧠 Der Zustand des Charakters wird im Browser gespeichert. Übernehme keine Gewähr was passiert, wenn ihr mehrere
   Browser-Tabs öffnet (es gibt im Moment nur einen "Speicherplatz").
+* Link zu GitHub unten links
 
 ## 2022-06-13
 

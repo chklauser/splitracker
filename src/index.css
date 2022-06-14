@@ -11,3 +11,22 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
   monospace;
 }
+
+#ghlink {
+  display: block;
+  width: 2.5em;
+  height: 2.5em;
+  position: fixed;
+  top: calc(100% - 2.5em - 0.5em);
+  left: 0.5em;
+}
+
+#ghlink img {
+  width: 100%;
+  height: 100%;
+}
+
+#ghlink:hover {
+  text-decoration: none;
+}
+
