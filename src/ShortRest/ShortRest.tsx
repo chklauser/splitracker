@@ -3,7 +3,7 @@ import {PointsVec} from "../char";
 import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
-import "./ShortRest.css";
+import {Alert} from "react-bootstrap";
 
 export interface IShortRestProps {
   currentPoints: PointsVec;
@@ -23,9 +23,9 @@ export const ShortRest: FunctionComponent<IShortRestProps> = ({currentPoints}) =
     })
   }), [currentPoints]);
   const pointsHealed = currentPoints.exhausted;
-  return currentPoints.exhausted > 0 ? <div ref={drag} className={classSet({ShortRest: true, "ShortRest-dragging": isDragging})}>
+  return currentPoints.exhausted > 0 ? <Alert role={"note"} variant={"success"} ref={drag} className={classSet({ShortRest: true, "ShortRest-dragging": isDragging})}>
     <p className="ShortRest-title">Verschnaufpause 😮‍💨</p>
     {pointsHealed > 0 ? <p className="ShortRest-points">Heile erschöpfte Punkte: {pointsHealed}</p> :
       <p>Kein Effekt</p>}
-  </div> : null;
+  </Alert> : null;
 };

@@ -1,38 +1,36 @@
-import React, {ChangeEventHandler, FunctionComponent, useRef} from 'react';
+import React, {ChangeEventHandler, FunctionComponent, useContext} from 'react';
 import {PointsVec} from "../char";
 import {PointsEditor} from "../PointsEditor";
 import {CurrentPoints} from "../CurrentPoints";
 import {ShortRest} from "../ShortRest";
 import {StopChanneling} from "../StopChanneling";
 import {PointsPreviewData} from "../drag";
-import "./PointsControl.css";
+import "./PointsControl.scss";
+import {Accordion, AccordionContext} from "react-bootstrap";
 
 export interface IPointsControlProps {
   title: string;
   baseCapacityLabel: string;
   baseCapacity: number;
   points: PointsVec;
-  onToggleExapanded: (newState: boolean) => void;
   onBaseCapacityChanged?: (newBaseCapacity: number) => void;
-  expanded: boolean;
   showPenalties: boolean;
   onReceivePoints: (points: PointsPreviewData) => void;
   channellings: number[];
+  eventKey: string;
 }
 
 export const PointsControl: FunctionComponent<IPointsControlProps> = ({
-  onToggleExapanded,
   title,
   baseCapacityLabel,
   onBaseCapacityChanged,
   baseCapacity,
   points,
-  expanded,
   showPenalties,
   onReceivePoints,
-  channellings
+  channellings,
+  eventKey
 }) => {
-  const detailsRef = useRef<HTMLDetailsElement>(null);
   const onBaseCapacityChangedInternal: ChangeEventHandler<HTMLInputElement> = (e) => {
     const newValue = Number.parseInt(e.target.value);
     if (!Number.isNaN(newValue)) {
@@ -44,31 +42,35 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
     }
   }
 
-  console.log()
+  const { activeEventKey } = useContext(AccordionContext);
   const penalty = Math.min(Math.floor(Math.pow(2, Math.ceil((points.exhausted + points.consumed + points.channeled) / baseCapacity) - 2)), 8);
 
   return (
-    <details ref={detailsRef} className="PointsControl"
-             onToggle={() => onToggleExapanded(detailsRef.current?.open ?? false)} open={expanded}>
-      <summary>
-        <span className="PointsControl-title">{title}</span>
+    <Accordion.Item eventKey={eventKey}>
+      <Accordion.Header>
+        <span className="PointsControl-title col">{title}</span>
         <span
-          className="PointsControl-value">{baseCapacity * 5 - (points.exhausted + points.consumed + points.channeled)}</span>
+          className="PointsControl-value col-1">{baseCapacity * 5 - (points.exhausted + points.consumed + points.channeled)}</span>
         {showPenalties ?
-          <abbr title="Wundabzüge" className="PointsControl-penalty">({penalty > 0 ? '-' : '±'}{penalty})</abbr> : <span className="PointsControl-penalty"/> }
-        <label style={{display: expanded ? undefined : 'none'}} className="PointsControl-baseCapacity">
+          <abbr title="Wundabzüge" className="PointsControl-penalty col-1">({penalty > 0 ? '-' : '±'}{penalty})</abbr> : <span className="PointsControl-penalty"/> }
+        <label className="PointsControl-baseCapacity col-3" style={{visibility: activeEventKey === eventKey ? 'visible' : 'hidden'}}>
           <span>{baseCapacityLabel}</span>
           <input type="number" value={baseCapacity}
-                 onChange={onBaseCapacityChangedInternal}/>
+                 min={1} max={20}
+                 onChange={onBaseCapacityChangedInternal}
+                 onClick={(e) => e.stopPropagation()}
+          />
         </label>
-      </summary>
-      <CurrentPoints {...{baseCapacity, points, showPenalties, onReceivePoints}} />
-      <PointsEditor {...{baseCapacity, showPenalties}}
-                    currentPoints={points}/>
-      {channellings.map((channeled, index) =>
-        <StopChanneling channeled={channeled} key={`${channeled}-${index}`}/>
-      )}
-      <ShortRest currentPoints={points}/>
-    </details>
+      </Accordion.Header>
+      <Accordion.Body>
+        <CurrentPoints {...{baseCapacity, points, showPenalties, onReceivePoints}} />
+        <PointsEditor {...{baseCapacity, showPenalties}}
+                      currentPoints={points}/>
+        {channellings.map((channeled, index) =>
+          <StopChanneling channeled={channeled} key={`${channeled}-${index}`}/>
+        )}
+        <ShortRest currentPoints={points}/>
+      </Accordion.Body>
+    </Accordion.Item>
   );
 }

@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './index.scss';
 import App from './App/App';
 import reportWebVitals from './reportWebVitals';
-import Gh from "./iconmonstr-github-1.svg";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -11,7 +10,6 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <App/>
-    <a href="https://github.com/chklauser/splitracker" id="ghlink"><img src={Gh} alt="Splitracker on GitHub" /></a>
   </React.StrictMode>
 );
 

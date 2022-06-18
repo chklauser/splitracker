@@ -1,0 +1,31 @@
+@import "../custom";
+
+.CurrentPoints {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.CurrentPoints-dropOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.CurrentPoints-dropOverlay p {
+  margin: 10% 20%;
+  font-weight: bolder;
+}
+
+.CurrentPoints-dropOverlay-over {
+  background: transparentize($success, 0.25);
+}
+.CurrentPoints-dropOverlay-canDrop {
+  background: transparentize($info, 0.25);
+}
+.CurrentPoints-dropOverlay-cannotDrop {
+  background: transparentize($secondary, 0.25)
+}

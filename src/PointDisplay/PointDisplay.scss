@@ -1,0 +1,17 @@
+
+.PointDisplay {
+  height: 1.25rem;
+  width: 1rem;
+}
+
+// https://codepen.io/sosuke/pen/Pjoqqp
+.PointDisplay-heal {
+  // #1f4b28;
+  filter: invert(22%) sepia(30%) saturate(808%) hue-rotate(80deg) brightness(100%) contrast(94%);;
+}
+
+.PointDisplay-harm {
+  // #540d0d;
+  filter: invert(12%) sepia(21%) saturate(5949%) hue-rotate(341deg) brightness(94%) contrast(102%);
+}
+

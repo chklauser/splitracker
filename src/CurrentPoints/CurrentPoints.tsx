@@ -3,7 +3,7 @@ import {IPointsBlockProps, PointsBlock} from "../PointsBlock";
 import {useDrop} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
-import './CurrentPoints.css';
+import './CurrentPoints.scss';
 
 export interface ICurrentPointsProps extends IPointsBlockProps {
   onReceivePoints: (points: PointsPreviewData) => void;
@@ -36,7 +36,12 @@ export const CurrentPoints: FunctionComponent<ICurrentPointsProps> = (props) => 
         "CurrentPoints-dropOverlay-over": isOver && canDrop,
         "CurrentPoints-dropOverlay-canDrop": !isOver && canDrop,
         "CurrentPoints-dropOverlay-cannotDrop": isOver && !canDrop})}>
-        <p>👉 Hierhin ziehen! 👈</p>
+        <p className={classSet({
+          "btn": true,
+          "btn-success": isOver && canDrop,
+          "btn-primary": !isOver && canDrop,
+          "btn-secondary": isOver && !canDrop
+        })}>👉 Hierhin ziehen! 👈</p>
       </div>
     )}
   </div>;

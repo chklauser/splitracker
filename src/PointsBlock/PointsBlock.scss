@@ -1,0 +1,28 @@
+.PointsBlock th.PointsBlock-active {
+  font-weight: bold;
+}
+
+.PointsBlock th {
+  font-weight: normal;
+  text-align: right;
+}
+
+.PointsBlock td {
+  text-align: center;
+}
+
+table.PointsBlock-table {
+  table-layout: fixed;
+  width: auto;
+  col.PointsBlock-levelCol {
+    height: 1rem;
+    width: 9rem;
+  }
+  col.PointsBlock-pointCol {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+table.PointsBlock-table > :not(caption) > * > * {
+  padding: 0;
+}

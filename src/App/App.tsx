@@ -1,5 +1,4 @@
 import React, {FunctionComponent, ReactElement, useState} from 'react';
-import './App.css';
 import {PointsControl} from "../PointsControl";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
@@ -8,7 +7,9 @@ import {TouchBackend} from "react-dnd-touch-backend";
 import {loadMouseEnabled, updateMouseEnabled} from "../preferences";
 import {Character, loadCharacters, persistCharacter, Pool} from "../char";
 import cloneDeep from "lodash.clonedeep";
-
+import {Accordion, Col, Container, Row} from "react-bootstrap";
+import "./App.scss";
+import Gh from "../iconmonstr-github-1.svg";
 
 function copyWith<T>(update: (value: T) => void): (value: T) => T {
   return (value: T) => {
@@ -63,13 +64,11 @@ const App: FunctionComponent = () => {
     }));
   }
 
-  function pointsControl(poolOf: (char: Character) => Pool, title: string, baseCapacityLabel: string, showPenalties: boolean, focus: "lp"|"fp", otherFocus: "lp"|"fp"): ReactElement {
+  function pointsControl(poolOf: (char: Character) => Pool, title: string, baseCapacityLabel: string, showPenalties: boolean, focus: "lp"|"fp"): ReactElement {
     const pool = poolOf(char);
-    return <PointsControl points={pool.points} baseCapacity={pool.baseCapacity} channellings={pool.channellings}
+    return <PointsControl eventKey={focus} points={pool.points} baseCapacity={pool.baseCapacity} channellings={pool.channellings}
                    onBaseCapacityChanged={newCap => setChar(copyWith(char => { poolOf(char).baseCapacity = newCap;}))}
                    baseCapacityLabel={baseCapacityLabel} title={title}
-                   expanded={focusOn == focus}
-                   onToggleExapanded={(expanded) => setFocusOn(focusOn => expanded ? focus : focusOn != otherFocus ? null : otherFocus)}
                    showPenalties={showPenalties}
                    onReceivePoints={(points) => applyPointsReceived(poolOf, points)}
     />;
@@ -90,17 +89,24 @@ const App: FunctionComponent = () => {
       ],
       enableHoverOutsideTarget: true
     }}>
-      <div className="App">
-        <div>
-          <p className="App-title">Splitracker <span className="App-modeToggle"
-                                                     onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span>
-          </p>
-        </div>
-
-        {pointsControl(c => c.lp, "Lebenspunkte 💖", "LP", true, "lp", "fp")}
-        {pointsControl(c => c.fo, "Fokuspunkte ✨", "FP", false, "fp", "lp")}
-        <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
-      </div>
+      <Container className="App" >
+        <Row className="gx-1 px-2">
+          <Col as="h1" className="App-title">Splitracker</Col>
+          <Col xs="1"><span className="App-modeToggle" role="button" onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></Col>
+        </Row>
+        <Row className="gx-0">
+          <Accordion flush>
+            {pointsControl(c => c.lp, "Lebenspunkte 💖", "LP", true, "lp")}
+            {pointsControl(c => c.fo, "Fokuspunkte ✨", "FP", false, "fp")}
+          </Accordion>
+        </Row>
+        <Row className="gx-1 px-2">
+          <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
+        </Row>
+        <Row className="gx-1 px-2">
+          <a href="https://github.com/chklauser/splitracker" id="ghlink"><img src={Gh} alt="Splitracker on GitHub" /></a>
+        </Row>
+      </Container>
     </DndProvider>
   );
 }

@@ -1,6 +1,6 @@
-import {Fragment, FunctionComponent} from "react";
+import {FunctionComponent} from "react";
 import {classSet} from "../ClassSet";
-import "./PointDisplay.css";
+import "./PointDisplay.scss";
 
 export const enum Point {
   Channeled = '∕',
@@ -11,19 +11,37 @@ export const enum Point {
 
 export interface IPointDisplayProps {
   point: Point,
-  value: 1 | 0 | -1
+  value: 1 | 0 | -1,
+  highlightDelta?: boolean
 }
 
-export const PointDisplay: FunctionComponent<IPointDisplayProps> = ({point, value}) => {
-  return <Fragment>
-    <span className={classSet({
-      PointDisplay: true,
-      "PointDisplay-heal": value < 0,
-      "PointDisplay-harm": value > 0,
-      "PointDisplay-free": value == 0,
-      "PointDisplay-channeled": point === Point.Channeled,
-      "PointDisplay-exhausted": point === Point.Exhausted,
-      "PointDisplay-consumed": point === Point.Consumed,
-    })}>{point != Point.Free ? point : <Fragment>&nbsp;</Fragment>}</span>
-  </Fragment>
+function iconFor(point: Point) {
+  switch (point) {
+    case Point.Channeled:
+      return "/K.svg";
+    case Point.Exhausted:
+      return "/E.svg";
+    case Point.Consumed:
+      return "/V.svg";
+    default:
+      throw Error("Invalid point: " + point);
+  }
+}
+
+export const PointDisplay: FunctionComponent<IPointDisplayProps> = ({point, value, highlightDelta = false}) => {
+
+  const pointClasses = classSet({
+    PointDisplay: true,
+    "PointDisplay-heal": highlightDelta && value < 0,
+    "PointDisplay-harm": highlightDelta && value > 0,
+    "PointDisplay-free": value == 0,
+    "PointDisplay-channeled": point === Point.Channeled,
+    "PointDisplay-exhausted": point === Point.Exhausted,
+    "PointDisplay-consumed": point === Point.Consumed,
+  });
+  if (point == Point.Free) {
+    return <div className={pointClasses}/>;
+  } else {
+    return <img className={pointClasses} src={iconFor(point)} alt={point}/>
+  }
 };

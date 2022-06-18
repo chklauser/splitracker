@@ -1,8 +1,10 @@
 import {Fragment, FunctionComponent, ReactElement, useState} from "react";
-import {Point} from "../PointDisplay";
+import {Point, PointDisplay} from "../PointDisplay";
 import {PointsVec} from "../char";
 import {PointsPreview} from "../PointsPreview";
-import "./PointsEditor.css";
+import "./PointsEditor.scss";
+import {Col, Container, Row} from "react-bootstrap";
+import FormRange from "react-bootstrap/FormRange";
 
 interface IPointsEditorProps {
   baseCapacity: number;
@@ -24,21 +26,21 @@ function calculatePreview(type: Point, value: number, currentPoints: PointsVec, 
   switch (type) {
     case Point.Consumed:
       preview = {
-        currentTypeDisplay: <Fragment>Verzehrt 🕳️</Fragment>,
+        currentTypeDisplay: <Fragment>V&nbsp;<PointDisplay point={Point.Consumed} value={1}/></Fragment>,
         points: {consumed: value, exhausted: 0, channeled: 0},
         typeValue: currentPoints.consumed
       };
       break;
     case Point.Channeled:
       preview = {
-        currentTypeDisplay: <Fragment>Kanalisiert ⚡</Fragment>,
+        currentTypeDisplay: <Fragment>K&nbsp;<PointDisplay point={Point.Channeled} value={1}/></Fragment>,
         points: {consumed: 0, exhausted: 0, channeled: value},
         typeValue: currentPoints.channeled
       };
       break;
     case Point.Exhausted:
       preview = {
-        currentTypeDisplay: <Fragment>Erschöpft 💤</Fragment>,
+        currentTypeDisplay: <Fragment>E&nbsp;<PointDisplay point={Point.Exhausted} value={1}/></Fragment>,
         points: {consumed: 0, exhausted: value, channeled: 0},
         typeValue: currentPoints.exhausted
       };
@@ -95,18 +97,30 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
   };
   const totalCurrentPoints = currentPoints.channeled + currentPoints.exhausted + currentPoints.consumed;
   const preview = calculatePreview(type, value, currentPoints, baseCapacity);
-
   return <div className="PointsEditor">
-    <div className="PointsEditor-controls">
-      <button type="button" className="PointsEditor-switch" onClick={toggleType}><p>{preview.currentTypeDisplay}</p><p>(wechseln)</p></button>
-      <input type="range" className="PointsEditor-range" min={preview.minAmount} max={preview.maxAmount} value={value}
-             onChange={e => setValue(e.target.valueAsNumber)}
-             step={1}/>
-      <input type="number" className="PointsEditor-edit" min={preview.minAmount} max={preview.maxAmount} value={value}
-           onChange={e => setValue(e.target.valueAsNumber)}/>
-    </div>
-    <PointsPreview {...{baseCapacity, totalCurrentPoints, showPenalties}}
-                   points={preview.points}
-                   onAppliedPoints={_ => setValue(_ => 0)}/>
+    <Row className="justify-content-center">
+      <Col className="col-auto">
+        <PointsPreview {...{baseCapacity, totalCurrentPoints}}
+                       showPenalties={false}
+                       points={preview.points}
+                       onAppliedPoints={_ => setValue(_ => 0)}/>
+      </Col>
+    </Row>
+    <Row className="PointsEditor-controls align-items-center py-2">
+      <Col xs={2} className={"PointsEditor-switch"}>
+        <button type="button" role="button" className="btn btn-primary" onClick={toggleType}>
+          <p>{preview.currentTypeDisplay}</p>
+          <p>(wechseln)</p></button>
+      </Col>
+      <Col xs={2}>
+        <input type="number" className="PointsEditor-edit" min={preview.minAmount} max={preview.maxAmount} value={value}
+               onChange={e => setValue(e.target.valueAsNumber)}/>
+      </Col>
+      <Col>
+        <FormRange className="PointsEditor-range" min={preview.minAmount} max={preview.maxAmount} value={value}
+                   onChange={e => setValue(e.target.valueAsNumber)}
+                   step={1}/>
+      </Col>
+    </Row>
   </div>;
 };

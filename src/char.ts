@@ -48,6 +48,11 @@ function internalLoadCharacters(): Versioned<Characters> {
     if(characters && characters['v'] !== 1) {
       console.log("Unexpected version number in characters: ", characters['v']);
     }
+    for (let charKey in characters.p) {
+      const c = characters.p[charKey];
+      c.lp.baseCapacity = Math.min(Math.max(1,c.lp.baseCapacity), 20);
+      c.fo.baseCapacity = Math.min(Math.max(1,c.fo.baseCapacity), 20);
+    }
     return characters;
   } else {
     console.log('No characters found in local storage.');

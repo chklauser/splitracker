@@ -3,4 +3,5 @@
 *.jpg                   binary
 *.jpeg                  binary
 *.gif                   binary
+*.afdesign              binary
 /.pnp.*                 text=auto linguist-generated

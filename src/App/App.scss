@@ -1,0 +1,21 @@
+.App {
+  div.accordion-body{
+    padding-left: 0;
+  }
+  button.accordion-button {
+    padding-left: 0.5rem;
+    ::after {
+      display: none;
+    }
+    input {
+      padding: 0;
+    }
+  }
+  div.accordion-body,
+  button.accordion-button{
+    padding-right: 0;
+  }
+  > div.row {
+    padding: 0;
+  }
+}

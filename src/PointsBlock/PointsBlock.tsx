@@ -1,6 +1,6 @@
 import {FunctionComponent, ReactElement} from "react";
 import {Point, PointDisplay} from "../PointDisplay";
-import './PointsBlock.css';
+import './PointsBlock.scss';
 import {PointsVec} from "../char";
 
 export interface IPointsBlockProps {
@@ -8,7 +8,8 @@ export interface IPointsBlockProps {
   points: PointsVec;
   showPenalties: boolean
   numSkip?: number
-  hideEmptyLines?: boolean
+  hideEmptyLines?: boolean,
+  highlightDelta?: boolean
 }
 
 type AnnotatedPoint = {
@@ -21,7 +22,8 @@ export const PointsBlock: FunctionComponent<IPointsBlockProps> = ({
   points,
   baseCapacity,
   numSkip = 0,
-  hideEmptyLines = false
+  hideEmptyLines = false,
+  highlightDelta = false
 }) => {
   let penaltiesCell: (rowIndex: number, active: boolean) => ReactElement<any, any> | null;
   if (showPenalties) {
@@ -81,7 +83,11 @@ export const PointsBlock: FunctionComponent<IPointsBlockProps> = ({
   }
 
   return <div className="PointsBlock">
-    <table className="PointsBlock-table">
+    <table className="PointsBlock-table table table-sm">
+      <colgroup>
+        { showPenalties ? <col className="PointsBlock-levelCol" /> : null }
+        {Array.from(new Array(baseCapacity), (_,i) => <col key={i} className="PointsBlock-pointCol" />)}
+      </colgroup>
       <tbody>
       {rows.map((row, rowIndex) =>
         !hideEmptyLines || hasPoints(row) ?
@@ -89,7 +95,7 @@ export const PointsBlock: FunctionComponent<IPointsBlockProps> = ({
             {penaltiesCell(rowIndex, hasPoints(row))}
             {row.map((cell, cellIndex) =>
               <td key={`${rowIndex}-${cellIndex}`}>
-                <PointDisplay {...cell}/>
+                <PointDisplay {...cell} highlightDelta={highlightDelta} />
               </td>
             )}
           </tr> : null

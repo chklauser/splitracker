@@ -4,7 +4,8 @@ import {PointsVec} from "../char";
 import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
-import './PointsPreview.css';
+import './PointsPreview.scss';
+import {Col, Row} from "react-bootstrap";
 
 export interface IPointsPreviewProps {
   baseCapacity: number;
@@ -21,7 +22,7 @@ export const PointsPreview: FunctionComponent<IPointsPreviewProps> = ({
   onAppliedPoints,
   showPenalties
 }) => {
-  const [{isDragging}, drag] = useDrag<PointsPreviewData,object,{isDragging: boolean}>(() => ({
+  const [{isDragging}, drag] = useDrag<PointsPreviewData, object, { isDragging: boolean }>(() => ({
     type: ItemTypes.PointsPreview,
     canDrag: points.consumed + points.exhausted + points.channeled != 0,
     end: (data: PointsPreviewData, monitor) => {
@@ -29,13 +30,18 @@ export const PointsPreview: FunctionComponent<IPointsPreviewProps> = ({
         onAppliedPoints(data);
       }
     },
-    item: monitor => ({ points }),
+    item: monitor => ({points}),
     collect: monitor => ({
       isDragging: monitor.isDragging()
     })
   }), [points, onAppliedPoints]);
-  return <div ref={drag} className={classSet({PointsPreview: true, "PointsPreview-dragging": isDragging})}>
+  return <div ref={drag} className={classSet({
+    PointsPreview: true,
+    btn: true,
+    "btn-primary": true,
+    "PointsPreview-dragging": isDragging
+  })}>
     <PointsBlock baseCapacity={baseCapacity} points={points} showPenalties={showPenalties}
-                 numSkip={totalCurrentPoints} hideEmptyLines={true}/>
+                     numSkip={totalCurrentPoints} hideEmptyLines={true} highlightDelta={true}/>
   </div>;
 };

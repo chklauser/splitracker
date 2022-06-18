@@ -3,7 +3,7 @@ import {PointsVec} from "../char";
 import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
-import './StopChanneling.css';
+import {Alert} from "react-bootstrap";
 
 export interface IStopChannelingProps {
   channeled: number
@@ -18,12 +18,12 @@ export const StopChanneling: FunctionComponent<IStopChannelingProps> = ({channel
       isDragging: monitor.isDragging()
     })
   }));
-  return <div ref={drag} className={classSet({StopChanneling: true, "StopChanneling-dragging": isDragging})}>
+  return <Alert variant={"warning"} role={"note"} ref={drag} className={classSet({StopChanneling: true, "StopChanneling-dragging": isDragging})}>
     <span className="StopChanneling-title">⚡</span>
     {
       channeled == 1
         ? <span>Einen kanalisierten Punkt in einen erschöpften Punkt umwandeln.</span>
         : <span>{channeled} kanalisierte Punkte in {channeled} erschöpfte Punkte umwandeln.</span>
     }
-  </div>;
+  </Alert>;
 };

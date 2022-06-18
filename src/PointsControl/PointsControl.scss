@@ -1,0 +1,33 @@
+@import "../custom";
+
+.PointsControl-title,
+.PointsControl-value,
+.PointsControl-penalty,
+.PointsControl-baseCapacity {
+  font-size: 1.1em;
+  font-weight: bolder;
+  margin-right: 0.5em;
+  color: $dark;
+}
+
+.PointsControl-baseCapacity {
+  text-align: right;
+  input {
+    max-width: 2.5rem;
+    text-align: right;
+    margin-left: 0.2rem;
+  }
+}
+
+.PointsControl-title {
+  font-style: italic;
+}
+
+.PointsControl-value {
+  text-align: right;
+}
+
+.PointsControl-penalty {
+  text-align: right;
+}
+

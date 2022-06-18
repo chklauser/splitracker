@@ -4,6 +4,14 @@
 
 # Updates
 
+## 2022-06-18
+KNOWN ISSUE: desktop view looks 💩
+
+* 💄 rendering & layout pass: should no longer scroll horizontally on mobile. 
+* Use "proper" icons for K/E/V.
+* swap preview & edit controls aroun (to make controls easier to reach on mobile)
+* prevent LP/FO points from going below 1 (would crash app)
+
 ## 2022-06-14
 
 * 🧠 Der Zustand des Charakters wird im Browser gespeichert. Übernehme keine Gewähr was passiert, wenn ihr mehrere

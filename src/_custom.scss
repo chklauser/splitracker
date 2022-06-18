@@ -1,0 +1,61 @@
+// Override default variables before the import
+
+// Theme: Sampera (compund, saturated)
+$sampera-a: #9DA4C9;
+$sampera-b: #485496;
+$sampera-c: #DEF3FC;
+$sampera-d: #FCC49F;
+$sampera-e: #C9A89D;
+
+// Theme: Volos (square, spicy neo brutalist)
+$volos-a: #C5EBFC;
+$volos-b: #F8C5FC;
+$volos-c: #DEF3FC;
+$volos-d: #FCE3C5;
+$volos-e: #E4FCD2;
+
+// Theme: Gondalis (double split complementary, tame neo brutalist)
+$gondalis-a: #D2D8FC;
+$gondalis-b: #FCD3C5;
+$gondalis-c: #DEF3FC;
+$gondalis-d: #FCEFC5;
+$gondalis-e: #D2FCF3;
+
+// Theme: Isafest (monochromatic, boring AF)
+$isafest-a: #6E787D;
+$isafest-b: #93DBFD;
+$isafest-c: #DEF3FC;
+$isafest-d: #486C7D;
+$isafest-e: #B1C2C9;
+
+// Theme: Winborn (complementary, pretty boring)
+$winborn-a: #89A4B0;
+$winborn-b: #FAFDFF;
+$winborn-c: #DEF3FC;
+$winborn-d: #B09678;
+$winborn-e: #FCEFDE;
+
+// Theme: Tolsing (shades, I hate colors)
+$tolsing-a: #A6B6BD;
+$tolsing-b: #6E787D;
+$tolsing-c: #DEF3FC;
+$tolsing-d: #363B3D;
+$tolsing-e: #C8DAE3;
+
+// Bootstrap theme colors
+$primary: $volos-c;
+$secondary: $winborn-a;
+$success: $volos-e;
+$info: $volos-a;
+$danger: $volos-b;
+$warning: $volos-d;
+$light: $volos-e;
+$dark: $tolsing-d;
+
+$body-bg: #fff;
+$body-color: #202125;
+$alert-padding-y: 0.5rem;
+
+// Import Bootstrap and its default variables
+//noinspection CssUnknownTarget
+@import '~bootstrap/scss/bootstrap.scss';
