@@ -5,7 +5,6 @@
 # Updates
 
 ## 2022-06-18
-KNOWN ISSUE: desktop view looks 💩
 
 * 💄 rendering & layout pass: should no longer scroll horizontally on mobile. 
 * Use "proper" icons for K/E/V.

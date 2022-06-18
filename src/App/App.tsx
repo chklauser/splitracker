@@ -64,16 +64,18 @@ const App: FunctionComponent = () => {
     }));
   }
 
-  function pointsControl(poolOf: (char: Character) => Pool, title: string, baseCapacityLabel: string, showPenalties: boolean, focus: "lp"|"fp"): ReactElement {
+  function pointsControl(poolOf: (char: Character) => Pool, title: string, baseCapacityLabel: string, showPenalties: boolean, focus: "lp" | "fp"): ReactElement {
     const pool = poolOf(char);
-    return <PointsControl eventKey={focus} points={pool.points} baseCapacity={pool.baseCapacity} channellings={pool.channellings}
-                   onBaseCapacityChanged={newCap => setChar(copyWith(char => { poolOf(char).baseCapacity = newCap;}))}
-                   baseCapacityLabel={baseCapacityLabel} title={title}
-                   showPenalties={showPenalties}
-                   onReceivePoints={(points) => applyPointsReceived(poolOf, points)}
+    return <PointsControl eventKey={focus} points={pool.points} baseCapacity={pool.baseCapacity}
+                          channellings={pool.channellings}
+                          onBaseCapacityChanged={newCap => setChar(copyWith(char => {
+                            poolOf(char).baseCapacity = newCap;
+                          }))}
+                          baseCapacityLabel={baseCapacityLabel} title={title}
+                          showPenalties={showPenalties}
+                          onReceivePoints={(points) => applyPointsReceived(poolOf, points)}
     />;
   }
-
 
 
   return (
@@ -89,22 +91,27 @@ const App: FunctionComponent = () => {
       ],
       enableHoverOutsideTarget: true
     }}>
-      <Container className="App" >
+      <Container className="App">
         <Row className="gx-1 px-2">
           <Col as="h1" className="App-title">Splitracker</Col>
-          <Col xs="1"><span className="App-modeToggle" role="button" onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></Col>
+          <Col xs="1"><span className="App-modeToggle" role="button"
+                            onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></Col>
         </Row>
-        <Row className="gx-0">
-          <Accordion flush>
-            {pointsControl(c => c.lp, "Lebenspunkte 💖", "LP", true, "lp")}
-            {pointsControl(c => c.fo, "Fokuspunkte ✨", "FP", false, "fp")}
-          </Accordion>
+        <Row>
+          <Col xs={12} sm={10} md={8} lg={6} xl={4} xxl={3}>
+            <Row className="gx-0">
+              <Accordion flush>
+                {pointsControl(c => c.lp, "Lebenspunkte 💖", "LP", true, "lp")}
+                {pointsControl(c => c.fo, "Fokuspunkte ✨", "FP", false, "fp")}
+              </Accordion>
+            </Row>
+          </Col>
         </Row>
         <Row className="gx-1 px-2">
           <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
         </Row>
         <Row className="gx-1 px-2">
-          <a href="https://github.com/chklauser/splitracker" id="ghlink"><img src={Gh} alt="Splitracker on GitHub" /></a>
+          <a href="https://github.com/chklauser/splitracker" id="ghlink"><img src={Gh} alt="Splitracker on GitHub"/></a>
         </Row>
       </Container>
     </DndProvider>
