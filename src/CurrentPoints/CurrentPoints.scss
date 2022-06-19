@@ -4,6 +4,9 @@
   position: relative;
   width: 100%;
   height: 100%;
+  .PointsBlock {
+    min-height: 6rem;
+  }
 }
 
 .CurrentPoints-dropOverlay {

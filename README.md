@@ -21,6 +21,12 @@
     * of which 2 points (3 - 1) are immediately consumed
     * exhaust -3 points (-4 + 1) (negative = heal)
 * (now with the "collapsing" interpretation of KEV formulas)
+* 👨‍👩‍👧‍👦 Multiple characters
+  * Add/remove/clone characters by going into "edit mode" (✏️-toggle in the top right corner)
+  * Characters are always ordered alphabetically
+  * Characters have a (hidden) identity
+  * Characters have a name (that can be changed in edit mode)
+  * Known issue: can drag channeling across characters. Don't do that pls ;) 
 
 ## 2022-06-18
 
