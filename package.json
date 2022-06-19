@@ -42,6 +42,7 @@
   "browserslist": {
     "production": [
       ">0.2%",
+      "supports es6",
       "not dead",
       "not op_mini all"
     ],

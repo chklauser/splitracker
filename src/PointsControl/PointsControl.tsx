@@ -73,7 +73,7 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
                        lineCapacity={lineCapacity(baseCapacity)}
                        totalCapcity={totalCapacity(baseCapacity)}
         />
-        <PointsEditor {...{baseCapacity, showPenalties}}
+        <PointsEditor {...{baseCapacity, showPenalties, onReceivePoints}}
                       lineCapacity={lineCapacity(baseCapacity)}
                       totalCapcity={totalCapacity(baseCapacity)}
                       currentPoints={points}/>

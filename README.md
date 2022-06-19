@@ -7,6 +7,19 @@
 ## 2022-06-19
 * ⬅️➡️ undo/redo support for up to 10 actions
 * ✨ Allow any number of focus points up to 60 
+* ⌨️ `K3V2` expressions supported in the points field. <kbd>Enter</kbd> applies the points.
+  * Expressions are read from left to right 
+  * `K`/`E`/`V` (or `k`/`e`/`v`) changes the type of point
+  * `+`/`-` changes whether points are added or subtracted
+  * numbers are applied
+  * other characters are ignored
+  * Example: `K3v2` will
+    * channel 3 points
+    * consume 2 points
+  * Example: `k 3 2 v 3 - 1 E4 +1` will
+    * channel 5 points (3 + 2)
+    * consume 2 points (3 - 1)
+    * exhaust -3 points (-4 + 1) (negative = heal)
 
 ## 2022-06-18
 
