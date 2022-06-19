@@ -15,11 +15,12 @@
   * other characters are ignored
   * Example: `K3v2` will
     * channel 3 points
-    * consume 2 points
+    * of which 2 points are immediately consumed
   * Example: `k 3 2 v 3 - 1 E4 +1` will
     * channel 5 points (3 + 2)
-    * consume 2 points (3 - 1)
+    * of which 2 points (3 - 1) are immediately consumed
     * exhaust -3 points (-4 + 1) (negative = heal)
+* (now with the "collapsing" interpretation of KEV formulas)
 
 ## 2022-06-18
 

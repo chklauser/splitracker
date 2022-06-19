@@ -78,7 +78,7 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
                       totalCapcity={totalCapacity(baseCapacity)}
                       currentPoints={points}/>
         {channellings.map((channeled, index) =>
-          <StopChanneling channeled={channeled} key={`${channeled}-${index}`}/>
+          <StopChanneling channeled={channeled} index={index} key={`${channeled}-${index}`}/>
         )}
         <ShortRest currentPoints={points}/>
       </Accordion.Body>

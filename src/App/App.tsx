@@ -84,9 +84,9 @@ const App: FunctionComponent = () => {
         pool.channellings.push(receivedPoints.channeled);
       }
 
-      if (data.channelingIndex) {
+      if (data.channelingIndex != null) {
         console.log("remove channeling index ", data.channelingIndex);
-        pool.channellings = pool.channellings.filter(c => c != data.channelingIndex);
+        pool.channellings = pool.channellings.filter((c,i) => i != data.channelingIndex);
       }
     }));
   }

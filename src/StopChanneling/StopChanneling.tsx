@@ -6,14 +6,15 @@ import {classSet} from "../ClassSet";
 import {Alert} from "react-bootstrap";
 
 export interface IStopChannelingProps {
-  channeled: number
+  index: number;
+  channeled: number;
 }
 
-export const StopChanneling: FunctionComponent<IStopChannelingProps> = ({channeled}) => {
+export const StopChanneling: FunctionComponent<IStopChannelingProps> = ({index, channeled}) => {
   const points: PointsVec = {channeled: -channeled, consumed: 0, exhausted: channeled};
   const [{isDragging}, drag] = useDrag<PointsPreviewData, object, { isDragging: boolean }>(() => ({
     type: ItemTypes.PointsPreview,
-    item: monitor => ({points, channelingIndex: channeled}),
+    item: monitor => ({points, channelingIndex: index}),
     collect: monitor => ({
       isDragging: monitor.isDragging()
     })

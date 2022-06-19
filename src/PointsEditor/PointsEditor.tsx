@@ -82,16 +82,31 @@ function calculatePreview(type: Point, value: PointsVec, currentPoints: PointsVe
   }
 }
 
-function inferType(points: PointsVec): Point|null {
-  if(points.consumed !== 0 && points.channeled === 0 && points.exhausted === 0) {
+function inferType(points: PointsVec): Point | null {
+  if (points.consumed !== 0 && points.channeled === 0 && points.exhausted === 0) {
     return Point.Consumed;
-  } else if(points.consumed === 0 && points.channeled !== 0 && points.exhausted === 0) {
+  } else if (points.consumed === 0 && points.channeled !== 0 && points.exhausted === 0) {
     return Point.Channeled;
-  } else if(points.consumed === 0 && points.channeled === 0 && points.exhausted !== 0) {
+  } else if (points.consumed === 0 && points.channeled === 0 && points.exhausted !== 0) {
     return Point.Exhausted;
   } else {
     return null;
   }
+}
+
+function collapsePoints(points: PointsVec): PointsVec {
+  let p = {...points};
+  if (p.channeled > 0) {
+    p.channeled = Math.max(0, Math.min(p.channeled - Math.max(p.exhausted, p.consumed), p.channeled));
+  } else if(p.channeled < 0) {
+    p.channeled = Math.min(0, Math.max(p.exhausted, p.consumed) - Math.min(p.exhausted, p.consumed));
+  }
+  if(p.exhausted > 0) {
+    p.exhausted = Math.max(0, Math.min(p.exhausted - p.consumed, p.exhausted));
+  } else if(p.exhausted < 0) {
+    p.exhausted = Math.min(0, Math.max(p.exhausted - p.consumed, p.exhausted));
+  }
+  return p;
 }
 
 export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
@@ -133,6 +148,19 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
     setPoints(_ => newPoints);
     setExpr(render(newPoints));
   };
+
+  function onExprChanged(newExpr: string) {
+    let explicitPoints = parse(newExpr, type);
+    const newPointsVec = collapsePoints(explicitPoints);
+    console.log("explicit", explicitPoints, "implicit", newPointsVec);
+    setPoints(newPointsVec)
+    setExpr(newExpr);
+    const newType = inferType(newPointsVec);
+    if (newType != null) {
+      setType(newType);
+    }
+  }
+
   return <div className="PointsEditor">
     <Row className="justify-content-center">
       <Col className="col-auto">
@@ -144,25 +172,16 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
     <Row>
       <Col>
         <FloatingLabel label="Punkte (z.B. +K3V1-E2)">
-          <FormControl type="text" pattern="(\s+|[kevKEV+-]|\d+)*" placeholder="+K3V1-E2" autoCorrect="off" enterKeyHint="send"
+          <FormControl type="text" pattern="(\s+|[kevKEV+-]|\d+)*" placeholder="+K3V1-E2" autoCorrect="off"
+                       enterKeyHint="send"
                        value={expr}
                        onKeyUp={e => {
-                         console.log('keyup', e.key, e);
-                         if(e.key === 'Enter') {
+                         if (e.key === 'Enter') {
                            onReceivePoints({points});
                            onAppliedPoints();
                          }
                        }}
-                       onChange={e => {
-                         const newExpr = e.target.value;
-                         const newPointsVec = parse(newExpr, type);
-                         setPoints(newPointsVec)
-                         setExpr(newExpr);
-                         const newType = inferType(newPointsVec);
-                         if(newType != null) {
-                            setType(newType);
-                         }
-                       }}/>
+                       onChange={e => onExprChanged(e.target.value)}/>
         </FloatingLabel>
       </Col>
     </Row>
@@ -173,7 +192,8 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
           <p>(wechseln)</p></button>
       </Col>
       <Col>
-        <FormRange className="PointsEditor-range" min={preview.minAmount} max={preview.maxAmount} value={points.channeled + points.exhausted + points.consumed}
+        <FormRange className="PointsEditor-range" min={preview.minAmount} max={preview.maxAmount}
+                   value={points.channeled + points.exhausted + points.consumed}
                    onChange={e => {
                      const newPoints = toPointsVector(e.target.valueAsNumber, type);
                      setPoints(newPoints);
