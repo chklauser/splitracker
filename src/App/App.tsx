@@ -11,7 +11,7 @@ import {Accordion, Col, Container, Row} from "react-bootstrap";
 import "./App.scss";
 import Gh from "../iconmonstr-github-1.svg";
 import {createDefaultUndoPersistence, UndoManager} from "../undo";
-import {MdRedo, MdUndo} from "react-icons/md"
+import {UndoRedoControls} from "../UndoRedoControls";
 
 function copyWith<T>(update: (value: T) => void): (value: T) => T {
   return (value: T) => {
@@ -23,30 +23,6 @@ function copyWith<T>(update: (value: T) => void): (value: T) => T {
 
 const characterPersistence = createDefaultCharacterPersistence();
 const undoManager = new UndoManager(createDefaultUndoPersistence(), characterPersistence);
-
-type UndoRedoState = {
-  canUndo: boolean;
-  canRedo: boolean;
-}
-
-function toUndoRedoState(undoManager: UndoManager): UndoRedoState {
-  return {
-    canUndo: undoManager.canUndo,
-    canRedo: undoManager.canRedo
-  };
-}
-
-function useUndoRedo(): UndoRedoState {
-  const [state, setState] = useState<UndoRedoState>(() => toUndoRedoState(undoManager));
-  useEffect(() => {
-    const handler = () => setState(toUndoRedoState(undoManager));
-    undoManager.on("change", handler);
-    return () => {
-      undoManager.off("change", handler);
-    }
-  });
-  return state;
-}
 
 function useCharacter(): [Character, React.Dispatch<React.SetStateAction<Character>>] {
   const [char, setChar] = useState(() => {
@@ -73,7 +49,6 @@ function useCharacter(): [Character, React.Dispatch<React.SetStateAction<Charact
 const App: FunctionComponent = () => {
   const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
   const [char, setChar] = useCharacter();
-  const undoRedoState = useUndoRedo();
 
   function toggleMouseEnabled() {
     setMouseEnabled(prevState => updateMouseEnabled(_ => !prevState));
@@ -133,18 +108,7 @@ const App: FunctionComponent = () => {
         <Row className="gx-1 px-2">
           <Col as="h1" className="App-title">Splitracker</Col>
           <Col xs="4" className="App-undo">
-            <Row className="justify-content-center">
-              <Col xs={3}>
-                <MdUndo onClick={() => undoManager.undo()}
-                        style={{visibility: undoRedoState.canUndo ? undefined : 'hidden'}} role="button"
-                        aria-label="undo"/>
-              </Col>
-              <Col xs={3}>
-                <MdRedo onClick={() => undoManager.redo()}
-                        style={{visibility: undoRedoState.canRedo ? undefined : 'hidden'}} role="button"
-                        aria-label="redo"/>
-              </Col>
-            </Row>
+            <UndoRedoControls undoManager={undoManager}/>
           </Col>
           <Col xs="1"><span className="App-modeToggle" role="button"
                             onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></Col>
