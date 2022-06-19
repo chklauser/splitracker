@@ -4,6 +4,9 @@
 
 # Updates
 
+## 2022-06-19
+* ⬅️➡️ undo/redo support for up to 10 actions
+
 ## 2022-06-18
 
 * 💄 rendering & layout pass: should no longer scroll horizontally on mobile. 
