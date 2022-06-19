@@ -1,15 +1,17 @@
-import React, {FunctionComponent, ReactElement, useState} from 'react';
+import React, {FunctionComponent, ReactElement, useEffect, useState} from 'react';
 import {PointsControl} from "../PointsControl";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {PointsPreviewData} from "../drag";
 import {TouchBackend} from "react-dnd-touch-backend";
 import {loadMouseEnabled, updateMouseEnabled} from "../preferences";
-import {Character, loadCharacters, persistCharacter, Pool} from "../char";
+import {Character, createDefaultCharacterPersistence, Pool} from "../char";
 import cloneDeep from "lodash.clonedeep";
 import {Accordion, Col, Container, Row} from "react-bootstrap";
 import "./App.scss";
 import Gh from "../iconmonstr-github-1.svg";
+import {createDefaultUndoPersistence, UndoManager} from "../undo";
+import {MdRedo, MdUndo} from "react-icons/md"
 
 function copyWith<T>(update: (value: T) => void): (value: T) => T {
   return (value: T) => {
@@ -19,23 +21,59 @@ function copyWith<T>(update: (value: T) => void): (value: T) => T {
   }
 }
 
+const characterPersistence = createDefaultCharacterPersistence();
+const undoManager = new UndoManager(createDefaultUndoPersistence(), characterPersistence);
+
+type UndoRedoState = {
+  canUndo: boolean;
+  canRedo: boolean;
+}
+
+function toUndoRedoState(undoManager: UndoManager): UndoRedoState {
+  return {
+    canUndo: undoManager.canUndo,
+    canRedo: undoManager.canRedo
+  };
+}
+
+function useUndoRedo(): UndoRedoState {
+  const [state, setState] = useState<UndoRedoState>(() => toUndoRedoState(undoManager));
+  useEffect(() => {
+    const handler = () => setState(toUndoRedoState(undoManager));
+    undoManager.on("change", handler);
+    return () => {
+      undoManager.off("change", handler);
+    }
+  });
+  return state;
+}
+
 function useCharacter(): [Character, React.Dispatch<React.SetStateAction<Character>>] {
   const [char, setChar] = useState(() => {
-    const chars = loadCharacters();
+    const chars = characterPersistence.load();
     return chars[Object.keys(chars)[0]];
   });
 
+  useEffect(() => {
+    const stateChanged = () => {
+      setChar(characterPersistence.load()[char.id])
+    };
+    undoManager.on("change", stateChanged);
+    return () => {
+      undoManager.off("change", stateChanged);
+    };
+  }, [char]);
+
   return [char, (newValue) => {
     const effectiveValue = newValue instanceof Function ? newValue(char) : newValue;
-    persistCharacter(effectiveValue);
-    setChar(effectiveValue);
+    undoManager.updateCharacter(effectiveValue);
   }];
 }
 
 const App: FunctionComponent = () => {
   const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
   const [char, setChar] = useCharacter();
-  const [focusOn, setFocusOn] = useState(null as 'fp' | 'lp' | null);
+  const undoRedoState = useUndoRedo();
 
   function toggleMouseEnabled() {
     setMouseEnabled(prevState => updateMouseEnabled(_ => !prevState));
@@ -94,6 +132,20 @@ const App: FunctionComponent = () => {
       <Container className="App">
         <Row className="gx-1 px-2">
           <Col as="h1" className="App-title">Splitracker</Col>
+          <Col xs="4" className="App-undo">
+            <Row className="justify-content-center">
+              <Col xs={3}>
+                <MdUndo onClick={() => undoManager.undo()}
+                        style={{visibility: undoRedoState.canUndo ? undefined : 'hidden'}} role="button"
+                        aria-label="undo"/>
+              </Col>
+              <Col xs={3}>
+                <MdRedo onClick={() => undoManager.redo()}
+                        style={{visibility: undoRedoState.canRedo ? undefined : 'hidden'}} role="button"
+                        aria-label="redo"/>
+              </Col>
+            </Row>
+          </Col>
           <Col xs="1"><span className="App-modeToggle" role="button"
                             onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span></Col>
         </Row>

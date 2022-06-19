@@ -54,6 +54,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["react-dnd-html5-backend", "npm:16.0.1"],\
             ["react-dnd-touch-backend", "npm:16.0.1"],\
             ["react-dom", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:18.2.0"],\
+            ["react-icons", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:4.4.0"],\
             ["react-scripts", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:5.0.1"],\
             ["sass-embedded", "npm:1.52.3"],\
             ["typescript", "patch:typescript@npm%3A4.7.3#~builtin<compat/typescript>::version=4.7.3&hash=7ad353"],\
@@ -14670,6 +14671,28 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["react-icons", [\
+        ["npm:4.4.0", {\
+          "packageLocation": "./.yarn/cache/react-icons-npm-4.4.0-a6c91164a4-dd93a1dcc8.zip/node_modules/react-icons/",\
+          "packageDependencies": [\
+            ["react-icons", "npm:4.4.0"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:4.4.0", {\
+          "packageLocation": "./.yarn/__virtual__/react-icons-virtual-b1ff63c98d/0/cache/react-icons-npm-4.4.0-a6c91164a4-dd93a1dcc8.zip/node_modules/react-icons/",\
+          "packageDependencies": [\
+            ["react-icons", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:4.4.0"],\
+            ["@types/react", "npm:18.0.12"],\
+            ["react", "npm:18.2.0"]\
+          ],\
+          "packagePeers": [\
+            "@types/react",\
+            "react"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["react-is", [\
         ["npm:16.13.1", {\
           "packageLocation": "./.yarn/cache/react-is-npm-16.13.1-a9b9382b4f-f7a19ac349.zip/node_modules/react-is/",\
@@ -15827,6 +15850,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["react-dnd-html5-backend", "npm:16.0.1"],\
             ["react-dnd-touch-backend", "npm:16.0.1"],\
             ["react-dom", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:18.2.0"],\
+            ["react-icons", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:4.4.0"],\
             ["react-scripts", "virtual:a820cabe1d76e195222bde934bc2f2cf879c22b1bf64dbefe74d833efac199982121842c07d38b0eb378dcf933ab6f4b4a9dbd3cbad41b69d23ff4796a4c70b0#npm:5.0.1"],\
             ["sass-embedded", "npm:1.52.3"],\
             ["typescript", "patch:typescript@npm%3A4.7.3#~builtin<compat/typescript>::version=4.7.3&hash=7ad353"],\
