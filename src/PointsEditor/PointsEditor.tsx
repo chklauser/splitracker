@@ -3,11 +3,12 @@ import {Point, PointDisplay} from "../PointDisplay";
 import {PointsVec} from "../char";
 import {PointsPreview} from "../PointsPreview";
 import "./PointsEditor.scss";
-import {Col, Container, Row} from "react-bootstrap";
+import {Col, Row} from "react-bootstrap";
 import FormRange from "react-bootstrap/FormRange";
 
 interface IPointsEditorProps {
-  baseCapacity: number;
+  lineCapacity: number;
+  totalCapcity: number;
   currentPoints: PointsVec;
   showPenalties: boolean;
 }
@@ -21,7 +22,7 @@ interface PreviewData {
   totalCurrentPoints: number;
 }
 
-function calculatePreview(type: Point, value: number, currentPoints: PointsVec, baseCapacity: number): PreviewData {
+function calculatePreview(type: Point, value: number, currentPoints: PointsVec, totalCapcity: number): PreviewData {
   let preview: Omit<PreviewData, "minAmount" | "maxAmount" | "totalCurrentPoints">;
   switch (type) {
     case Point.Consumed:
@@ -55,7 +56,7 @@ function calculatePreview(type: Point, value: number, currentPoints: PointsVec, 
       break;
   }
   const totalCurrentPoints = currentPoints.channeled + currentPoints.exhausted + currentPoints.consumed;
-  const maxAmount = Math.max(0, baseCapacity * 5 - totalCurrentPoints);
+  const maxAmount = Math.max(0, totalCapcity - totalCurrentPoints);
   const minAmount = Math.min(0, -preview.typeValue);
   return {
     ...preview,
@@ -66,9 +67,9 @@ function calculatePreview(type: Point, value: number, currentPoints: PointsVec, 
 }
 
 export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
-  baseCapacity,
-  currentPoints,
-  showPenalties
+  lineCapacity,
+  totalCapcity,
+  currentPoints
 }) => {
   const [type, setType] = useState(Point.Consumed);
   const [value, setValue] = useState(0);
@@ -90,17 +91,17 @@ export const PointsEditor: FunctionComponent<IPointsEditorProps> = ({
           nextType = ty;
           break;
       }
-      const preview = calculatePreview(nextType, value, currentPoints, baseCapacity);
+      const preview = calculatePreview(nextType, value, currentPoints, totalCapcity);
       setValue(v => Math.min(preview.maxAmount, Math.max(preview.minAmount, v)));
       return nextType;
     });
   };
   const totalCurrentPoints = currentPoints.channeled + currentPoints.exhausted + currentPoints.consumed;
-  const preview = calculatePreview(type, value, currentPoints, baseCapacity);
+  const preview = calculatePreview(type, value, currentPoints, totalCapcity);
   return <div className="PointsEditor">
     <Row className="justify-content-center">
       <Col className="col-auto">
-        <PointsPreview {...{baseCapacity, totalCurrentPoints}}
+        <PointsPreview {...{lineCapacity, totalCapcity, totalCurrentPoints}}
                        showPenalties={false}
                        points={preview.points}
                        onAppliedPoints={_ => setValue(_ => 0)}/>

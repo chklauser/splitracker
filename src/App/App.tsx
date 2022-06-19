@@ -46,6 +46,20 @@ function useCharacter(): [Character, React.Dispatch<React.SetStateAction<Charact
   }];
 }
 
+const capcity: Record<"lp" | "fp", {
+  lineCapacity: (baseCapacity: number) => number,
+  totalCapacity: (baseCapacity: number) => number
+}> = {
+  lp: {
+    lineCapacity: (baseCapacity: number) => baseCapacity,
+    totalCapacity: (baseCapacity: number) => baseCapacity * 5
+  },
+  fp: {
+    lineCapacity: (_) => 12,
+    totalCapacity: (baseCapacity: number) => baseCapacity
+  }
+};
+
 const App: FunctionComponent = () => {
   const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
   const [char, setChar] = useCharacter();
@@ -84,8 +98,10 @@ const App: FunctionComponent = () => {
                           onBaseCapacityChanged={newCap => setChar(copyWith(char => {
                             poolOf(char).baseCapacity = newCap;
                           }))}
+                          maxBaseCapacity={focus === "lp" ? 20 : 12*5}
                           baseCapacityLabel={baseCapacityLabel} title={title}
                           showPenalties={showPenalties}
+                          {...capcity[focus]}
                           onReceivePoints={(points) => applyPointsReceived(poolOf, points)}
     />;
   }

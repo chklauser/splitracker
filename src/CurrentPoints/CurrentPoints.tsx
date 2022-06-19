@@ -15,7 +15,7 @@ export const CurrentPoints: FunctionComponent<ICurrentPointsProps> = (props) => 
     canDrop: (item: PointsPreviewData) => {
       let delta = item.points.consumed + item.points.exhausted + item.points.channeled;
       return delta != 0
-      && delta > 0 ? props.points.consumed + props.points.exhausted + props.points.channeled < props.baseCapacity * 5
+      && delta > 0 ? props.points.consumed + props.points.exhausted + props.points.channeled < props.totalCapcity
         : props.points.consumed + props.points.exhausted + props.points.channeled > 0;
     },
     drop: (incomingPoints: PointsPreviewData) => {

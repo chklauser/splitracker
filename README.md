@@ -6,6 +6,7 @@
 
 ## 2022-06-19
 * ⬅️➡️ undo/redo support for up to 10 actions
+* ✨ Allow any number of focus points up to 60 
 
 ## 2022-06-18
 

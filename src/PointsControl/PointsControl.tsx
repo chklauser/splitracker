@@ -12,6 +12,9 @@ export interface IPointsControlProps {
   title: string;
   baseCapacityLabel: string;
   baseCapacity: number;
+  lineCapacity: (baseCapcity: number) => number;
+  totalCapacity: (baseCapcity: number) => number;
+  maxBaseCapacity: number;
   points: PointsVec;
   onBaseCapacityChanged?: (newBaseCapacity: number) => void;
   showPenalties: boolean;
@@ -25,6 +28,9 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
   baseCapacityLabel,
   onBaseCapacityChanged,
   baseCapacity,
+  lineCapacity,
+  totalCapacity,
+  maxBaseCapacity,
   points,
   showPenalties,
   onReceivePoints,
@@ -50,21 +56,26 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
       <Accordion.Header>
         <span className="PointsControl-title col">{title}</span>
         <span
-          className="PointsControl-value col-1">{baseCapacity * 5 - (points.exhausted + points.consumed + points.channeled)}</span>
+          className="PointsControl-value col-1">{totalCapacity(baseCapacity) - (points.exhausted + points.consumed + points.channeled)}</span>
         {showPenalties ?
           <abbr title="Wundabzüge" className="PointsControl-penalty col-1">({penalty > 0 ? '-' : '±'}{penalty})</abbr> : <span className="PointsControl-penalty"/> }
         <label className="PointsControl-baseCapacity col-3" style={{visibility: activeEventKey === eventKey ? 'visible' : 'hidden'}}>
           <span>{baseCapacityLabel}</span>
           <input type="number" value={baseCapacity}
-                 min={1} max={20}
+                 min={1} max={maxBaseCapacity}
                  onChange={onBaseCapacityChangedInternal}
                  onClick={(e) => e.stopPropagation()}
           />
         </label>
       </Accordion.Header>
       <Accordion.Body>
-        <CurrentPoints {...{baseCapacity, points, showPenalties, onReceivePoints}} />
+        <CurrentPoints {...{points, showPenalties, onReceivePoints}}
+                       lineCapacity={lineCapacity(baseCapacity)}
+                       totalCapcity={totalCapacity(baseCapacity)}
+        />
         <PointsEditor {...{baseCapacity, showPenalties}}
+                      lineCapacity={lineCapacity(baseCapacity)}
+                      totalCapcity={totalCapacity(baseCapacity)}
                       currentPoints={points}/>
         {channellings.map((channeled, index) =>
           <StopChanneling channeled={channeled} key={`${channeled}-${index}`}/>

@@ -5,10 +5,10 @@ import {useDrag} from "react-dnd";
 import {ItemTypes, PointsPreviewData} from "../drag";
 import {classSet} from "../ClassSet";
 import './PointsPreview.scss';
-import {Col, Row} from "react-bootstrap";
 
 export interface IPointsPreviewProps {
-  baseCapacity: number;
+  lineCapacity: number;
+  totalCapcity: number;
   points: PointsVec;
   totalCurrentPoints: number;
   onAppliedPoints: (points: PointsPreviewData) => void;
@@ -16,7 +16,8 @@ export interface IPointsPreviewProps {
 }
 
 export const PointsPreview: FunctionComponent<IPointsPreviewProps> = ({
-  baseCapacity,
+  lineCapacity,
+  totalCapcity,
   points,
   totalCurrentPoints,
   onAppliedPoints,
@@ -41,7 +42,7 @@ export const PointsPreview: FunctionComponent<IPointsPreviewProps> = ({
     "btn-primary": true,
     "PointsPreview-dragging": isDragging
   })}>
-    <PointsBlock baseCapacity={baseCapacity} points={points} showPenalties={showPenalties}
+    <PointsBlock {...{lineCapacity, totalCapcity, points, showPenalties}}
                      numSkip={totalCurrentPoints} hideEmptyLines={true} highlightDelta={true}/>
   </div>;
 };

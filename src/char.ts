@@ -43,7 +43,7 @@ export type Characters = Record<string, Character>
 export const characterMigration: Migration<Character> = {
   1: (c: Character) => {
     c.lp.baseCapacity = Math.min(Math.max(1,c.lp.baseCapacity), 20);
-    c.fo.baseCapacity = Math.min(Math.max(1,c.fo.baseCapacity), 20);
+    c.fo.baseCapacity = Math.min(Math.max(1,c.fo.baseCapacity), 5*12);
     return c;
   }
 }
