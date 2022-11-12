@@ -1,0 +1,243 @@
+@using Splitracker.Web.Domain
+@using System.Text.RegularExpressions
+
+<div class="ty-PointsEditor">
+    <div>
+        <label>
+            <MudTextField @bind-Value="expression" Label="Punkte" Variant="Variant.Outlined"
+                          HelperText="z.B. +K3V1-E2" autocomplete="off" enterkeyhind="send"
+                          @onkeyup="textFieldKeyUp" Pattern="([KEVkev0-9+-]|\s)*"
+                          Clearable Immediate @ref="textField" />
+            @Value
+        </label>
+    </div>
+    <div>
+        <MudButton @onclick="toggleType" >
+            <p>@type</p>
+            <p>(wechseln)</p>
+        </MudButton>
+        @{
+            var preview = limitsFor(Value);
+        }
+        <MudSlider T="int" Value="@primaryPointValue" ValueChanged="@onSlide" Min="@preview.Min" Max="@preview.Max"
+                   Variant="Variant.Filled" Size="Size.Medium">
+            min=@preview.Min max=@preview.Max
+        </MudSlider>
+    </div>
+</div>
+
+@code {
+
+    MudTextField<string>? textField;
+
+    public PointsVec Value
+    {
+        get => value;
+        set
+        {
+            this.value = value;
+            type = inferType(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<PointsVec> ValueChanged { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int LineCapacity { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int TotalCapacity { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public PointsVec CurrentPoints { get; set; }
+    
+    [Parameter]
+    public EventCallback<PointsVec> PointsApplied { get; set; }
+
+    private PointType type = PointType.V;
+    private PointsVec value;
+
+    private int totalCurrentPoints => CurrentPoints.Channeled + CurrentPoints.Exhausted + CurrentPoints.Consumed;
+
+    private enum PointType
+    {
+        K,
+        E,
+        V
+    }
+
+    public static readonly Regex TokenPattern = new(@"[kev+-]|(\d+)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(500));
+
+    string expression
+    {
+        get
+        {
+            return "" +
+                Value.Channeled switch {
+                    > 0 => $"K{Value.Channeled}",
+                    _ => ""
+                    } +
+                Value.Exhausted switch {
+                    > 0 => $"E{Value.Exhausted}",
+                    _ => ""
+                    } +
+                Value.Consumed switch {
+                    > 0 => $"V{Value.Consumed}",
+                    _ => ""
+                    } + (Value.Channeled < 0 || Value.Exhausted < 0 || Value.Consumed < 0 ? "-" + Value.Channeled switch {
+                        < 0 => $"K{Math.Abs(Value.Channeled)}",
+                        _ => ""
+                        } +
+                        Value.Exhausted switch {
+                            < 0 => $"E{Math.Abs(Value.Exhausted)}",
+                            _ => ""
+                            } +
+                        Value.Consumed switch {
+                            < 0 => $"V{Math.Abs(Value.Consumed)}",
+                            _ => ""
+                            } : "");
+        }
+        set
+        {
+            var matches = TokenPattern.EnumerateMatches(value);
+            var vec = new PointsVec();
+            var factor = 1;
+            var currentType = type;
+            while (matches.MoveNext())
+            {
+                var match = matches.Current;
+                switch (value[match.Index])
+                {
+                    case '+':
+                        factor = 1;
+                        break;
+                    case '-':
+                        factor = -1;
+                        break;
+                    case 'k':
+                    case 'K':
+                        currentType = PointType.K;
+                        break;
+                    case 'e':
+                    case 'E':
+                        currentType = PointType.E;
+                        break;
+                    case 'v':
+                    case 'V':
+                        currentType = PointType.V;
+                        break;
+                    default:
+                        if (int.TryParse(value.AsSpan(match.Index, match.Length), out var numericValue))
+                        {
+                            vec = currentType switch
+                            {
+                                PointType.K => vec with { Channeled = vec.Channeled + numericValue * factor },
+                                PointType.E => vec with { Exhausted = vec.Exhausted + numericValue * factor },
+                                PointType.V => vec with { Consumed = vec.Consumed + numericValue * factor },
+                                _ => vec
+                                };
+                        }
+                        break;
+                }
+            }
+            Value = collapsePoints(vec);
+        }
+    }
+
+    private int primaryPointValue
+    {
+        get => type switch {
+            PointType.E => Value.Exhausted,
+            PointType.K => Value.Channeled,
+            PointType.V => Value.Consumed,
+            _ => throw new ArgumentOutOfRangeException()};
+        set => Value = toPointsVec(value, type);
+    }
+
+    private void toggleType()
+    {
+        var nextType = type switch {
+            PointType.K => PointType.E,
+            PointType.E => PointType.V,
+            PointType.V => PointType.K,
+            _ => throw new ArgumentOutOfRangeException()
+            };
+
+        var inferredValue = toPointsVec(Value.Channeled + Value.Consumed + Value.Exhausted, nextType);
+        Value = inferredValue;
+        type = nextType;
+    }
+
+    private (int Min, int Max) limitsFor(in PointsVec nextValue)
+    {
+        var currentValue = inferType(nextValue) switch 
+        {
+            PointType.K => CurrentPoints.Channeled,
+            PointType.E => CurrentPoints.Exhausted,
+            PointType.V => CurrentPoints.Consumed,
+            _ => throw new ArgumentOutOfRangeException()
+            };
+        var maxAmount = Math.Max(0, TotalCapacity - totalCurrentPoints);
+        var minAmount = Math.Min(0, -currentValue);
+        return (minAmount, maxAmount);
+    }
+
+    private PointsVec toPointsVec(int points, PointType ty) => new() {
+        Channeled = ty == PointType.K ? points : 0,
+        Exhausted = ty == PointType.E ? points : 0,
+        Consumed = ty == PointType.V ? points : 0
+    };
+
+    private PointType inferType(in PointsVec vec)
+    {
+        var k = Math.Abs(vec.Channeled);
+        var e = Math.Abs(vec.Exhausted);
+        var v = Math.Abs(vec.Consumed);
+        return k >= e && k >= v ? PointType.K : e >= v ? PointType.E : PointType.V;
+    }
+
+    private void onSlide(int newValue)
+    {
+        Value = toPointsVec(newValue, type);
+    }
+
+    PointsVec collapsePoints(in PointsVec pointsVec)
+    {
+        var p = pointsVec;
+        p = p.Channeled switch
+        {
+            > 0 => p with { Channeled = Math.Max(0, Math.Min(p.Channeled - Math.Max(p.Exhausted, p.Consumed), p.Channeled)) },
+            < 0 => p with { Channeled = Math.Min(0, Math.Max(p.Exhausted, p.Consumed) - Math.Min(p.Exhausted, p.Consumed)) },
+            _ => p
+            };
+        p = p.Exhausted switch {
+            > 0 => p with { Exhausted = Math.Max(0, Math.Min(p.Exhausted - p.Consumed, p.Exhausted)) },
+            < 0 => p with { Exhausted = Math.Min(0, Math.Max(p.Exhausted - p.Consumed, p.Exhausted)) },
+            _ => p
+            };
+        return p;
+    }
+
+    async Task textFieldKeyUp(KeyboardEventArgs obj)
+    {
+        if(obj.Key == "Enter")
+        {
+            if (textField != null)
+            {
+                await textField.BlurAsync();
+            }
+            await PointsApplied.InvokeAsync(Value);
+            Value = default;
+            if (textField != null)
+            {
+                await textField.FocusAsync();
+            }
+        }
+    }
+
+}

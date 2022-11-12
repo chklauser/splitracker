@@ -1,0 +1,22 @@
+@inherits LayoutComponentBase
+
+<PageTitle>Splitracker.Web</PageTitle>
+
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar>
+        <MudText Typo="Typo.h5" Class="ml-3">
+            Splitracker
+        </MudText>
+        <MudSpacer/>
+        <LoginDisplay/>
+    </MudAppBar>
+    <MudMainContent>
+        <MudContainer>
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>

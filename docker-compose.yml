@@ -1,0 +1,21 @@
+﻿services:
+  raven:
+    image: ravendb/ravendb:5.4-ubuntu-latest
+    volumes:
+      - type: volume
+        source: raven_data
+        target: /opt/RavenDB/Server/RavenData
+      - type: volume
+        source: raven_settings
+        target: /opt/RavenDB/config
+    environment:
+      RAVEN_Setup_Mode: 'None'
+      RAVEN_Security_UnsecuredAccessAllowed: 'PrivateNetwork'
+      RAVEN_ARGS: '--log-to-console'
+    ports:
+      - 8080:8080
+      
+
+volumes:
+  raven_data: {}
+  raven_settings: {}
