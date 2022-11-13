@@ -118,4 +118,6 @@ public readonly record struct PointsVec(int Channeled, int Exhausted, int Consum
         };
         return p;
     }
+    
+    public PointsVec Normalized => new PointsVec(Math.Abs(Channeled), Math.Abs(Exhausted), Math.Abs(Consumed));
 }

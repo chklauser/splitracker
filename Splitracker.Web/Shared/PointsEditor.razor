@@ -1,30 +1,55 @@
 @using Splitracker.Web.Domain
 @using System.Text.RegularExpressions
 
-<div class="ty-PointsEditor">
+<MudStack
+    Class="ty-PointsEditor">
+    <PointsPreview
+        LineCapacity="@LineCapacity"
+        TotalCapacity="@TotalCapacity"
+        TotalCurrentPoints="@totalCurrentPoints"
+        Points="@Value"
+        ShowPenalties="@false"
+        />
     <div>
         <label>
-            <MudTextField @bind-Value="expression" Label="Punkte" Variant="Variant.Outlined"
-                          HelperText="z.B. +K3V1-E2" autocomplete="off" enterkeyhind="send"
-                          @onkeyup="textFieldKeyUp" Pattern="([KEVkev0-9+-]|\s)*"
-                          Clearable Immediate @ref="textField" />
+            <MudTextField
+                @bind-Value="expression"
+                Label="Punkte"
+                Variant="Variant.Outlined"
+                HelperText="z.B. +K3V1-E2"
+                autocomplete="off"
+                enterkeyhind="send"
+                @onkeyup="textFieldKeyUp"
+                Pattern="([KEVkev0-9+-]|\s)*"
+                Clearable
+                Immediate @ref="textField"/>
             @Value
         </label>
     </div>
     <div>
-        <MudButton @onclick="toggleType" >
-            <p>@type</p>
+        <MudButton
+            @onclick="toggleType">
+            <p>
+                <PointDisplay
+                    Type="type"/>
+            </p>
             <p>(wechseln)</p>
         </MudButton>
         @{
             var preview = limitsFor(Value);
         }
-        <MudSlider T="int" Value="@primaryPointValue" ValueChanged="@onSlide" Min="@preview.Min" Max="@preview.Max"
-                   Variant="Variant.Filled" Size="Size.Medium">
+        <MudSlider
+            T="int"
+            Value="@primaryPointValue"
+            ValueChanged="@onSlide"
+            Min="@preview.Min"
+            Max="@preview.Max"
+            Variant="Variant.Filled"
+            Size="Size.Medium">
             min=@preview.Min max=@preview.Max
         </MudSlider>
     </div>
-</div>
+</MudStack>
 
 @code {
 
@@ -54,7 +79,7 @@
     [Parameter]
     [EditorRequired]
     public PointsVec CurrentPoints { get; set; }
-    
+
     [Parameter]
     public EventCallback<PointsVec> PointsApplied { get; set; }
 
@@ -111,7 +136,7 @@
 
     async Task textFieldKeyUp(KeyboardEventArgs obj)
     {
-        if(obj.Key == "Enter")
+        if (obj.Key == "Enter")
         {
             if (textField != null)
             {

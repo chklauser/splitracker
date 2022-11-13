@@ -1,0 +1,105 @@
+﻿@using Splitracker.Web.Domain
+
+<MudSimpleTable Dense="@true">
+    <colgroup>
+        @if (ShowPenalties)
+        {
+            <col class="PointsBlock-levelCol"/>
+        }
+        @foreach (var line in Enumerable.Range(0, LineCapacity))
+        {
+            <col @key="line" class="PointsBlock-lineCol"/>
+        }
+    </colgroup>
+    @foreach (var (row, rowIdx) in computeTable().ByRows().Enumerated())
+    {
+        var hasPoints = false;
+        if (!HideEmptyLines || (hasPoints = row.Select(x => x.Point != null).Any()))
+        {
+            <tr @key="@rowIdx">
+                @if (ShowPenalties)
+                {
+                    var penaltyClass = hasPoints ? "PointsBlock-penaltyActive" : "PointsBlock-penaltyInactive";
+                    @switch (rowIdx)
+                    {
+                        case 0:
+                            <th class="@penaltyClass">Unversehrt ±0</th>
+                            break;
+                        case 1:
+                            <th class="@penaltyClass">Angeschlagen -1</th>
+                            break;
+                        case 2:
+                            <th class="@penaltyClass">Verletzt -2</th>
+                            break;
+                        case 3:
+                            <th class="@penaltyClass">Schwer Verletzt -4</th>
+                            break;
+                        case 4:
+                            <th class="@penaltyClass">Todgeweiht -5</th>
+                            break;
+                    }
+                }
+                @foreach (var (cell, cellIdx) in row.Enumerated())
+                {
+                    <td @key="cellIdx">
+                        <PointDisplay HighlightDelta="@HighlightDelta" Type="@cell.Point" Value="@cell.Value"/>
+                    </td>
+                }
+            </tr>
+        }
+    }
+</MudSimpleTable>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public int LineCapacity { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public int TotalCapacity { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public PointsVec Points { get; set; }
+
+    [Parameter]
+    public bool ShowPenalties { get; set; }
+
+    [Parameter]
+    public int NumSkip { get; set; }
+
+    [Parameter]
+    public bool HideEmptyLines { get; set; }
+
+    [Parameter]
+    public bool HighlightDelta { get; set; }
+
+    readonly record struct AnnotatedPoint(PointType? Point, int Value);
+
+    AnnotatedPoint[,] computeTable()
+    {
+        var norm = Points.Normalized;
+        var effSkip = NumSkip
+            + (Points.Channeled < 0 ? Points.Channeled : 0)
+            + (Points.Exhausted < 0 ? Points.Exhausted : 0)
+            + (Points.Consumed < 0 ? Points.Consumed : 0);
+
+        var tab = new AnnotatedPoint[(int)Math.Ceiling((double)TotalCapacity / LineCapacity), LineCapacity];
+        foreach (var i in Enumerable.Range(0, tab.Length))
+        {
+            var line = i / LineCapacity;
+            var offset = i % LineCapacity;
+            var cell = i < effSkip ? new()
+                : i - effSkip < norm.Consumed ? new(PointType.K, Points.Consumed > 0 ? 1 : -1)
+                    : i - effSkip - norm.Consumed < norm.Exhausted ? new(PointType.E, Points.Exhausted > 0 ? 1 : -1)
+                        : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.V, Points.Channeled > 0 ? 1 : -1)
+                            : new AnnotatedPoint();
+            tab[line, offset] = cell;
+        }
+
+        return tab;
+    }
+
+}
