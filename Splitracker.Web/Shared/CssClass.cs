@@ -12,6 +12,7 @@ readonly struct CssClass
     public CssClass(string name)
     {
         Name = name;
+        Enabled = true;
     }
 
     public CssClass If(bool enabled)

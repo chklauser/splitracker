@@ -25,6 +25,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
 builder.Services.AddServerSideBlazor()
     .AddMicrosoftIdentityConsentHandler();
+#if DEBUG
+builder.Services.AddSassCompiler();
+#endif
 
 var app = builder.Build();
 

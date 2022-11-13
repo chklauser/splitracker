@@ -1,25 +1,25 @@
 ﻿@using Splitracker.Web.Domain
 
-<MudSimpleTable Dense="@true">
+<MudSimpleTable Dense="@true" Class="PointsBlock" Elevation="0">
     <colgroup>
         @if (ShowPenalties)
         {
-            <col class="PointsBlock-levelCol"/>
+            <col class="level"/>
         }
         @foreach (var line in Enumerable.Range(0, LineCapacity))
         {
-            <col @key="line" class="PointsBlock-lineCol"/>
+            <col @key="line" class="point"/>
         }
     </colgroup>
     @foreach (var (row, rowIdx) in computeTable().ByRows().Enumerated())
     {
         var hasPoints = false;
-        if (!HideEmptyLines || (hasPoints = row.Select(x => x.Point != null).Any()))
+        if (!HideEmptyLines || (hasPoints = row.Any(x => x.Point != null)))
         {
             <tr @key="@rowIdx">
                 @if (ShowPenalties)
                 {
-                    var penaltyClass = hasPoints ? "PointsBlock-penaltyActive" : "PointsBlock-penaltyInactive";
+                    var penaltyClass = hasPoints ? "active" : "inactive";
                     @switch (rowIdx)
                     {
                         case 0:
@@ -92,9 +92,9 @@
             var line = i / LineCapacity;
             var offset = i % LineCapacity;
             var cell = i < effSkip ? new()
-                : i - effSkip < norm.Consumed ? new(PointType.K, Points.Consumed > 0 ? 1 : -1)
+                : i - effSkip < norm.Consumed ? new(PointType.K, Points.Channeled > 0 ? 1 : -1)
                     : i - effSkip - norm.Consumed < norm.Exhausted ? new(PointType.E, Points.Exhausted > 0 ? 1 : -1)
-                        : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.V, Points.Channeled > 0 ? 1 : -1)
+                        : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.V, Points.Consumed > 0 ? 1 : -1)
                             : new AnnotatedPoint();
             tab[line, offset] = cell;
         }

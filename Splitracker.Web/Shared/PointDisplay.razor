@@ -30,13 +30,13 @@ else
         };
 
     string pointClasses => CssClass.Rendered(
-        "PointDisplay",
-        ("PointDisplay-harm", HighlightDelta && Value > 0),
-        ("PointDisplay-heal", HighlightDelta && Value < 0),
-        ("PointDisplay-free", Value == 0),
-        ("PointDisplay-channeled", Type == PointType.K),
-        ("PointDisplay-exhausted", Type == PointType.E),
-        ("PointDisplay-consumed", Type == PointType.V)
+        "display",
+        ("harm", HighlightDelta && Value > 0),
+        ("heal", HighlightDelta && Value < 0),
+        ("free", Value == 0),
+        ("channeled", Type == PointType.K),
+        ("exhausted", Type == PointType.E),
+        ("consumed", Type == PointType.V)
         );
 
 
