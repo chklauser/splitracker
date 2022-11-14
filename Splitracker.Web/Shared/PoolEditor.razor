@@ -1,0 +1,66 @@
+﻿@using System.Collections.Immutable
+@using Splitracker.Web.Domain
+
+@{
+    var lost = Points.Exhausted + Points.Consumed + Points.Channeled;
+}
+<MudTabPanel
+    BadgeData="@(ShowPenalties ? $"{(penalty > 0 ? '-' : '±')}{penalty}" : null)"
+    BadgeColor="@Color.Error"
+    Text="@($"{Title} ({TotalCapacity(BaseCapacity) - lost})")"
+    Icon="@Icon">
+    <MudStack>
+        <PointsBlock
+            Points="@Points"
+            ShowPenalties="@ShowPenalties"
+            LineCapacity="@LineCapacity(BaseCapacity)"
+            TotalCapacity="@TotalCapacity(BaseCapacity)"/>
+        <PointsEditor
+            CurrentPoints="@Points"
+            LineCapacity="@LineCapacity(BaseCapacity)"
+            TotalCapacity="@TotalCapacity(BaseCapacity)"/>
+        @foreach (var (channeling, idx) in Channelings.Enumerated())
+        {
+            <StopChanneling @key="idx" Index="@idx" Channeled="@channeling" />
+        }
+        @if (Points.Exhausted > 0)
+        {
+            <ShortRest ExhaustedPoints="@Points.Exhausted" />
+        }
+    </MudStack>
+</MudTabPanel>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required string Title { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required string Icon { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public int BaseCapacity { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public PointsVec Points { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required Func<int, int> LineCapacity { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required Func<int, int> TotalCapacity { get; set; }
+
+    [Parameter]
+    public bool ShowPenalties { get; set; }
+    
+    [Parameter]
+    public IImmutableList<int> Channelings { get; set; } = ImmutableArray<int>.Empty;
+
+    int penalty => (int)Math.Min(Math.Floor(Math.Pow(2, Math.Ceiling((double)(Points.Exhausted + Points.Consumed + Points.Channeled) / BaseCapacity) - 2)), 8);
+
+}

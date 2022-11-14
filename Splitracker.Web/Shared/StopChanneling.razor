@@ -1,0 +1,27 @@
+﻿
+<MudCard>
+    <MudCardContent>
+        @if (Channeled == 1)
+        {
+            <text>Einen kanalisierten Punkt in einen erschöpften Punkt umwandeln</text>
+        }
+        else
+        {
+            <text>@Channeled kanalisierte Punkte in @Channeled erschöpfte Punkte umwandeln</text>
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text">Ja, gerne!</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required int Index { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required int Channeled { get; set; }
+}

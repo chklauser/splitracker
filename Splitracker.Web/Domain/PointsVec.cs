@@ -108,7 +108,7 @@ public readonly record struct PointsVec(int Channeled, int Exhausted, int Consum
         p = p.Channeled switch
         {
             > 0 => p with { Channeled = Math.Max(0, Math.Min(p.Channeled - Math.Max(p.Exhausted, p.Consumed), p.Channeled)) },
-            < 0 => p with { Channeled = Math.Min(0, Math.Max(p.Exhausted, p.Consumed) - Math.Min(p.Exhausted, p.Consumed)) },
+            < 0 => p with { Channeled = Math.Min(0, Math.Max(p.Channeled - Math.Min(p.Exhausted, p.Consumed), p.Channeled)) },
             _ => p
         };
         p = p.Exhausted switch {
@@ -119,5 +119,6 @@ public readonly record struct PointsVec(int Channeled, int Exhausted, int Consum
         return p;
     }
     
-    public PointsVec Normalized => new PointsVec(Math.Abs(Channeled), Math.Abs(Exhausted), Math.Abs(Consumed));
+    public PointsVec Normalized => new(Math.Abs(Channeled), Math.Abs(Exhausted), Math.Abs(Consumed));
+    public bool IsZero => Channeled == 0 && Exhausted == 0 && Consumed == 0; 
 }

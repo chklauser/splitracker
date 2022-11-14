@@ -35,7 +35,7 @@
                             <th class="@penaltyClass">Schwer Verletzt -4</th>
                             break;
                         case 4:
-                            <th class="@penaltyClass">Todgeweiht -5</th>
+                            <th class="@penaltyClass">Todgeweiht -8</th>
                             break;
                     }
                 }
@@ -92,9 +92,9 @@
             var line = i / LineCapacity;
             var offset = i % LineCapacity;
             var cell = i < effSkip ? new()
-                : i - effSkip < norm.Consumed ? new(PointType.K, Points.Channeled > 0 ? 1 : -1)
+                : i - effSkip < norm.Consumed ? new(PointType.V, Points.Consumed > 0 ? 1 : -1)
                     : i - effSkip - norm.Consumed < norm.Exhausted ? new(PointType.E, Points.Exhausted > 0 ? 1 : -1)
-                        : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.V, Points.Consumed > 0 ? 1 : -1)
+                        : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.K, Points.Channeled > 0 ? 1 : -1)
                             : new AnnotatedPoint();
             tab[line, offset] = cell;
         }

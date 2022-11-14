@@ -1,0 +1,22 @@
+﻿
+<MudCard>
+    <MudCardContent>
+        @if (ExhaustedPoints == 1)
+        {
+            <text>Einen erschöpften Punkt durch eine kurze Rast (1h) heilen.</text>
+        }
+        else
+        {
+            <text>@ExhaustedPoints erschöpfte Punkte durch eine kurze Rast (1h) heilen.</text>
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text">Endlich!</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required int ExhaustedPoints { get; set; }
+}

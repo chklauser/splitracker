@@ -1,7 +1,24 @@
 @page "/"
 @using Splitracker.Web.Domain
+@using System.Collections.Immutable
 
 <PageTitle>Index</PageTitle>
 
-<PointsEditor TotalCapacity="20" LineCapacity="5" CurrentPoints="@(new PointsVec(3,2,1))" />
-
+<MudTabs KeepPanelsAlive="true">
+    <PoolEditor
+        Title="Leben"
+        Icon="@Icons.Material.Filled.Shield"
+        TotalCapacity="@(c => c * 5)"
+        LineCapacity="@(c => c)"
+        BaseCapacity="8"
+        Points="@(new(5 + 7, 3, 2))"
+        ShowPenalties />
+    <PoolEditor
+        Title="Fokus"
+        Icon="@Icons.Material.Filled.Nightlight"
+        Channelings="@(ImmutableArray.Create(5, 7))"
+        TotalCapacity="@(c => c)"
+        LineCapacity="@(_ => 12)"
+        BaseCapacity="20"
+        Points="@(new(5 + 7, 3, 2))"/>
+</MudTabs>
