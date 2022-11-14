@@ -1,18 +1,37 @@
 @inherits LayoutComponentBase
 
+@code {
+    bool isDarkMode;
+    MudThemeProvider? mudThemeProvider;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isDarkMode = await mudThemeProvider!.GetSystemPreference();
+            StateHasChanged();
+        }
+    }
+}
+
 <PageTitle>Splitracker.Web</PageTitle>
 
-<MudThemeProvider/>
+<MudThemeProvider @ref="mudThemeProvider" @bind-IsDarkMode="isDarkMode" />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
-<MudLayout>
+<MudLayout Class="@CssClass.Rendered(("dark", isDarkMode))">
     <MudAppBar>
         <MudText Typo="Typo.h5" Class="ml-3">
             Splitracker
         </MudText>
         <MudSpacer/>
         <LoginDisplay/>
+        <MudToggleIconButton
+            Icon="@Icons.Material.Filled.LightMode"
+            ToggledIcon="@Icons.Material.Filled.DarkMode"
+            @bind-Toggled="isDarkMode"
+            />
     </MudAppBar>
     <MudMainContent>
         <MudContainer>
