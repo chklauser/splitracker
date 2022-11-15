@@ -6,11 +6,11 @@
     <Authorized>
         @if (canEditProfile)
         {
-            <a href="MicrosoftIdentity/Account/EditProfile">Hello, @GetUserName(context)</a>
+            <a href="MicrosoftIdentity/Account/EditProfile">Hallo, @GetUserName(context)</a>
         }
         else
         {
-            <text>Hello, @GetUserName(context)</text>
+            <text>Hallo, @GetUserName(context)</text>
         }
     </Authorized>
     <NotAuthorized>
