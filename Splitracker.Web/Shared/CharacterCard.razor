@@ -1,4 +1,7 @@
 ﻿@using Splitracker.Domain
+
+@implements IDisposable
+
 <MudCard Class="CharacterCard">
     <MudCardHeader Class="pb-0">
         <CardHeaderContent>
@@ -12,7 +15,7 @@
             }
             else
             {
-                <MudText Typo="Typo.h4">@Character.Name</MudText>
+                <MudText Typo="Typo.h4">@character.Name</MudText>
             }
         </CardHeaderContent>
         <CardHeaderActions>
@@ -61,17 +64,17 @@
                     Icon="@Icons.Material.Filled.Shield"
                     TotalCapacity="@(c => c * 5)"
                     LineCapacity="@(c => c)"
-                    BaseCapacity="@Character.Lp.BaseCapacity"
-                    Points="@Character.Lp.Points"
+                    BaseCapacity="@character.Lp.BaseCapacity"
+                    Points="@character.Lp.Points"
                     ShowPenalties/>
                 <PoolEditor
                     Title="Fokus"
                     Icon="@Icons.Material.Filled.Nightlight"
                     TotalCapacity="@(c => c)"
                     LineCapacity="@(_ => 12)"
-                    BaseCapacity="@Character.Fo.BaseCapacity"
-                    Points="@Character.Fo.Points"
-                    Channelings="@Character.Fo.Channelings"/>
+                    BaseCapacity="@character.Fo.BaseCapacity"
+                    Points="@character.Fo.Points"
+                    Channelings="@character.Fo.Channelings"/>
             </MudTabs>
         }
     </MudCardContent>
@@ -99,7 +102,11 @@
 
     [Parameter]
     [EditorRequired]
-    public required Character Character { get; set; }
+    public required ICharacterHandle CharacterHandle { get; set; }
+
+    ICharacterHandle? lastHandle;
+
+    Character character => CharacterHandle.Character;
 
     [Parameter]
     [EditorRequired]
@@ -111,16 +118,43 @@
 
     protected override void OnParametersSet()
     {
+        clearHandleCallbacks();
+
         base.OnParametersSet();
-        newName = Character.Name;
-        newLpBaseCapacity = Character.Lp.BaseCapacity;
-        newFoBaseCapacity = Character.Fo.BaseCapacity;
+        newName = character.Name;
+        newLpBaseCapacity = character.Lp.BaseCapacity;
+        newFoBaseCapacity = character.Fo.BaseCapacity;
+        lastHandle = CharacterHandle;
+        CharacterHandle.CharacterUpdated += handleCharacterUpdated;
     }
 
     private bool hasChanges =>
-        Character.Id == ""
-            || newName != Character.Name
-            || newLpBaseCapacity != Character.Lp.BaseCapacity
-            || newFoBaseCapacity != Character.Fo.BaseCapacity;
+        character.Id == ""
+            || newName != character.Name
+            || newLpBaseCapacity != character.Lp.BaseCapacity
+            || newFoBaseCapacity != character.Fo.BaseCapacity;
+
+    public void Dispose()
+    {
+        clearHandleCallbacks();
+    }
+
+    void clearHandleCallbacks()
+    {
+        if (lastHandle is { } prevHandle)
+        {
+            prevHandle.CharacterUpdated -= handleCharacterUpdated;
+        }
+
+        if (CharacterHandle is { } handle)
+        {
+            handle.CharacterUpdated -= handleCharacterUpdated;
+        }
+    }
+
+    void handleCharacterUpdated(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
 
 }

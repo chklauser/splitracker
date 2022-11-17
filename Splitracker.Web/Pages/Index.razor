@@ -26,7 +26,7 @@
         {
             <CharacterCard
                 @key="characterHandle.Character.Id"
-                Character="@characterHandle.Character"
+                CharacterHandle="@characterHandle"
                 EditMode="@editMode"/>
         }
     }
@@ -57,6 +57,8 @@
         await base.OnInitializedAsync();
         var auth = await AuthenticationState;
         handle = await repository.OpenAsync(auth.User);
+        handle.CharacterAdded += (_, _) => InvokeAsync(StateHasChanged);
+        handle.CharacterDeleted += (_, _) => InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()

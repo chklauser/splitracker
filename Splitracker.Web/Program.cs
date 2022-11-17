@@ -30,7 +30,7 @@ builder.Services.AddServerSideBlazor()
 builder.Services.AddSassCompiler();
 #endif
 
-builder.Services.AddPersistenceServices();
+builder.Services.AddPersistenceServices(builder.Configuration);
 
 var app = builder.Build();
 

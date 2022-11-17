@@ -30,17 +30,17 @@ internal record FakeCharacterRepositoryHandle(IReadOnlyList<ICharacterHandle> Ch
         add { }
         remove { }
     }
+
+    public event EventHandler? CharacterDeleted
+    {
+        add { }
+        remove { }
+    }
 }
 
 internal record FakeCharacterHandle(Character Character) : ICharacterHandle
 {
     public event EventHandler? CharacterUpdated
-    {
-        add { }
-        remove { }
-    }
-
-    public event EventHandler? CharacterDeleted
     {
         add { }
         remove { }
