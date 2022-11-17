@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splitracker.Web", "Splitracker.Web\Splitracker.Web.csproj", "{F345273B-8E2B-43C6-8BCF-25C233F8A286}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splitracker.Domain", "Splitracker.Domain\Splitracker.Domain.csproj", "{74226988-18CF-4547-8191-284FD182556C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splitracker.Persistence", "Splitracker.Persistence\Splitracker.Persistence.csproj", "{4C636D46-D59F-4BAC-A00D-A13B502BAE70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{F345273B-8E2B-43C6-8BCF-25C233F8A286}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F345273B-8E2B-43C6-8BCF-25C233F8A286}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F345273B-8E2B-43C6-8BCF-25C233F8A286}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74226988-18CF-4547-8191-284FD182556C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74226988-18CF-4547-8191-284FD182556C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74226988-18CF-4547-8191-284FD182556C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74226988-18CF-4547-8191-284FD182556C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C636D46-D59F-4BAC-A00D-A13B502BAE70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C636D46-D59F-4BAC-A00D-A13B502BAE70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C636D46-D59F-4BAC-A00D-A13B502BAE70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C636D46-D59F-4BAC-A00D-A13B502BAE70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
