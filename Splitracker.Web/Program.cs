@@ -6,6 +6,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
 using MudBlazor.Services;
+using Splitracker.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddServerSideBlazor()
 #if DEBUG
 builder.Services.AddSassCompiler();
 #endif
+
+builder.Services.AddPersistenceServices();
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-﻿namespace Splitracker.Web.Domain;
+﻿namespace Splitracker.Domain;
 
 public record Character(string Id, string Name, Pool Lp, Pool Fo)
 {

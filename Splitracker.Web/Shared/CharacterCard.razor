@@ -1,0 +1,126 @@
+﻿@using Splitracker.Domain
+<MudCard Class="CharacterCard">
+    <MudCardHeader Class="pb-0">
+        <CardHeaderContent>
+            @if (EditMode)
+            {
+                <MudTextField
+                    @bind-Value="newName"
+                    Label="Name"
+                    Required
+                    RequiredError="Jeder braucht einen Namen!"/>
+            }
+            else
+            {
+                <MudText Typo="Typo.h4">@Character.Name</MudText>
+            }
+        </CardHeaderContent>
+        <CardHeaderActions>
+            @if (EditMode)
+            {
+                <MudIconButton
+                    Icon="@Icons.Material.Filled.Delete"
+                    Color="Color.Secondary"/>
+            }
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent Class="pt-0">
+        @if (EditMode)
+        {
+            <MudGrid Justify="Justify.FlexStart">
+                <MudItem
+                    xs="9">
+                    <MudNumericField
+                        Label="LP"
+                        @bind-Value="newLpBaseCapacity"
+                        Min="1"
+                        Max="20"
+                        Required/>
+                </MudItem>
+                <MudItem
+                    xs="3">
+                    <MudText>=&nbsp;@(newLpBaseCapacity * 5)</MudText>
+                </MudItem>
+                <MudItem
+                    xs="9">
+                    <MudNumericField
+                        Label="FO"
+                        @bind-Value="newFoBaseCapacity"
+                        Min="1"
+                        Max="@(12 * 5)"
+                        Required/>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudTabs
+                KeepPanelsAlive="true">
+                <PoolEditor
+                    Title="Leben"
+                    Icon="@Icons.Material.Filled.Shield"
+                    TotalCapacity="@(c => c * 5)"
+                    LineCapacity="@(c => c)"
+                    BaseCapacity="@Character.Lp.BaseCapacity"
+                    Points="@Character.Lp.Points"
+                    ShowPenalties/>
+                <PoolEditor
+                    Title="Fokus"
+                    Icon="@Icons.Material.Filled.Nightlight"
+                    TotalCapacity="@(c => c)"
+                    LineCapacity="@(_ => 12)"
+                    BaseCapacity="@Character.Fo.BaseCapacity"
+                    Points="@Character.Fo.Points"
+                    Channelings="@Character.Fo.Channelings"/>
+            </MudTabs>
+        }
+    </MudCardContent>
+    @if (EditMode)
+    {
+        <MudCardActions>
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly">
+                <MudButton
+                    EndIcon="@Icons.Material.Filled.ContentCopy"
+                    Color="@Color.Tertiary">
+                    Klonen
+                </MudButton>
+                <MudButton
+                    EndIcon="@Icons.Material.Filled.Save"
+                    Disabled="@(!hasChanges)"
+                    Color="@Color.Primary">
+                    Speichern
+                </MudButton>
+            </MudStack>
+        </MudCardActions>
+    }
+</MudCard>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required Character Character { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required bool EditMode { get; set; }
+
+    private string newName = string.Empty;
+    private int newLpBaseCapacity;
+    private int newFoBaseCapacity;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        newName = Character.Name;
+        newLpBaseCapacity = Character.Lp.BaseCapacity;
+        newFoBaseCapacity = Character.Fo.BaseCapacity;
+    }
+
+    private bool hasChanges =>
+        Character.Id == ""
+            || newName != Character.Name
+            || newLpBaseCapacity != Character.Lp.BaseCapacity
+            || newFoBaseCapacity != Character.Fo.BaseCapacity;
+
+}

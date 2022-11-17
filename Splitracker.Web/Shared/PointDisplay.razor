@@ -1,12 +1,12 @@
-﻿@using Splitracker.Web.Domain
-@using System.ComponentModel.DataAnnotations
+﻿@using System.ComponentModel.DataAnnotations
+@using Splitracker.Domain
 @if (iconPath is {} path)
 {
     <img src="@path" alt="@Type" class="@pointClasses"/>
 }
 else
 {
-    <div class="@pointClasses">&nbsp;</div>
+    <div class="@pointClasses">•</div>
 }
 
 @code {

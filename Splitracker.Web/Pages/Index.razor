@@ -1,24 +1,70 @@
 @page "/"
-@using Splitracker.Web.Domain
-@using System.Collections.Immutable
+@using Splitracker.Domain
+@implements IAsyncDisposable
 
-<PageTitle>Index</PageTitle>
+@inject ICharacterRepository repository
 
-<MudTabs KeepPanelsAlive="true">
-    <PoolEditor
-        Title="Leben"
-        Icon="@Icons.Material.Filled.Shield"
-        TotalCapacity="@(c => c * 5)"
-        LineCapacity="@(c => c)"
-        BaseCapacity="8"
-        Points="@(new(5 + 7, 3, 2))"
-        ShowPenalties />
-    <PoolEditor
-        Title="Fokus"
-        Icon="@Icons.Material.Filled.Nightlight"
-        Channelings="@(ImmutableArray.Create(5, 7))"
-        TotalCapacity="@(c => c)"
-        LineCapacity="@(_ => 12)"
-        BaseCapacity="20"
-        Points="@(new(5 + 7, 3, 2))"/>
-</MudTabs>
+<PageTitle>Splitracker</PageTitle>
+<SectionContent
+    Name="top">
+    <MudPaper Elevation="1" Class="mx-6 pl-6">
+        <MudSwitch
+            T="bool"
+            @bind-Checked="editMode">
+            <MudIcon
+                Icon="@Icons.Material.Filled.ModeEdit"
+                Color="@(editMode ? Color.Tertiary : Color.Default)"/>
+        </MudSwitch>
+    </MudPaper>
+</SectionContent>
+
+<div
+    class="d-flex flex-row flex-wrap gap-4">
+    @if (handle != null)
+    {
+        @foreach (var characterHandle in handle.Characters)
+        {
+            <CharacterCard
+                @key="characterHandle.Character.Id"
+                Character="@characterHandle.Character"
+                EditMode="@editMode"/>
+        }
+    }
+    else
+    {
+        <CharacterCardSkeleton/>
+    }
+</div>
+
+@code {
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    ICharacterRepositoryHandle? handle;
+
+    private bool editMode;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+        handle = null;
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+        var auth = await AuthenticationState;
+        handle = await repository.OpenAsync(auth.User);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+    }
+
+}

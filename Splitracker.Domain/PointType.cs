@@ -1,4 +1,4 @@
-﻿namespace Splitracker.Web.Domain;
+﻿namespace Splitracker.Domain;
 
 public enum PointType
 {

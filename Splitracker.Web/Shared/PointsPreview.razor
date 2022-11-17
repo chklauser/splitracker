@@ -1,12 +1,16 @@
-﻿@using Splitracker.Web.Domain
+﻿@using Splitracker.Domain
 
-<PointsBlock
-    LineCapacity="@LineCapacity"
-    TotalCapacity="@TotalCapacity"
-    Points="@Points"
-    NumSkip="@TotalCurrentPoints"
-    HideEmptyLines="@true"
-    HighlightDelta="@true"/>
+@if (!Points.IsZero)
+{
+    <MudDivider DividerType="DividerType.Middle" Class="mb-3" />
+    <PointsBlock
+        LineCapacity="@LineCapacity"
+        TotalCapacity="@TotalCapacity"
+        Points="@Points"
+        NumSkip="@TotalCurrentPoints"
+        HideEmptyLines="@true"
+        HighlightDelta="@true"/>
+}
 
 @code {
 

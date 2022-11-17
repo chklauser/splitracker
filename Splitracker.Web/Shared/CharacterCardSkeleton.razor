@@ -1,0 +1,18 @@
+﻿<MudStack>
+    <MudSkeleton
+        SkeletonType="@SkeletonType.Rectangle"
+        Height="2.5rem"
+        Animation="@DefaultAnimation"/>
+    <MudSkeleton
+        SkeletonType="@SkeletonType.Rectangle"
+        Height="6rem"
+        Animation="@DefaultAnimation"/>
+    <MudSkeleton
+        Animation="@DefaultAnimation"/>
+    <MudSkeleton
+        Animation="@DefaultAnimation"/>
+</MudStack>
+
+@code {
+        private const Animation DefaultAnimation = Animation.Wave;
+}

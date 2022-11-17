@@ -1,5 +1,5 @@
 ﻿@using System.Collections.Immutable
-@using Splitracker.Web.Domain
+@using Splitracker.Domain
 
 @{
     var lost = Points.Exhausted + Points.Consumed + Points.Channeled;
@@ -9,23 +9,29 @@
     BadgeColor="@Color.Error"
     Text="@($"{Title} ({TotalCapacity(BaseCapacity) - lost})")"
     Icon="@Icon">
-    <MudStack>
-        <PointsBlock
-            Points="@Points"
-            ShowPenalties="@ShowPenalties"
-            LineCapacity="@LineCapacity(BaseCapacity)"
-            TotalCapacity="@TotalCapacity(BaseCapacity)"/>
+    <MudStack Class="pt-3">
+        <div class="mx-auto">
+            <PointsBlock
+                Points="@Points"
+                ShowPenalties="@ShowPenalties"
+                LineCapacity="@LineCapacity(BaseCapacity)"
+                TotalCapacity="@TotalCapacity(BaseCapacity)"/>
+        </div>
         <PointsEditor
             CurrentPoints="@Points"
             LineCapacity="@LineCapacity(BaseCapacity)"
             TotalCapacity="@TotalCapacity(BaseCapacity)"/>
         @foreach (var (channeling, idx) in Channelings.Enumerated())
         {
-            <StopChanneling @key="idx" Index="@idx" Channeled="@channeling" />
+            <StopChanneling
+                @key="idx"
+                Index="@idx"
+                Channeled="@channeling"/>
         }
         @if (Points.Exhausted > 0)
         {
-            <ShortRest ExhaustedPoints="@Points.Exhausted" />
+            <ShortRest
+                ExhaustedPoints="@Points.Exhausted"/>
         }
     </MudStack>
 </MudTabPanel>

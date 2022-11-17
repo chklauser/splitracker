@@ -1,40 +1,49 @@
-@using Splitracker.Web.Domain
 @using System.Text.RegularExpressions
 @using System.Diagnostics.CodeAnalysis
+@using Splitracker.Domain
 
 <MudStack
-    Class="ty-PointsEditor">
-    <PointsPreview
-        LineCapacity="@LineCapacity"
-        TotalCapacity="@TotalCapacity"
-        TotalCurrentPoints="@totalCurrentPoints"
-        Points="@Value.Collapse()"
-        ShowPenalties="@false"/>
-    <div>
-        <label>
-            <MudTextField
-                T="string"
-                @bind-Text="expression"
-                Label="Punkte"
-                Variant="Variant.Outlined"
-                HelperText="z.B. +K3V1-E2"
-                autocomplete="off"
-                enterkeyhind="send"
-                @onkeyup="textFieldKeyUp"
-                Pattern="([KEVkev0-9+-]|\s)*"
-                Clearable
-                Immediate
-                @ref="textField"/>
-        </label>
+    Class="ty-PointsEditor"
+    Spacing="1">
+    <div
+        class="mx-auto">
+        <PointsPreview
+            LineCapacity="@LineCapacity"
+            TotalCapacity="@TotalCapacity"
+            TotalCurrentPoints="@totalCurrentPoints"
+            Points="@Value.Collapse()"
+            ShowPenalties="@false"/>
     </div>
-    <div>
+    <MudTextField
+        T="string"
+        @bind-Text="expression"
+        Label="Punkte"
+        Variant="Variant.Outlined"
+        HelperText="z.B. +K3V1-E2"
+        autocomplete="off"
+        enterkeyhind="send"
+        @onkeyup="textFieldKeyUp"
+        Pattern="([KEVkev0-9+-]|\s)*"
+        FullWidth
+        Clearable
+        Immediate
+        @ref="textField"/>
+    <MudStack
+        Spacing="6"
+        Row="true"
+        Justify="Justify.SpaceAround"
+        AlignItems="AlignItems.Center">
         <MudButton
-            @onclick="toggleType">
-            <p>
+            @onclick="toggleType"
+            Variant="Variant.Filled">
+            <MudStack
+                Spacing="1"
+                Justify="Justify.SpaceAround"
+                AlignItems="AlignItems.Center">
                 <PointDisplay
                     Type="type"/>
-            </p>
-            <p>(wechseln)</p>
+                <MudText>(wechseln)</MudText>
+            </MudStack>
         </MudButton>
         @{
             var preview = limitsFor(Value);
@@ -47,11 +56,10 @@
             Max="@preview.Max"
             Variant="Variant.Filled"
             Size="Size.Medium">
-            min=@preview.Min max=@preview.Max
+            <!-- min=@preview.Min max=@preview.Max -->
         </MudSlider>
-    </div>
+    </MudStack>
 </MudStack>
-@Value
 
 @code {
 
@@ -97,8 +105,7 @@
 
     private int totalCurrentPoints => CurrentPoints.Channeled + CurrentPoints.Exhausted + CurrentPoints.Consumed;
 
-    [SuppressMessage("ReSharper", "InconsistentNaming")] 
-    string _expression = string.Empty;
+    [SuppressMessage("ReSharper", "InconsistentNaming")] string _expression = string.Empty;
 
     string expression
     {

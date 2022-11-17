@@ -1,7 +1,6 @@
-using System;
 using System.Text.RegularExpressions;
 
-namespace Splitracker.Web.Domain;
+namespace Splitracker.Domain;
 
 public readonly record struct PointsVec(int Channeled, int Exhausted, int Consumed)
 {
