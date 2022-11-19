@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Security.Claims;
 using Splitracker.Domain;
+using Splitracker.Domain.Commands;
 
 namespace Splitracker.Persistence;
 
@@ -15,6 +16,11 @@ internal class FakeCharacterRepository : ICharacterRepository
                     new FakeCharacterHandle(new Character("2", "Andrin", 8, 15)),
                 }
             )));
+    }
+
+    public Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand)
+    {
+        return Task.CompletedTask;
     }
 }
 

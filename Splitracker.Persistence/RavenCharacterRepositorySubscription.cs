@@ -29,7 +29,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
     )
     {
         using var session = store.OpenAsyncSession();
-        var docIdPrefix = $"{RavenCharacterRepository.CollectionName}/{oid}/";
+        var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(oid);
         var characters = new List<RavenCharacterHandle>();
         await using var characterEnumerator = await session.Advanced.StreamAsync<CharacterModel>(docIdPrefix);
         while (await characterEnumerator.MoveNextAsync())

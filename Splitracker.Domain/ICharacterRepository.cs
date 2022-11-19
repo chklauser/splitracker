@@ -1,10 +1,12 @@
 ﻿using System.Security.Claims;
+using Splitracker.Domain.Commands;
 
 namespace Splitracker.Domain;
 
 public interface ICharacterRepository
 {
     Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal);
+    Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand);
 }
 
 public interface ICharacterRepositoryHandle : IAsyncDisposable

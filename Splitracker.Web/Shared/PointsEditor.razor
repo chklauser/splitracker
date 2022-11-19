@@ -1,6 +1,7 @@
 @using System.Text.RegularExpressions
 @using System.Diagnostics.CodeAnalysis
 @using Splitracker.Domain
+@using Splitracker.Domain.Commands
 
 <MudStack
     Class="ty-PointsEditor"
@@ -14,20 +15,29 @@
             Points="@Value.Collapse()"
             ShowPenalties="@false"/>
     </div>
-    <MudTextField
-        T="string"
-        @bind-Text="expression"
-        Label="Punkte"
-        Variant="Variant.Outlined"
-        HelperText="z.B. +K3V1-E2"
-        autocomplete="off"
-        enterkeyhind="send"
-        @onkeyup="textFieldKeyUp"
-        Pattern="([KEVkev0-9+-]|\s)*"
-        FullWidth
-        Clearable
-        Immediate
-        @ref="textField"/>
+    <MudStack Spacing="1" Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <MudTextField
+            T="string"
+            @bind-Text="expression"
+            Label="Punkte"
+            Variant="Variant.Outlined"
+            HelperText="z.B. +K3V1-E2"
+            autocomplete="off"
+            enterkeyhind="send"
+            @onkeyup="textFieldKeyUp"
+            Pattern="([KEVkev0-9+-]|\s)*"
+            FullWidth
+            Clearable
+            Immediate
+            @ref="textField"/>
+        <MudButton
+            StartIcon="@Icons.Material.Filled.ArrowUpward"
+            @onclick="applyPointsAsync"
+            Color="Color.Primary"
+            Variant="Variant.Filled">
+            Go
+        </MudButton>
+    </MudStack>
     <MudStack
         Spacing="6"
         Row="true"
@@ -92,13 +102,17 @@
     [Parameter]
     [EditorRequired]
     public int TotalCapacity { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required PoolType Type { get; set; }
 
     [Parameter]
     [EditorRequired]
     public PointsVec CurrentPoints { get; set; }
-
-    [Parameter]
-    public EventCallback<PointsVec> PointsApplied { get; set; }
+    
+    [CascadingParameter]
+    public required ICharacterCommandRouter Router { get; set; }
 
     private PointType type = PointType.V;
     private PointsVec value;
@@ -169,13 +183,18 @@
             {
                 await textField.BlurAsync();
             }
-            await PointsApplied.InvokeAsync(Value);
-            Value = default;
+            await applyPointsAsync();
             if (textField != null)
             {
                 await textField.FocusAsync();
             }
         }
+    }
+
+    async Task applyPointsAsync()
+    {
+        await Router.ApplyAsync(new ApplyPoints(null!, Type, Value.Collapse()));
+        Value = default;
     }
 
 }

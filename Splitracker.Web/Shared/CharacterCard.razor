@@ -1,9 +1,16 @@
 ﻿@using Splitracker.Domain
+@using Splitracker.Domain.Commands
+@using System.Diagnostics.CodeAnalysis
 
 @implements IDisposable
+@implements ICharacterCommandRouter
+@inject ICharacterRepository repository
 
-<MudCard Class="CharacterCard">
-    <MudCardHeader Class="pb-0">
+<CascadingValue TValue="ICharacterCommandRouter" IsFixed="true" Value="@this">
+  <MudCard
+    Class="CharacterCard">
+    <MudCardHeader
+        Class="pb-0">
         <CardHeaderContent>
             @if (EditMode)
             {
@@ -15,7 +22,10 @@
             }
             else
             {
-                <MudText Typo="Typo.h4">@character.Name</MudText>
+                <MudText
+                    Typo="Typo.h4">
+                    @character.Name
+                </MudText>
             }
         </CardHeaderContent>
         <CardHeaderActions>
@@ -23,14 +33,17 @@
             {
                 <MudIconButton
                     Icon="@Icons.Material.Filled.Delete"
-                    Color="Color.Secondary"/>
+                    Color="Color.Secondary"
+                    @onclick="deleteAsync"/>
             }
         </CardHeaderActions>
     </MudCardHeader>
-    <MudCardContent Class="pt-0">
+    <MudCardContent
+        Class="pt-0">
         @if (EditMode)
         {
-            <MudGrid Justify="Justify.FlexStart">
+            <MudGrid
+                Justify="Justify.FlexStart">
                 <MudItem
                     xs="9">
                     <MudNumericField
@@ -64,45 +77,56 @@
                     Icon="@Icons.Material.Filled.Shield"
                     TotalCapacity="@(c => c * 5)"
                     LineCapacity="@(c => c)"
-                    BaseCapacity="@character.Lp.BaseCapacity"
-                    Points="@character.Lp.Points"
-                    ShowPenalties/>
+                    Pool="@character.Lp"
+                    ShowPenalties
+                    Type="@PoolType.Lp" />
                 <PoolEditor
                     Title="Fokus"
                     Icon="@Icons.Material.Filled.Nightlight"
                     TotalCapacity="@(c => c)"
                     LineCapacity="@(_ => 12)"
-                    BaseCapacity="@character.Fo.BaseCapacity"
-                    Points="@character.Fo.Points"
-                    Channelings="@character.Fo.Channelings"/>
+                    Pool="@character.Fo"
+                    Type="@PoolType.Fo" />
             </MudTabs>
         }
     </MudCardContent>
     @if (EditMode)
     {
         <MudCardActions>
-            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly">
-                <MudButton
-                    EndIcon="@Icons.Material.Filled.ContentCopy"
-                    Color="@Color.Tertiary">
-                    Klonen
-                </MudButton>
+            <MudStack
+                Row
+                AlignItems="AlignItems.Center"
+                Justify="Justify.SpaceEvenly">
+                @if (character.Id != "")
+                {
+                    <MudButton
+                        EndIcon="@Icons.Material.Filled.ContentCopy"
+                        Color="@Color.Tertiary"
+                        @onclick="cloneAsync">
+                        Klonen
+                    </MudButton>
+                }
                 <MudButton
                     EndIcon="@Icons.Material.Filled.Save"
                     Disabled="@(!hasChanges)"
-                    Color="@Color.Primary">
+                    Color="@Color.Primary"
+                    @onclick="saveAsync">
                     Speichern
                 </MudButton>
             </MudStack>
         </MudCardActions>
     }
 </MudCard>
+</CascadingValue>
 
 @code {
 
     [Parameter]
     [EditorRequired]
     public required ICharacterHandle CharacterHandle { get; set; }
+
+    [CascadingParameter]
+    public required ICharacterCommandRouter OuterCommandRouter { get; set; }
 
     ICharacterHandle? lastHandle;
 
@@ -155,6 +179,36 @@
     void handleCharacterUpdated(object? sender, EventArgs e)
     {
         InvokeAsync(StateHasChanged);
+    }
+
+    [SuppressMessage("ReSharper", "WithExpressionModifiesAllMembers")]
+    public async Task ApplyAsync(ICharacterCommand command)
+    {
+        command = command switch {
+            ApplyPoints applyPoints => applyPoints with{ CharacterId = character.Id},
+            EditCharacter editCharacter => editCharacter with { CharacterId = character.Id},
+            Domain.Commands.StopChanneling releaseChanneling => releaseChanneling with { CharacterId = character.Id},
+            Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id},
+            DeleteCharacter deleteCharacter => deleteCharacter with { CharacterId = character.Id},
+            CloneCharacter cloneCharacter => cloneCharacter with { CharacterId = character.Id},
+            _ => throw new ArgumentOutOfRangeException(nameof(command))
+            };
+        await OuterCommandRouter.ApplyAsync(command);
+    }
+
+    async Task saveAsync()
+    {
+        await ApplyAsync(new EditCharacter(null!, newName, newLpBaseCapacity, newFoBaseCapacity));
+    }
+
+    async Task cloneAsync()
+    {
+        await ApplyAsync(new CloneCharacter(null!));
+    }
+
+    async Task deleteAsync()
+    {
+        await ApplyAsync(new DeleteCharacter(null!));
     }
 
 }

@@ -1,37 +1,41 @@
 ﻿@using System.Collections.Immutable
 @using Splitracker.Domain
+@using Splitracker.Domain.Commands
 
 @{
-    var lost = Points.Exhausted + Points.Consumed + Points.Channeled;
+    var lost = points.Exhausted + points.Consumed + points.Channeled;
 }
 <MudTabPanel
     BadgeData="@(ShowPenalties ? $"{(penalty > 0 ? '-' : '±')}{penalty}" : null)"
     BadgeColor="@Color.Error"
-    Text="@($"{Title} ({TotalCapacity(BaseCapacity) - lost})")"
+    Text="@($"{Title} ({TotalCapacity(baseCapacity) - lost})")"
     Icon="@Icon">
     <MudStack Class="pt-3">
         <div class="mx-auto">
             <PointsBlock
-                Points="@Points"
+                Points="@points"
                 ShowPenalties="@ShowPenalties"
-                LineCapacity="@LineCapacity(BaseCapacity)"
-                TotalCapacity="@TotalCapacity(BaseCapacity)"/>
+                LineCapacity="@LineCapacity(baseCapacity)"
+                TotalCapacity="@TotalCapacity(baseCapacity)"/>
         </div>
         <PointsEditor
-            CurrentPoints="@Points"
-            LineCapacity="@LineCapacity(BaseCapacity)"
-            TotalCapacity="@TotalCapacity(BaseCapacity)"/>
-        @foreach (var (channeling, idx) in Channelings.Enumerated())
+            CurrentPoints="@points"
+            LineCapacity="@LineCapacity(baseCapacity)"
+            TotalCapacity="@TotalCapacity(baseCapacity)"
+            Type="@Type"/>
+        @foreach (var (channeling, idx) in channelings.Enumerated())
         {
             <StopChanneling
                 @key="idx"
                 Index="@idx"
-                Channeled="@channeling"/>
+                Channeled="@channeling"
+                Type="@Type"
+                />
         }
-        @if (Points.Exhausted > 0)
+        @if (points.Exhausted > 0)
         {
             <ShortRest
-                ExhaustedPoints="@Points.Exhausted"/>
+                ExhaustedPoints="@points.Exhausted"/>
         }
     </MudStack>
 </MudTabPanel>
@@ -40,6 +44,10 @@
     [Parameter]
     [EditorRequired]
     public required string Title { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required PoolType Type { get; set; }
     
     [Parameter]
     [EditorRequired]
@@ -47,11 +55,11 @@
     
     [Parameter]
     [EditorRequired]
-    public int BaseCapacity { get; set; }
+    public required Pool Pool { get; set; }
     
-    [Parameter]
-    [EditorRequired]
-    public PointsVec Points { get; set; }
+    int baseCapacity => Pool.BaseCapacity;
+    
+    PointsVec points => Pool.Points;
     
     [Parameter]
     [EditorRequired]
@@ -63,10 +71,9 @@
 
     [Parameter]
     public bool ShowPenalties { get; set; }
-    
-    [Parameter]
-    public IImmutableList<int> Channelings { get; set; } = ImmutableArray<int>.Empty;
 
-    int penalty => (int)Math.Min(Math.Floor(Math.Pow(2, Math.Ceiling((double)(Points.Exhausted + Points.Consumed + Points.Channeled) / BaseCapacity) - 2)), 8);
+    IImmutableList<int> channelings => Pool.Channelings;
+
+    int penalty => (int)Math.Min(Math.Floor(Math.Pow(2, Math.Ceiling((double)(points.Exhausted + points.Consumed + points.Channeled) / baseCapacity) - 2)), 8);
 
 }

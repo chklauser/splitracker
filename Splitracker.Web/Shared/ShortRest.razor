@@ -1,4 +1,5 @@
-﻿
+﻿@using Splitracker.Domain
+
 <MudCard>
     <MudCardContent>
         @if (ExhaustedPoints == 1)
@@ -11,7 +12,7 @@
         }
     </MudCardContent>
     <MudCardActions>
-        <MudButton Variant="Variant.Text">Endlich!</MudButton>
+        <MudButton Variant="Variant.Text" @onclick="OnShortRest" StartIcon="@Icons.Material.Filled.RestaurantMenu">Endlich!</MudButton>
     </MudCardActions>
 </MudCard>
 
@@ -19,4 +20,14 @@
     [Parameter]
     [EditorRequired]
     public required int ExhaustedPoints { get; set; }
+    
+    [CascadingParameter]
+    [EditorRequired]
+    public required ICharacterCommandRouter Router { get; set; }
+
+    async Task OnShortRest()
+    {
+        await Router.ApplyAsync(new Domain.Commands.ShortRest(null!));
+    }
+
 }
