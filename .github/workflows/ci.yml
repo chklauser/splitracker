@@ -157,7 +157,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           command: up
-          stack-name: dev
+          stack-name: prod
           work-dir: ./Splitracker.Deploy
           config-map: |
             version: {value: '${{ needs.build.outputs.version }}', secret: false}          
