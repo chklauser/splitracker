@@ -78,6 +78,8 @@ return await Deployment.RunAsync(() =>
             Namespace = nsName,
             Annotations = new() {
                 ["pulumi.com/skipAwait"] = "true",
+                ["nginx.ingress.kubernetes.io/proxy-buffers-number"] = "8",
+                ["nginx.ingress.kubernetes.io/proxy-buffer-size"] = "16k",
             },
         },
         Spec = new IngressSpecArgs {
