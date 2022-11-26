@@ -16,7 +16,7 @@ export interface IPointsControlProps {
   points: PointsVec;
   showPenalties: boolean;
   onReceivePoints: (points: PointsPreviewData) => void;
-  channellings: number[];
+  channellings: number[]|undefined;
   eventKey: string;
 }
 
@@ -51,7 +51,7 @@ export const PointsControl: FunctionComponent<IPointsControlProps> = ({
                       lineCapacity={lineCapacity(baseCapacity)}
                       totalCapcity={totalCapacity(baseCapacity)}
                       currentPoints={points}/>
-        {channellings.map((channeled, index) =>
+        {channellings?.map((channeled, index) =>
           <StopChanneling channeled={channeled} index={index} key={`${channeled}-${index}`}/>
         )}
         <ShortRest currentPoints={points}/>

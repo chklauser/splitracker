@@ -1,5 +1,6 @@
 import {v4} from 'uuid';
-import {LocalStoragePersistence, Migration, Persistence} from "./persistence";
+import {FirebaseDriver, Migration, mkPersistence, Persistence} from "./persistence";
+import {realtimeDb} from "./firebaseSetup";
 
 export interface PointsVec {
   channeled: number;
@@ -10,7 +11,7 @@ export interface PointsVec {
 export class Pool {
   public baseCapacity: number;
   public points: PointsVec;
-  public channellings: number[];
+  public channellings: number[]|undefined;
 
   constructor(baseCapacity: number, points: PointsVec = {channeled: 0, exhausted: 0, consumed: 0}, channellings: number[] = []) {
     this.baseCapacity = baseCapacity;
@@ -56,7 +57,7 @@ function mapObject<TKey extends string | number | symbol, TInput, TOutput>(objec
   }, {} as Record<TKey, TOutput>);
 }
 
-export const createDefaultCharacterPersistence = (): Persistence<Characters> => new LocalStoragePersistence<Characters>({
+export const createDefaultCharacterPersistence = async (uid: string): Promise<Persistence<Characters>> => mkPersistence<Characters>({
   get version(): number {
     return 1;
   },
@@ -75,7 +76,4 @@ export const createDefaultCharacterPersistence = (): Persistence<Characters> => 
     }
     return characters;
   }),
-});
-
-
-
+}, new FirebaseDriver(uid, await realtimeDb.promise));

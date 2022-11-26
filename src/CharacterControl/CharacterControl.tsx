@@ -1,17 +1,16 @@
-import React, {Fragment, FunctionComponent, ReactElement, useEffect, useState} from "react";
+import React, {Fragment, FunctionComponent, ReactElement, useEffect} from "react";
 import {Accordion, Button, Card, Col, FormControl, FormGroup, FormLabel, Row} from "react-bootstrap";
-import {Character, Characters, Pool} from "../char";
+import {Character, Pool} from "../char";
 import {PointsControl} from "../PointsControl";
 import {PointsPreviewData} from "../drag";
 import cloneDeep from "lodash.clonedeep";
-import {Persistence} from "../persistence";
 import {UndoManager} from "../undo";
 import {MdContentCopy, MdDeleteForever} from "react-icons/md";
 import {v4} from "uuid";
+import {useDeferredFn, usePromiseFn} from "../asyncData";
 
 export type ICharacterControlProps = {
   characterId: string;
-  characterPersistence: Persistence<Characters>;
   undoManager: UndoManager;
   editMode: boolean;
 };
@@ -25,20 +24,18 @@ function copyWith<T>(update: (value: T) => void): (value: T) => T {
 }
 
 function useCharacter(
-  characterPersistence: Persistence<Characters>,
   undoManager: UndoManager,
   characterId: string
 ): [Character | null, React.Dispatch<React.SetStateAction<Character | null>>] {
-  const [char, setChar] = useState(() => {
-    const chars = characterPersistence.load();
-    const c = chars[characterId];
-    return !c ? null : c;
-  });
+  const { data: char, reload: reloadChar } = usePromiseFn(
+    async () => (await undoManager.characterPersistence.load())[characterId],
+    [characterId]
+  );
 
   useEffect(() => {
     const stateChanged = () => {
       if (char) {
-        setChar(characterPersistence.load()[char.id])
+        reloadChar();
       }
     };
     undoManager.on("change", stateChanged);
@@ -47,10 +44,10 @@ function useCharacter(
     };
   }, [char]);
 
-  return [char, (newValue) => {
-    const effectiveValue = newValue instanceof Function ? newValue(char) : newValue;
+  return [char ?? null, async (newValue) => {
+    const effectiveValue = newValue instanceof Function ? newValue(char ?? null) : newValue;
     if (effectiveValue) {
-      undoManager.updateCharacter(effectiveValue);
+      await undoManager.updateCharacter(effectiveValue);
     }
   }];
 }
@@ -70,12 +67,11 @@ const capacity: Record<"lp" | "fp", {
 };
 
 export const CharacterControl: FunctionComponent<ICharacterControlProps> = ({
-  characterPersistence,
   characterId,
   undoManager,
   editMode
 }) => {
-  const [char, setChar] = useCharacter(characterPersistence, undoManager, characterId);
+  const [char, setChar] = useCharacter(undoManager, characterId);
 
   function applyPointsReceived(poolOf: (char: Character) => Pool, data: PointsPreviewData): void {
     const receivedPoints = data.points;
@@ -93,12 +89,15 @@ export const CharacterControl: FunctionComponent<ICharacterControlProps> = ({
 
       if (receivedPoints.channeled > 0) {
         console.log("remember channeling of ", receivedPoints.channeled);
+        if(!pool.channellings) {
+          pool.channellings = [];
+        }
         pool.channellings.push(receivedPoints.channeled);
       }
 
       if (data.channelingIndex != null) {
         console.log("remove channeling index ", data.channelingIndex);
-        pool.channellings = pool.channellings.filter((c,i) => i != data.channelingIndex);
+        pool.channellings = (pool.channellings ?? []).filter((c,i) => i != data.channelingIndex);
       }
     }));
   }
@@ -115,7 +114,7 @@ export const CharacterControl: FunctionComponent<ICharacterControlProps> = ({
     }
     const pool = poolOf(char);
     return <PointsControl eventKey={focus} points={pool.points} baseCapacity={pool.baseCapacity}
-                          channellings={pool.channellings}
+                          channellings={pool.channellings ?? []}
                           title={title}
                           showPenalties={showPenalties}
                           {...capacity[focus]}
@@ -136,22 +135,22 @@ export const CharacterControl: FunctionComponent<ICharacterControlProps> = ({
     }
   }
 
-  function cloneCharacter() {
+  const cloneCharacter = useDeferredFn(async () => {
     if (!char) {
       return;
     }
     const newChar = cloneDeep(char);
     (newChar as unknown as any)["id"] = v4();
     newChar.name = `${newChar.name} Klon`;
-    undoManager.addCharacter(newChar);
-  }
+    await undoManager.addCharacter(newChar);
+  }, [undoManager, char]);
 
-  function deleteCharacter() {
+  const deleteCharacter = useDeferredFn(async () => {
     if (!char) {
       return;
     }
-    undoManager.removeCharacter(characterId);
-  }
+    await undoManager.removeCharacter(characterId);
+  }, [undoManager, characterId]);
 
   function changeBaseCapacity(newBaseCapacity: number, poolOf: (char: Character) => Pool) {
     if(!char){

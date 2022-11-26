@@ -2,9 +2,11 @@ import type {UndoManager} from "./undo";
 import {FunctionComponent, useEffect, useState} from "react";
 import {Col, Row} from "react-bootstrap";
 import {MdRedo, MdUndo} from "react-icons/md";
+import {useDeferredFn} from "./asyncData/asyncData";
 
 export type IUndoRedoControlsProps = {
   undoManager: UndoManager;
+  uid: string | null;
 }
 type UndoRedoState = {
   canUndo: boolean;
@@ -30,17 +32,19 @@ function useUndoRedo(undoManager: UndoManager): UndoRedoState {
   return state;
 }
 
-export const UndoRedoControls: FunctionComponent<IUndoRedoControlsProps> = ({undoManager}) => {
+export const UndoRedoControls: FunctionComponent<IUndoRedoControlsProps> = ({undoManager, uid}) => {
   const undoRedoState = useUndoRedo(undoManager);
+  const undo = useDeferredFn(() => undoManager.undo(), [uid]);
+  const redo = useDeferredFn(() => undoManager.redo(), [uid]);
 
   return <Row className="justify-content-center">
     <Col xs={3}>
-      <MdUndo onClick={() => undoManager.undo()}
+      <MdUndo onClick={undo}
               style={{visibility: undoRedoState.canUndo ? undefined : 'hidden'}} role="button"
               aria-label="undo"/>
     </Col>
     <Col xs={3}>
-      <MdRedo onClick={() => undoManager.redo()}
+      <MdRedo onClick={redo}
               style={{visibility: undoRedoState.canRedo ? undefined : 'hidden'}} role="button"
               aria-label="redo"/>
     </Col>

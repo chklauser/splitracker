@@ -1,64 +1,41 @@
-import React, {FunctionComponent, useEffect, useState} from 'react';
+import React, {FunctionComponent, useState} from 'react';
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {TouchBackend} from "react-dnd-touch-backend";
 import {loadMouseEnabled, updateMouseEnabled} from "../preferences";
-import {Character, createDefaultCharacterPersistence} from "../char";
-import {Button, Card, Col, Container, FormCheck, Row} from "react-bootstrap";
+import {createDefaultCharacterPersistence} from "../char";
+import {Card, Col, Container, FormCheck, Row, Spinner} from "react-bootstrap";
 import "./App.scss";
 import Gh from "../iconmonstr-github-1.svg";
 import {createDefaultUndoPersistence, UndoManager} from "../undo";
 import {UndoRedoControls} from "../UndoRedoControls";
-import {CharacterControl} from "../CharacterControl";
-import {MdCreate, MdPersonAdd} from "react-icons/md";
-import {v4} from "uuid";
-
-
-const characterPersistence = createDefaultCharacterPersistence();
-const undoManager = new UndoManager(createDefaultUndoPersistence(), characterPersistence);
+import {MdCreate} from "react-icons/md";
+import {firebaseApp, SignInState, StyledFirebaseAuth, uiConfig, useAuth} from "../firebaseSetup";
+import {AppStage} from "../AppStage";
+import {usePromiseFn} from "../asyncData";
+import {cardSizing} from "../AppStage/AppStage";
 
 const App: FunctionComponent = () => {
-  function refresedhCharacterIds(): string[] {
-    const characters = characterPersistence.load();
-    return Object.keys(characters)
-      .map(id => characters[id])
-      .filter(c => !!c)
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map(c => c.id);
-  }
-
   const [mouseEnabled, setMouseEnabled] = useState(loadMouseEnabled());
   const [editMode, setEditMode] = useState(false);
-  const [characterIds, setCharacterIds] = useState<string[]>(refresedhCharacterIds);
+  const [authVisible, setAuthVisible] = useState(false);
+  const {signInState, uid} = useAuth();
+  const {data: undoManager} = usePromiseFn(async () => {
+    if (!uid) {
+      console.log("Cannot create undo manager without user session");
+      return null;
+    }
+    console.log("initializing undo manager");
+    const mgr = new UndoManager(createDefaultUndoPersistence(), await createDefaultCharacterPersistence(uid));
+    console.log("UndoManager created for uid", uid);
+    return mgr;
+  }, [uid]);
 
   function toggleMouseEnabled() {
     setMouseEnabled(prevState => updateMouseEnabled(_ => !prevState));
   }
 
-  useEffect(() => {
-    const onChange = () => {
-      const newIds = refresedhCharacterIds();
-      setCharacterIds(newIds);
-    };
-    undoManager.on("change", onChange);
-    return () => {
-      undoManager.off("change", onChange);
-    }
-  });
-
-  function addCharacter() {
-    undoManager.addCharacter(new Character(v4(), `Charakter ${characterIds.length + 1}`, 8, 8));
-  }
-
-  const cardSizing = {
-    xs: 12,
-    sm: 10,
-    md: 8,
-    lg: 6,
-    xl: 4,
-    xxl: 3,
-    className: "g-1"
-  };
+  console.log("app: ", signInState, authVisible, uid);
 
   return (
     <DndProvider backend={mouseEnabled ? HTML5Backend : TouchBackend} options={{
@@ -77,25 +54,29 @@ const App: FunctionComponent = () => {
         <Row className="gx-1 px-2">
           <Col as="h1" className="App-title">Splitracker</Col>
           <Col xs="4" className="App-undo">
-            <UndoRedoControls undoManager={undoManager}/>
+            {undoManager && <UndoRedoControls {...{undoManager, uid}}/>}
           </Col>
           <Col xs="1">
             <span className="App-modeToggle" role="button"
-                            onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span>
+                  onClick={toggleMouseEnabled}>{mouseEnabled ? '🖱️' : '👆'}</span>
           </Col>
           <Col xs="1">
-            <FormCheck type="switch" label={<MdCreate />} checked={editMode} onChange={e => setEditMode(e.target.checked)} />
+            <FormCheck type="switch" label={<MdCreate/>} checked={editMode}
+                       onChange={e => setEditMode(e.target.checked)}/>
+          </Col>
+          <Col xs="1">
+            <span className="App-authToggle" role="button" onClick={() => setAuthVisible(x => !x)}>🔐</span>
           </Col>
         </Row>
-        <Row className="gx-1 px-2">
-          {editMode && <Col as={Button} {...cardSizing} variant="success" onClick={addCharacter} >Hinzufügen <MdPersonAdd /></Col>}
-          {characterIds.map(id =>
-            <Col as={Card} body key={id} {...cardSizing}>
-              <CharacterControl characterId={id} {...{characterPersistence, undoManager, editMode}} />
-            </Col>)}
-        </Row>
-        {!editMode && <Row className="gx-1 px-2">
-          <p>ℹ️ Tipp: Elemente unten packen und auf die Punkte im oberen Bereich ziehen! 🤚</p>
+        {(signInState != SignInState.SignedIn && authVisible) &&
+          <Row>
+            <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebaseApp.auth()}/>
+          </Row>}
+        {undoManager && <AppStage {...{undoManager, editMode, uid}} /> || <Row className="gx-1 px-2">
+          <Col as={Card} body {...cardSizing}>
+            <Spinner animation="border"/>
+            <p>Verbinde mit&hellip;☁️</p>
+          </Col>
         </Row>}
         <Row className="gx-1 px-2">
           <a href="https://github.com/chklauser/splitracker" id="ghlink"><img src={Gh} alt="Splitracker on GitHub"/></a>
