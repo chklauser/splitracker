@@ -6,7 +6,7 @@ namespace Klauser.Do.Infrastructure.CertManager;
 
 using K8sCustomResource = Pulumi.Kubernetes.ApiExtensions.CustomResource;
 
-class Certificate : K8sCustomResource
+public class Certificate : K8sCustomResource
 {
     public Certificate(string name, CertificateArgs args, CustomResourceOptions? options = null) : base(name, args,
         options)
@@ -14,7 +14,7 @@ class Certificate : K8sCustomResource
     }
 }
 
-class CertificateArgs : CustomResourceArgs
+public class CertificateArgs : CustomResourceArgs
 {
     public CertificateArgs() : base("cert-manager.io/v1", "Certificate")
     {
@@ -24,7 +24,7 @@ class CertificateArgs : CustomResourceArgs
     public required Input<CertificateSpecArgs> Spec { get; set; }
 }
 
-class CertificateSpecArgs : ResourceArgs
+public class CertificateSpecArgs : ResourceArgs
 {
     [Input("commonName", required: true)]
     public required Input<string> CommonName { get; set; }
@@ -99,7 +99,7 @@ class CertificateSpecArgs : ResourceArgs
     public Input<bool>? EncodeUsagesInRequest { get; set; }
 }
 
-class CertificateObjectReference : ResourceArgs
+public class CertificateObjectReference : ResourceArgs
 {
     [Input("name", required: true)]
     public required Input<string> Name { get; set; }
@@ -111,7 +111,7 @@ class CertificateObjectReference : ResourceArgs
     public Input<string>? Group { get; set; }
 }
 
-class CertificateKeystoresArgs : ResourceArgs
+public class CertificateKeystoresArgs : ResourceArgs
 {
     /// <summary>
     /// A file named keystore.p12 will be created in the target Secret resource,
@@ -124,7 +124,7 @@ class CertificateKeystoresArgs : ResourceArgs
     public required Input<Pkcs12KeystoreArgs> Pkcs12 { get; set; }
 }
 
-class Pkcs12KeystoreArgs : ResourceArgs
+public class Pkcs12KeystoreArgs : ResourceArgs
 {
     [Input("create", required: true)]
     public required Input<bool> Create { get; set; }

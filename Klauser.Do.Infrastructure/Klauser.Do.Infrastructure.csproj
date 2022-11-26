@@ -18,4 +18,8 @@
     <Folder Include="Properties" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Klauser.Do.CertManager\Klauser.Do.CertManager.csproj" />
+  </ItemGroup>
+
 </Project>

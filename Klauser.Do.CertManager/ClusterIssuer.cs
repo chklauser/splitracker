@@ -6,13 +6,13 @@ namespace Klauser.Do.Infrastructure.CertManager;
 
 using K8sCustomResource = Pulumi.Kubernetes.ApiExtensions.CustomResource;
 
-class ClusterIssuer : K8sCustomResource  {
+public class ClusterIssuer : K8sCustomResource  {
     public ClusterIssuer(string name, ClusterIssuerArgs args, CustomResourceOptions? options = null) : base(name, args, options)
     {
     }
 }
 
-class ClusterIssuerArgs : CustomResourceArgs {
+public class ClusterIssuerArgs : CustomResourceArgs {
     public ClusterIssuerArgs() : base("cert-manager.io/v1", "ClusterIssuer")
     { 
     }
@@ -21,7 +21,7 @@ class ClusterIssuerArgs : CustomResourceArgs {
     public required Input<IssuerSpecArgs> Spec { get; set; }
 }
 
-class IssuerSpecArgs : ResourceArgs
+public class IssuerSpecArgs : ResourceArgs
 {
     [Input("acme")]
     public Input<AcmeSpecArgs>? Acme { get; set; }
@@ -36,7 +36,7 @@ class IssuerSpecArgs : ResourceArgs
 }
 
 
-class SecretKeySelectorArgs : ResourceArgs
+public class SecretKeySelectorArgs : ResourceArgs
 {
     [Input("name")]
     public required Input<string> Name { get; set; }

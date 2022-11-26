@@ -351,6 +351,9 @@ public class RavenDb : ComponentResource
                         },
                         Spec = new PersistentVolumeClaimSpecArgs {
                             AccessModes = new() { "ReadWriteOnce" },
+                            Selector = new LabelSelectorArgs {
+                                MatchLabels = podSelector,
+                            },
                             Resources = new ResourceRequirementsArgs {
                                 Requests = new() {
                                     ["storage"] = "4G",

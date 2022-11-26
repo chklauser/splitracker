@@ -11,4 +11,8 @@
     <PackageReference Include="Pulumi.Kubernetes" Version="3.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Klauser.Do.CertManager\Klauser.Do.CertManager.csproj" />
+  </ItemGroup>
+
 </Project>

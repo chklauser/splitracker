@@ -1,5 +1,5 @@
 ﻿using Pulumi;
-using Pulumi.Kubernetes.ApiExtensions;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace Klauser.Do.Infrastructure.CertManager;

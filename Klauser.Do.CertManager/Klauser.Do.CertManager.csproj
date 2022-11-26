@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Pulumi" Version="3.48.0" />
+      <PackageReference Include="Pulumi.Kubernetes" Version="3.22.1" />
+    </ItemGroup>
+
+</Project>

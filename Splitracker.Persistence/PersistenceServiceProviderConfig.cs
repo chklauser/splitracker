@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Conventions;
 using Splitracker.Domain;
 
 namespace Splitracker.Persistence;
@@ -22,6 +25,12 @@ public static class PersistenceServiceProviderConfig
             var store = new DocumentStore {
                 Urls = opts.Urls.ToArray(),
                 Database = opts.Database,
+                Certificate = new(tolerateNestedWorkingDir(opts.CertificatePath), readCertificatePassword(opts)),
+            };
+            store.Conventions.FindCollectionName = type =>
+            {
+                var defaultName = DocumentConventions.DefaultGetCollectionName(type);
+                return defaultName.EndsWith("Models") ? $"{defaultName[..^6]}s" : defaultName;
             };
             store.Initialize();
             logger.Log(LogLevel.Information, "Document store initialized");
@@ -29,5 +38,37 @@ public static class PersistenceServiceProviderConfig
         });
         services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
         return services;
+    }
+
+    static string readCertificatePassword(RavenOptions opts)
+    {
+        return opts.CertificatePassword ??
+            (opts.CertificatePasswordFile is { } passwordFile
+                ? File.ReadAllText(passwordFile)
+                : throw new("Certificate password not configured."));
+    }
+
+    static string tolerateNestedWorkingDir(string path)
+    {
+        if (path == "" || Path.IsPathRooted(path) || File.Exists(path))
+        {
+            return path;
+        }
+
+        var candidate = path;
+        while (Path.GetDirectoryName(candidate) is {} nextCandidate and not "")
+        {
+            if (File.Exists(nextCandidate))
+            {
+                return nextCandidate;
+            }
+            else
+            {
+                candidate = nextCandidate;
+            }
+        }
+
+        // give up and return the original path for an error message that makes sense
+        return path;
     }
 }

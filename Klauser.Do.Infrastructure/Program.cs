@@ -149,6 +149,30 @@ return await Deployment.RunAsync(() =>
             ["installCRDs"] = true,
         },
     }, new() { Provider = clusterProvider });
+
+    var kubeStateMetrics = new Release("kube-state-metrics", new() {
+        Name = "advanced",
+        Namespace = "kube-system",
+        CreateNamespace = true,
+        CleanupOnFail = true,
+        RepositoryOpts = new RepositoryOptsArgs {
+            Repo = "https://prometheus-community.github.io/helm-charts",
+        },
+        Chart = "kube-state-metrics",
+        Version = "4.24.0",
+        Values = new() {
+            ["resources"] = new InputMap<object?>() {
+                ["limits"] = new InputMap<object?>() {
+                    ["cpu"] = "100m",
+                    ["memory"] = "64Mi",
+                },
+                ["requests"] = new InputMap<object?>() {
+                    ["cpu"] = "10m",
+                    ["memory"] = "32Mi",
+                },
+            },
+        },
+    }, new() {Provider = clusterProvider});
     
     var digitalOceanTokenSecret = new Secret("do-token", new() {
         Metadata = new ObjectMetaArgs() {

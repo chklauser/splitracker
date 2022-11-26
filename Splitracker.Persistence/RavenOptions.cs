@@ -22,4 +22,26 @@ public class RavenOptions
         get;
         set;
     } = new();
+    
+    [Required]
+    public required string CertificatePath
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
+    
+    public string? CertificatePassword
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
+    
+    public string? CertificatePasswordFile
+    {
+        get;
+        [UsedImplicitly]
+        set;
+    }
 }

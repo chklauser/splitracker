@@ -4,7 +4,7 @@ using Pulumi;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 
-class AcmeSpecArgs : ResourceArgs
+public class AcmeSpecArgs : ResourceArgs
 {
     [Input("email")]
     public Input<string>? Email { get; set; }
@@ -25,7 +25,7 @@ class AcmeSpecArgs : ResourceArgs
     public required InputList<AcmeChallengeSolverArgs> Solvers { get; set; }
 }
 
-class AcmeChallengeSolverArgs : ResourceArgs
+public class AcmeChallengeSolverArgs : ResourceArgs
 {
     [Input("selector")]
     public Input<CertificateDnsNameSelectorArgs>? Selector { get; set; }
@@ -37,7 +37,7 @@ class AcmeChallengeSolverArgs : ResourceArgs
     public Input<AcmeChallengeSolverHttp01Args>? Http01 { get; set; }
 }
 
-class CertificateDnsNameSelectorArgs : ResourceArgs
+public class CertificateDnsNameSelectorArgs : ResourceArgs
 {
     [Input("matchLabels")]
     public InputMap<string>? MatchLabels { get; set; }
@@ -49,24 +49,24 @@ class CertificateDnsNameSelectorArgs : ResourceArgs
     public InputList<string>? DnsNames { get; set; }
 }
 
-class AcmeChallengeSolverDns01Args : ResourceArgs
+public class AcmeChallengeSolverDns01Args : ResourceArgs
 {
     [Input("digitalocean")]
     public Input<AcmeIssuerDns01ProviderDigitalOceanArgs>? DigitalOcean { get; set; }
 }
 
-class AcmeIssuerDns01ProviderDigitalOceanArgs : ResourceArgs
+public class AcmeIssuerDns01ProviderDigitalOceanArgs : ResourceArgs
 {
     [Input("tokenSecretRef", required: true)]
     public required Input<SecretKeySelectorArgs> TokenSecretRef { get; set; }
 }
 
-class AcmeChallengeSolverHttp01Args : ResourceArgs
+public class AcmeChallengeSolverHttp01Args : ResourceArgs
 {
     [Input("ingress", required: true)]
     public required Input<AcmeChallengeSolverHttp01IngressArgs> Ingress { get; set; }
 }
-class AcmeChallengeSolverHttp01IngressArgs : ResourceArgs
+public class AcmeChallengeSolverHttp01IngressArgs : ResourceArgs
 {
     [Input("serviceType")]
     public Input<string>? ServiceType { get; set; }
