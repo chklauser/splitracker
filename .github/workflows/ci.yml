@@ -55,8 +55,41 @@ jobs:
           docker tag splitracker-web:1.0.0 "$tag"
           docker push "$tag"
           doctl registry logout
+  preview_deployment:
+    name: Preview deployment
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up .NET 7 SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 7.0.x
+      - uses: actions/cache@v2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
+      - name: Preview Deployment
+        uses: pulumi/actions@v3
+        with:
+          command: preview
+          stack-name: dev
+          comment-on-pr: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          work-dir: ./Splitracker.Deploy
+          config-map: |
+            version: {value: '${{ needs.build.outputs.version }}', secret: false}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
   deploy_dev:
     name: Deploy to dev
+    if: github.event_name != 'pull_request'
     needs: [build]
     runs-on: ubuntu-latest
     environment:
@@ -78,26 +111,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget
       - name: Install doctl
-        if: github.event_name != 'pull_request'
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      - name: Preview Deployment
-        uses: pulumi/actions@v3
-        if: github.event_name == 'pull_request'
-        with:
-          command: preview
-          stack-name: dev
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          work-dir: ./Splitracker.Deploy
-          config-map: |
-            version: {value: '${{ needs.build.outputs.version }}', secret: false}
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
       - name: Perform Deployment
         uses: pulumi/actions@v3
-        if: github.event_name != 'pull_request'
         with:
           command: up
           stack-name: dev
