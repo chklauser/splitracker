@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using JetBrains.Annotations;
 using Riok.Mapperly.Abstractions;
 using Splitracker.Domain;
