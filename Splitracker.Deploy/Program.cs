@@ -4,19 +4,23 @@ using Pulumi.Kubernetes.Types.Inputs.Core.V1;
 using Pulumi.Kubernetes.Types.Inputs.Apps.V1;
 using Pulumi.Kubernetes.Types.Inputs.Meta.V1;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Klauser.Do.Infrastructure.CertManager;
-using Pulumi.Kubernetes;
+using Pulumi.DigitalOcean;
 using Pulumi.Kubernetes.Core.V1;
 using Pulumi.Kubernetes.Networking.V1;
 using Pulumi.Kubernetes.Types.Inputs.Networking.V1;
 using Splitracker.Deploy;
+using Certificate = Klauser.Do.Infrastructure.CertManager.Certificate;
 using Config = Pulumi.Config;
+using Provider = Pulumi.Kubernetes.Provider;
+using VolumeArgs = Pulumi.Kubernetes.Types.Inputs.Core.V1.VolumeArgs;
 
 return await Deployment.RunAsync(() =>
 {
     var appLabels = new InputMap<string> {
-        { "app", "splitracker" }
+        { "app", "splitracker" },
     };
     var config = new Config();
     var ravenClientCertBase64 = config.RequireSecret("raven-cert");
@@ -24,9 +28,11 @@ return await Deployment.RunAsync(() =>
     var version = config.Require("version");
     var infra = new StackReference("chklauser/do.klauser.link/prod");
 
-    var kubeConfig = infra.GetOutput("kubeconfig").Apply(x => (string)x!);
+    var cluster = KubernetesCluster.Get("cluster", infra.GetOutput("cluster-id").Apply(x => (string)x!));
+
+    var kubeConfig = cluster.KubeConfigs.Apply(x => x.First());
     var clusterProvider = new Provider("k8s-infra", new() {
-        KubeConfig = kubeConfig,
+        KubeConfig = kubeConfig.Apply(x => x.RawConfig!),
     });
     var plannedNamespaceName = $"splitracker-{Deployment.Instance.StackName}";
     var ns = new Namespace(plannedNamespaceName,
@@ -133,7 +139,8 @@ return await Deployment.RunAsync(() =>
             Namespace = nsName,
         },
         Data = new() {
-          [clientSecretKey] = config.RequireSecret("oauth-client-secret"),  
+          [clientSecretKey] = config.RequireSecret("oauth-client-secret")
+              .Apply(x => Convert.ToBase64String(Encoding.UTF8.GetBytes(x))),  
         },
     }, new(){Provider = clusterProvider});
     

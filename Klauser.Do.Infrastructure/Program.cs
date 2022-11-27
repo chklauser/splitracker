@@ -69,7 +69,20 @@ return await Deployment.RunAsync(() =>
         Resources = new() { domain.DomainUrn, cluster.ClusterUrn },
     });
 
-    var kubeConfig = cluster.KubeConfigs.Apply(cs => cs.First().RawConfig ??
+    var kubeConfig = cluster.Status.Apply(status =>
+    {
+        if (status == "running")
+        {
+            return cluster.Id
+                .Apply(n => KubernetesCluster.Get("klauser-refresh", n))
+                .Apply(m => m.KubeConfigs.First())
+                .Apply(k => k.RawConfig);
+        }
+        else
+        {
+            return cluster.KubeConfigs.Apply(k => k.First().RawConfig);
+        }
+    }).Apply(x => x ??
         throw new ArgumentException("Somehow the cluster didn't return a kubeconfig"));
     var clusterProvider = new Provider("k8s-infra", new() {
         KubeConfig = kubeConfig
@@ -265,6 +278,8 @@ return await Deployment.RunAsync(() =>
         ["vpc-cluster-urn"] = vpc.VpcUrn,
         ["domain-apex-urn2"] = domain.DomainUrn,
         ["kubeconfig"] = Output.CreateSecret(cluster.KubeConfigs.First().Apply(k => k.RawConfig)),
+        ["cluster-name"] = cluster.Name, 
+        ["cluster-id"] = cluster.Id, 
         ["clusterissuer-staging-name"] = letsEncryptStagingIssuer.Metadata.Apply(m => m.Name),
         ["clusterissuer-prod-name"] = letsEncryptProdIssuer.Metadata.Apply(m => m.Name),
         ["raven-admin-thumbprint"] = raven.AdminThumbprint,

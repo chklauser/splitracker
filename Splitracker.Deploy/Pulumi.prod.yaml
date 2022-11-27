@@ -1,4 +1,6 @@
 config:
+  digitalocean:token:
+    secure: AAABAJL8zJqBl3je5Odf0Miw3O6/bvXIVYqZKwHxzOct7GlSEz6JbCNqPXG+C2WwQGQDXoqnFtH9GsAgrVi21lLE2kSmB/q+qSvBrjff3WU1In/f2E505FSSeVyH9QJNNCMEhTvLTA==
   splitracker:oauth-client-secret:
     secure: AAABAEhBGgRTxgObPUOaYkgJcBbCoF8swnWw3CJ0jrA3ezajHGijkyadd8gAT5caZjZDYG6PXYyvpYhY7Bq6CYC5OAfxZQNv
   splitracker:raven-cert:
