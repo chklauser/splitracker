@@ -126,6 +126,16 @@ return await Deployment.RunAsync(() =>
             ["password"] = ravenClientCertPassword.Apply(p => Convert.ToBase64String(Encoding.UTF8.GetBytes(p))),
         },
     }, new() { Provider = clusterProvider });
+
+    var clientSecretKey = "client-secret";
+    var oidcSecret = new Secret("oidc", new() {
+        Metadata = new ObjectMetaArgs() {
+            Namespace = nsName,
+        },
+        Data = new() {
+          [clientSecretKey] = config.RequireSecret("oauth-client-secret"),  
+        },
+    }, new(){Provider = clusterProvider});
     
     var healthEndpoint = new HTTPGetActionArgs {
         Port = "http",
@@ -194,6 +204,15 @@ return await Deployment.RunAsync(() =>
                                     }).ToEnvVarArgs(),
                                     ("Raven__CertificatePath", "/etc/raven-client-cert/keystore.p12").ToEnvVarArgs(),
                                     ("Raven__CertificatePasswordFile", "/etc/raven-client-cert/password").ToEnvVarArgs(),
+                                    new EnvVarArgs {
+                                        Name = "AzureAdB2C__ClientSecret",
+                                        ValueFrom = new EnvVarSourceArgs {
+                                            SecretKeyRef = new Pulumi.Kubernetes.Types.Inputs.Core.V1.SecretKeySelectorArgs {
+                                                Name = oidcSecret.Metadata.Apply(m => m.Name),
+                                                Key = clientSecretKey,
+                                            },
+                                        },
+                                    },
                                 },
                                 Resources = new ResourceRequirementsArgs {
                                     Limits = new() {
