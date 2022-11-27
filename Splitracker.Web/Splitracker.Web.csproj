@@ -6,7 +6,7 @@
     <UserSecretsId>aspnet-Splitracker.Web-77e41de4-1c51-4786-aa4a-1995294c2d38</UserSecretsId>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <PublishProfile>DefaultContainer</PublishProfile>
   </PropertyGroup>

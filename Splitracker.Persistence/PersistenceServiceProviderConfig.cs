@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,12 +57,13 @@ public static class PersistenceServiceProviderConfig
             return path;
         }
 
-        var candidate = path;
+        var candidate = Environment.CurrentDirectory;        
         while (Path.GetDirectoryName(candidate) is {} nextCandidate and not "")
         {
-            if (File.Exists(nextCandidate))
+            var location = Path.Join(nextCandidate, path);
+            if (File.Exists(location))
             {
-                return nextCandidate;
+                return location;
             }
             else
             {

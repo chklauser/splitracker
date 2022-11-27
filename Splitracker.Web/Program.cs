@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
 using Splitracker.Persistence;
 
@@ -20,7 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(options =>
     {
-        builder.Configuration.GetSection("AzureAd").Bind(options);
+        builder.Configuration.GetSection("AzureAdB2C").Bind(options);
+        options.ResponseType = OpenIdConnectResponseType.IdToken;
     }, options =>
     {
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
