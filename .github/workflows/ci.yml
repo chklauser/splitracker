@@ -27,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget
       - name: Install dependencies
-        run: dotnet restore --configuration=Release --lock-file-path=./packages.lock.json --verbosity=normal
+        run: dotnet restore --runtime linux-x64 --lock-file-path=./packages.lock.json --verbosity=normal
       - name: Build
         run: dotnet build --configuration=Release --no-restore --verbosity=normal
       - name: Test
