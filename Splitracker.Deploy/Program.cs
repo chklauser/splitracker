@@ -56,7 +56,10 @@ return await Deployment.RunAsync(() =>
         },
     }, new() { Provider = clusterProvider });
 
-    var publicDomain = $"{Deployment.Instance.StackName}-splitracker.do.klauser.link";
+    var publicDomain = Deployment.Instance.StackName switch {
+        "prod" => "splitracker.klauser.link",
+        var stackName => $"{stackName}-splitracker.do.klauser.link",
+    };
     const string certSecretName = "splitracker-cert";
     var cert = new Certificate("cert", new() {
         Metadata = new ObjectMetaArgs {

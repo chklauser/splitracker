@@ -185,12 +185,25 @@ return await Deployment.RunAsync(() =>
 
     var letsEncryptSolver = new InputList<AcmeChallengeSolverArgs>() {
         new AcmeChallengeSolverArgs {
+            Selector = new CertificateDnsNameSelectorArgs {
+                DnsZones = new() {
+                    "do.klauser.link",
+                },
+            },
             Dns01 = new AcmeChallengeSolverDns01Args {
                 DigitalOcean = new AcmeIssuerDns01ProviderDigitalOceanArgs {
                     TokenSecretRef = new SecretKeySelectorArgs {
                         Name = digitalOceanTokenSecret.Metadata.Apply(m => m.Name),
                         Key = "token",
                     },
+                },
+            },
+        },
+        new AcmeChallengeSolverArgs {
+            Http01 = new AcmeChallengeSolverHttp01Args {
+                Ingress = new AcmeChallengeSolverHttp01IngressArgs {
+                    ServiceType = "ClusterIP",
+                    Class = "nginx",
                 },
             },
         },
