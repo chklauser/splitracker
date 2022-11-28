@@ -61,7 +61,7 @@ return await Deployment.RunAsync(() =>
     var containerRegistry = new ContainerRegistry("klauser", new() {
         Name = "klauser",
         Region = region.ToString(),
-        SubscriptionTierSlug = "starter",
+        SubscriptionTierSlug = "basic",
     });
 
     var projectResourceAssignment = new ProjectResources("do.klauser.link", new() {
