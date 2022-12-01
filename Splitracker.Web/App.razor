@@ -1,14 +1,53 @@
+@using Blazored.LocalStorage
+@inject ILocalStorageService localStorage;
+@inject FlagContextHolder flags;
+@implements IDisposable
+
 <CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(App).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    <Router
+        AppAssembly="@typeof(App).Assembly">
+        <Found
+            Context="routeData">
+            <CascadingValue Value="@flags.Context">
+                <AuthorizeRouteView
+                    RouteData="@routeData"
+                    DefaultLayout="@typeof(MainLayout)"/>
+                <FocusOnNavigate
+                    RouteData="@routeData"
+                    Selector="h1"/>
+            </CascadingValue>
         </Found>
         <NotFound>
             <PageTitle>Not found</PageTitle>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p role="alert">Sorry, there's nothing at this address.</p>
+            <LayoutView
+                Layout="@typeof(MainLayout)">
+                <p
+                    role="alert">Sorry, there's nothing at this address.</p>
             </LayoutView>
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        flags.Changed += flagsChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        flags.Context = await localStorage.GetItemAsync<FlagContext>("flags") ?? flags.Context;
+    }
+
+    public void Dispose()
+    {
+        flags.Changed -= flagsChanged;
+    }
+
+    void flagsChanged(object? sender, EventArgs e)
+    {
+        StateHasChanged();
+    }
+
+}

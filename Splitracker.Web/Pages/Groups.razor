@@ -1,0 +1,46 @@
+﻿@page "/Groups"
+@using Splitracker.Domain
+
+@implements IAsyncDisposable
+
+@inject ICharacterRepository repository
+
+<PageTitle>Gruppen - Splitracker</PageTitle>
+
+<MudFab
+    Class="fixed z-100"
+    Style="right: 1.5rem; bottom: 1.5rem;"
+    DisableRipple="@true"
+    StartIcon="@Icons.Material.Filled.Add"
+    Color="@Color.Primary"/>
+
+@code {
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    ICharacterRepositoryHandle? handle;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+        handle = null;
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+        var auth = await AuthenticationState;
+        handle = await repository.OpenAsync(auth.User);
+        handle.CharacterAdded += (_, _) => InvokeAsync(StateHasChanged);
+        handle.CharacterDeleted += (_, _) => InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+    }
+}

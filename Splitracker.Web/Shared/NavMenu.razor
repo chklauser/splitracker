@@ -1,0 +1,27 @@
+﻿@inject FlagContextHolder holder
+
+<MudStack>
+    <MudNavMenu>
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EmojiPeople">Charaktere</MudNavLink>
+        @if (Flags.Experimental)
+        {
+            <MudNavLink
+                Href="/Groups"
+                Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Filled.People">Gruppen</MudNavLink>
+        }
+    </MudNavMenu>
+    <MudSpacer/>
+    <MudSwitch @bind-Checked="experimental">Experimente</MudSwitch>
+</MudStack>
+
+@code {
+    [CascadingParameter]
+    public required FlagContext Flags { get; set; }
+
+    bool experimental
+    {
+        get => Flags.Experimental;
+        set => holder.Context = holder.Context with { Experimental = value };
+    }
+}

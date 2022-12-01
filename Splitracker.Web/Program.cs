@@ -1,4 +1,5 @@
 using System.Net;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
 using Splitracker.Persistence;
+using Splitracker.Web.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,7 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
+builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
 builder.Services.AddServerSideBlazor()
@@ -58,6 +61,7 @@ builder.Services.AddHttpLogging(logging =>
 });
 
 builder.Services.AddPersistenceServices(builder.Configuration);
+builder.Services.AddScoped<FlagContextHolder>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

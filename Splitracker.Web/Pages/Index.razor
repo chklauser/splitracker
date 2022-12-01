@@ -1,6 +1,7 @@
 @page "/"
 @using Splitracker.Domain
 @using Splitracker.Domain.Commands
+@using Splitracker.Web.Shared.Characters
 @implements IAsyncDisposable
 @implements ICharacterCommandRouter
 
@@ -140,6 +141,7 @@
                     break;
                 case EditCharacter edit:
                     await inner.ApplyAsync(new CreateCharacter(edit.Name, edit.LpBaseCapacity, edit.FoBaseCapacity));
+                    inner.newCharacter = null;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(command), "Unexpected command type: " + command.GetType());

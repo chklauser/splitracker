@@ -22,21 +22,34 @@
 
 <MudLayout Class="@CssClass.Rendered(("dark", isDarkMode))">
     <MudAppBar>
-        <MudText Typo="Typo.h5" Class="ml-3">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="@Color.Inherit" Edge="@Edge.Start" OnClick="@drawerToggle"/>
+        <MudText
+            Typo="Typo.h5"
+            Class="ml-3">
             Splitracker
         </MudText>
         <MudSpacer/>
-        <SectionOutlet Name="top" />
+        <SectionOutlet
+            Name="top"/>
         <LoginDisplay/>
         <MudToggleIconButton
             Icon="@Icons.Material.Filled.LightMode"
             ToggledIcon="@Icons.Material.Filled.DarkMode"
-            @bind-Toggled="isDarkMode"
-            />
+            @bind-Toggled="isDarkMode"/>
     </MudAppBar>
+    <MudDrawer @bind-Open="drawerOpen" ClipMode="@DrawerClipMode.Always" >
+        <NavMenu/>
+    </MudDrawer>
     <MudMainContent>
         <MudContainer Class="mb-16">
             @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
+
+@code {
+
+    bool drawerOpen;
+    void drawerToggle() => drawerOpen = !drawerOpen;
+
+}
