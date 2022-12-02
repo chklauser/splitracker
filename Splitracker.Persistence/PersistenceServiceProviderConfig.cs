@@ -39,6 +39,7 @@ public static class PersistenceServiceProviderConfig
             return store;
         });
         services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
+        services.AddSingleton<IGroupRepository, FakeGroupRepository>();
         return services;
     }
 

@@ -1,0 +1,22 @@
+﻿@inherits MudBaseItemsControl<MultiTimelineItem>
+
+<div
+    @attributes="UserAttributes"
+    class="@Classnames"
+    style="@Style">
+    @foreach (var (label,idx) in Labels.Enumerated())
+    {
+        if (label != null)
+        {
+            <div
+                class="multi-timeline-label"
+                style="grid-column: 1/2; grid-row: @(idx + 1)/@(idx + 2)">
+                @label
+            </div>
+        }
+    }
+    <CascadingValue
+        Value="this">
+        @ChildContent
+    </CascadingValue>
+</div>

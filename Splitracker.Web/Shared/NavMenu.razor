@@ -1,4 +1,6 @@
-﻿@inject FlagContextHolder holder
+﻿@using Microsoft.AspNetCore.Hosting
+@inject FlagContextHolder holder
+@inject IWebHostEnvironment hostEnvironment;
 
 <MudStack>
     <MudNavMenu>
@@ -9,10 +11,18 @@
                 Href="/Groups"
                 Match="NavLinkMatch.Prefix"
                 Icon="@Icons.Filled.People">Gruppen</MudNavLink>
+            <MudNavLink
+                Href="/Ticks"
+                Match="NavLinkMatch.Prefix"
+                Icon="@Icons.Filled.ViewTimeline">Ticks</MudNavLink>
         }
     </MudNavMenu>
-    <MudSpacer/>
-    <MudSwitch @bind-Checked="experimental">Experimente</MudSwitch>
+    @if (hostEnvironment.EnvironmentName != "Production")
+    {
+        <MudSwitch
+            @bind-Checked="experimental"
+            class="ml-2">Experimente</MudSwitch>
+    }
 </MudStack>
 
 @code {

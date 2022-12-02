@@ -1,0 +1,124 @@
+﻿@page "/Ticks"
+@using Splitracker.Web.Shared.Characters
+@using Splitracker.Domain
+@implements IAsyncDisposable
+
+@inject IGroupRepository repository
+
+<PageTitle>Ticks - Splitracker</PageTitle>
+
+<MudStack
+    Row="@true">
+    <MudStack
+        Style="width: 12rem">
+        <CharacterCardSkeleton/>
+        <CharacterCardSkeleton/>
+    </MudStack>
+    @if (handle != null)
+    {
+        var timelineWithTracks = allocateTracks(handle.Group.Timeline).ToList();
+        <MultiTimeline
+            DisableModifiers="@true"
+            TimelinePosition="@TimelinePosition.Alternate"
+            TimelineAlign="@TimelineAlign.Start"
+            Labels="@timelineLabels(timelineWithTracks)">
+            @foreach (var (track, lastOffset) in timelineWithTracks.GroupBy(y => y.Track).Select(track => (track.Key, track.Max(t => t.Offset))))
+            {
+                <MultiTimelineTrack @key="@track" Index="@track" Length="@(track == 0 ? timelineWithTracks.Count : lastOffset + 1)" />
+            }
+            @foreach(var (tick, track, offset) in timelineWithTracks)
+            {
+                @if (tick is not Empty)
+                {
+                    <MultiTimelineItem
+                        @key="tick.ToString()"
+                        Track="@track"
+                        Offset="@offset"
+                        Size="@Size.Medium">
+                        <ItemContent>
+                            <MudCard>
+                            @tick
+                            </MudCard>
+                        </ItemContent>
+                    </MultiTimelineItem>
+                }
+                else
+                {
+                    <MultiTimelineItem @key="@($"synth-tick:{tick.At}")" Track="@track" Offset="@offset" Size="@Size.Small"/>
+                }
+            }
+        </MultiTimeline>
+        @* <MudTimeline
+            Class="ml-12"
+            TimelinePosition="@TimelinePosition.Alternate"
+            TimelineOrientation="@TimelineOrientation.Vertical"
+            TimelineAlign="@TimelineAlign.Start">
+            @{
+                var startTick = handle.Group.Timeline.FirstOrDefault()?.At ?? 1;
+                var endTick = Math.Max(handle.Group.Timeline.LastOrDefault()?.At ?? 1, startTick + 14);
+                var currentTick = startTick - 1;
+            }
+            @foreach (var tick in handle.Group.Timeline)
+            {
+                bool tickHasChanged;
+                if (tick.At != currentTick)
+                {
+                    currentTick = tick.At;
+                    tickHasChanged = true;
+                }
+                else
+                {
+                    tickHasChanged = false;
+                }
+
+                <MudTimelineItem
+                    TimelineAlign="@TimelineAlign.Start"
+                    @key="tick.ToString()">
+                    <ItemOpposite>
+                        @if (tickHasChanged)
+                        {
+                            <MudText
+                                Typo="Typo.caption">
+                                @tick.At
+                            </MudText>
+                        }
+                    </ItemOpposite>
+                    <ItemContent>
+                        @tick
+                    </ItemContent>
+                </MudTimelineItem>
+            }
+        </MudTimeline> *@
+    }
+</MudStack>
+
+@code {
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    IGroupHandle? handle;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+        handle = null;
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+        var auth = await AuthenticationState;
+        handle = await repository.OpenSingleAsync(auth.User, "whocares");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+    }
+
+}

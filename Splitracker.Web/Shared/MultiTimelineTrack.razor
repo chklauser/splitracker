@@ -1,0 +1,15 @@
+﻿<div
+    class="multi-timeline-track"
+    style="grid-column: @(Index + 2) / @(Index + 3); grid-row: 1/@(Length + 1)">
+    
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required int Index { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required int Length { get; set; }
+}
