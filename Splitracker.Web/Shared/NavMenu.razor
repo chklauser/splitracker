@@ -5,7 +5,7 @@
 <MudStack>
     <MudNavMenu>
         <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EmojiPeople">Charaktere</MudNavLink>
-        @if (Flags.Experimental)
+        @if (experimental)
         {
             <MudNavLink
                 Href="/Groups"
@@ -27,11 +27,11 @@
 
 @code {
     [CascadingParameter]
-    public required FlagContext Flags { get; set; }
+    public required FlagContext? Flags { get; set; }
 
     bool experimental
     {
-        get => Flags.Experimental;
+        get => Flags?.Experimental ?? false;
         set => holder.Context = holder.Context with { Experimental = value };
     }
 }

@@ -11,7 +11,7 @@ $label-row-width: 48px
 		display: grid
 		grid-template-columns: [tick] $label-row-width
 		grid-auto-columns: calc(210px / 3)
-		grid-auto-rows: 48px
+		grid-auto-rows: minmax(48px, auto)
 	
 	&.multi-timeline-vertical
 		padding-top: 24px

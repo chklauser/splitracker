@@ -60,8 +60,8 @@ partial class Ticks
 
     static (int startTick, int endTick) allocateTicks(IReadOnlyList<Tick> timeline)
     {
-        var startTick = timeline[0].At;
-        var endTick = Math.Max(timeline[^1].At, startTick + 14);
+        var startTick = timeline.Count > 0 ? timeline[0].At : 1;
+        var endTick = Math.Max(timeline.Count > 0 ? timeline[^1].At : 1, startTick + 14);
         return (startTick, endTick);
     }
 

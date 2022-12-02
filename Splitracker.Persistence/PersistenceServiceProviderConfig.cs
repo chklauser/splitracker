@@ -64,7 +64,10 @@ public static class PersistenceServiceProviderConfig
 
         services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
         services.AddSingleton<IGroupRepository, FakeGroupRepository>();
-        services.AddSingleton<ITimelineRepository, FakeTimelineRepository>();
+
+        services.AddSingleton<RavenTimelineRepository>()
+            .AlsoAddAsHostedService<RavenTimelineRepository>()
+            .AlsoAddAsSingleton<ITimelineRepository, RavenTimelineRepository>();
         return services;
     }
 

@@ -77,7 +77,7 @@
         }
         else
         {
-            newHandle.Updated += (_, _) => StateHasChanged();
+            newHandle.Updated += (_, _) => InvokeAsync(StateHasChanged);
             handle = newHandle;
         }
     }
