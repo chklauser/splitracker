@@ -20,37 +20,19 @@ class FakeGroupRepository : IGroupRepository
         var char5 = new Character("b", "Eugene", new LpPool(10), new(15));
         var char6 = new Character("c", "Felix", new LpPool(12), new(10));
 
-        var poison = new Effect("g", "Gift", 1, 30, ImmutableArray.Create(char6), 4);
-        var dazed = new Effect("d", "Benommen", 3, 7, ImmutableArray.Create(char5));
-        
         return Task.FromResult((IGroupRepositoryHandle)new FakeGroupRepositoryHandle(new[] {
-            new FakeGroupHandle(new Group(
+            new FakeGroupHandle(new(
+                "Sandkasten",
                 ImmutableDictionary.CreateRange(
                     new[] { char1, char2, char3, char4, char5, char6 }.Select(c =>
-                        new KeyValuePair<string, Character>(c.Id, c))),
-                ImmutableList.Create(char3),
-                ImmutableList.Create<Tick>(
-                    new Tick.Recovers(char1, 3),
-                    new Tick.ActionEnds(char2, 5, 1, "Fokus"),
-                    new Tick.Recovers(char4, 5),
-                    new Tick.EffectTicks(poison, 5),
-                    new Tick.EffectTicks(poison, 9),
-                    new Tick.ActionEnds(char5, 10, 2, "Bewegen"),
-                    new Tick.EffectEnds(dazed, 10),
-                    new Tick.EffectTicks(poison, 13),
-                    new Tick.Recovers(char6, 13),
-                    new Tick.EffectTicks(poison, 17),
-                    new Tick.EffectTicks(poison, 21),
-                    new Tick.EffectTicks(poison, 24),
-                    new Tick.EffectTicks(poison, 27)
-            ))),
+                        new KeyValuePair<string, Character>(c.Id, c))))),
         }));
     }
 
     public async Task<IGroupHandle> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
         var handle = await OpenAsync(principal);
-        return handle.Groups.First();
+        return handle.Groups[0];
     }
 
     public Task ApplyAsync(ClaimsPrincipal principal, IGroupCommand groupCommand)

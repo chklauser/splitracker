@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
@@ -40,6 +38,7 @@ public static class PersistenceServiceProviderConfig
         });
         services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
         services.AddSingleton<IGroupRepository, FakeGroupRepository>();
+        services.AddSingleton<ITimelineRepository, FakeTimelineRepository>();
         return services;
     }
 

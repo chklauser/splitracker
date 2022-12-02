@@ -3,7 +3,7 @@
 @using Splitracker.Domain
 @implements IAsyncDisposable
 
-@inject IGroupRepository repository
+@inject ITimelineRepository repository
 
 <PageTitle>Ticks - Splitracker</PageTitle>
 
@@ -16,7 +16,7 @@
     </MudStack>
     @if (handle != null)
     {
-        var timelineWithTracks = allocateTracks(handle.Group.Timeline).ToList();
+        var timelineWithTracks = allocateTracks(handle.Timeline.Ticks).ToList();
         <MultiTimeline
             DisableModifiers="@true"
             TimelinePosition="@TimelinePosition.Alternate"
@@ -48,47 +48,6 @@
                 }
             }
         </MultiTimeline>
-        @* <MudTimeline
-            Class="ml-12"
-            TimelinePosition="@TimelinePosition.Alternate"
-            TimelineOrientation="@TimelineOrientation.Vertical"
-            TimelineAlign="@TimelineAlign.Start">
-            @{
-                var startTick = handle.Group.Timeline.FirstOrDefault()?.At ?? 1;
-                var endTick = Math.Max(handle.Group.Timeline.LastOrDefault()?.At ?? 1, startTick + 14);
-                var currentTick = startTick - 1;
-            }
-            @foreach (var tick in handle.Group.Timeline)
-            {
-                bool tickHasChanged;
-                if (tick.At != currentTick)
-                {
-                    currentTick = tick.At;
-                    tickHasChanged = true;
-                }
-                else
-                {
-                    tickHasChanged = false;
-                }
-
-                <MudTimelineItem
-                    TimelineAlign="@TimelineAlign.Start"
-                    @key="tick.ToString()">
-                    <ItemOpposite>
-                        @if (tickHasChanged)
-                        {
-                            <MudText
-                                Typo="Typo.caption">
-                                @tick.At
-                            </MudText>
-                        }
-                    </ItemOpposite>
-                    <ItemContent>
-                        @tick
-                    </ItemContent>
-                </MudTimelineItem>
-            }
-        </MudTimeline> *@
     }
 </MudStack>
 
@@ -97,7 +56,7 @@
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
 
-    IGroupHandle? handle;
+    ITimelineHandle? handle;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -111,6 +70,7 @@
         await base.OnInitializedAsync();
         var auth = await AuthenticationState;
         handle = await repository.OpenSingleAsync(auth.User, "whocares");
+        handle.Updated += (_, _) => StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()

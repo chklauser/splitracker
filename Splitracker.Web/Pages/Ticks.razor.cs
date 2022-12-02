@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Splitracker.Domain;
-using Splitracker.Web.Shared;
 
 namespace Splitracker.Web.Pages;
 
@@ -11,7 +9,7 @@ partial class Ticks
 {
     IEnumerable<string?> timelineLabels()
     {
-        var timeline = handle?.Group.Timeline;
+        var timeline = handle?.Timeline.Ticks;
         if (timeline == null || timeline.Count == 0)
         {
             foreach (var i in Enumerable.Range(1,15))
@@ -98,6 +96,13 @@ partial class Ticks
                 _ => throw new($"Unknown tick type {tick.GetType()}"),
             };
             yield return (tick, track, nextOffset);
+            nextOffset += 1;
+        }
+        
+        while (currentTick < endTick)
+        {
+            currentTick += 1;
+            yield return (new Empty(currentTick), 0, nextOffset);
             nextOffset += 1;
         }
     }
