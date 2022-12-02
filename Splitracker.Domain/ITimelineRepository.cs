@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Splitracker.Domain.Commands;
@@ -8,7 +7,7 @@ namespace Splitracker.Domain;
 
 public interface ITimelineRepository
 {
-    Task<ITimelineHandle> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
+    Task<ITimelineHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
     Task ApplyAsync(ClaimsPrincipal principal, ITimelineCommand groupCommand);
 }
 

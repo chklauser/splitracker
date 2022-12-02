@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Characters;
 
 internal class FakeCharacterRepository : ICharacterRepository
 {

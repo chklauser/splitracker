@@ -29,16 +29,4 @@
     <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="Shared\Characters\CharacterCard.razor" />
-    <AdditionalFiles Include="Shared\Characters\CharacterCardSkeleton.razor" />
-    <AdditionalFiles Include="Shared\Characters\PointDisplay.razor" />
-    <AdditionalFiles Include="Shared\Characters\PointsBlock.razor" />
-    <AdditionalFiles Include="Shared\Characters\PointsEditor.razor" />
-    <AdditionalFiles Include="Shared\Characters\PointsPreview.razor" />
-    <AdditionalFiles Include="Shared\Characters\PoolEditor.razor" />
-    <AdditionalFiles Include="Shared\Characters\ShortRest.razor" />
-    <AdditionalFiles Include="Shared\Characters\StopChanneling.razor" />
-  </ItemGroup>
-
 </Project>

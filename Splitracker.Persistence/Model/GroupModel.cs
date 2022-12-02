@@ -6,5 +6,6 @@ class Group
 {
     public string? Id { get; set; }
     public required string Name { get; set; }
-    public required List<string> Characters { get; set; }
+    public required List<string> CharacterIds { get; set; }
+    public required List<GroupMember> Members { get; set; }
 }

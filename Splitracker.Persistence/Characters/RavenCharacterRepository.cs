@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -10,40 +9,46 @@ using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Model;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Characters;
 
 class RavenCharacterRepository : ICharacterRepository
 {
     internal const string CollectionName = "Characters";
-    const string OidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
+
     readonly IDocumentStore store;
     readonly ILogger<RavenCharacterRepository> log;
+    readonly IUserRepository userRepository;
 
     readonly ConcurrentDictionary<string, Task<RavenCharacterRepositorySubscription>> handles = new();
 
-    public RavenCharacterRepository(IDocumentStore store, ILogger<RavenCharacterRepository> log)
+    public RavenCharacterRepository(
+        IDocumentStore store,
+        ILogger<RavenCharacterRepository> log,
+        IUserRepository userRepository
+    )
     {
         this.store = store;
         this.log = log;
+        this.userRepository = userRepository;
     }
 
-    bool isOwner(string characterId, string oid) => 
-        characterId.StartsWith(CharacterDocIdPrefix(oid), StringComparison.Ordinal);
+    bool isOwner(string characterId, string userId) =>
+        characterId.StartsWith(CharacterDocIdPrefix(userId), StringComparison.Ordinal);
 
     [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
     public async Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand)
     {
-        var oid = oidOf(principal);
+        var userId = await userRepository.GetUserIdAsync(principal);
 
-        log.LogInformation("Applying character {Command} to {Oid}", characterCommand, oid);
+        log.LogInformation("Applying character {Command} to {Oid}", characterCommand, userId);
         using var session = store.OpenAsyncSession();
         CharacterModel? model;
         var id = characterCommand.CharacterId;
         if (id != null)
         {
-            if (!isOwner(id, oid))
+            if (!isOwner(id, userId))
             {
-                throw new ArgumentException($"Character {id} does not belong to user {oid}.");
+                throw new ArgumentException($"Character {id} does not belong to user {userId}.");
             }
 
             model = await session.LoadAsync<CharacterModel>(id);
@@ -68,14 +73,14 @@ class RavenCharacterRepository : ICharacterRepository
                     Math.Min(domain.TotalCapacity - model.Points.Exhausted - model.Points.Consumed,
                         model.Points.Channeled + points.Channeled));
             }
-            
+
             if (points.Exhausted < 0)
             {
                 model.Points.Exhausted = Math.Max(0,
                     Math.Min(domain.TotalCapacity - model.Points.Channeled - model.Points.Consumed,
                         model.Points.Exhausted + points.Exhausted));
             }
-            
+
             // Only then apply point addition ("damage") and start with the "worst" type: consume.
             // working our way down the list until the capacity is filled.
             model.Points.Consumed = Math.Max(0,
@@ -111,21 +116,21 @@ class RavenCharacterRepository : ICharacterRepository
             {
                 log.Log(LogLevel.Warning, "Character {Id} doesn't have an Lp channeling valued {Points}", id, points);
             }
-            
+
             model.Channelings.RemoveAt(idx);
             applyPointsTo(model, domain, new(-points, points, 0));
         }
-        
+
         switch (characterCommand)
         {
             case ApplyPoints { Pool: PoolType.Lp, Points: var points }:
                 applyPointsTo(model!.Lp, model.Lp.ToDomainLp(), points);
                 break;
-            case ApplyPoints { Pool: PoolType.Fo, Points: var points}:
+            case ApplyPoints { Pool: PoolType.Fo, Points: var points }:
                 applyPointsTo(model!.Fo, model.Fo.ToDomainFo(), points);
                 break;
             case CreateCharacter create:
-                var newCharacter = new CharacterModel(CharacterDocIdPrefix(oid), create.Name,
+                var newCharacter = new CharacterModel(CharacterDocIdPrefix(userId), create.Name,
                     new() { BaseCapacity = create.LpBaseCapacity },
                     new() { BaseCapacity = create.FoBaseCapacity });
                 await session.StoreAsync(newCharacter);
@@ -149,7 +154,7 @@ class RavenCharacterRepository : ICharacterRepository
                 session.Delete(model);
                 break;
             case CloneCharacter:
-                await session.StoreAsync(new Character(CharacterDocIdPrefix(oid), model!.Name, model.Lp.BaseCapacity,
+                await session.StoreAsync(new Character(CharacterDocIdPrefix(userId), model!.Name, model.Lp.BaseCapacity,
                     model.Fo.BaseCapacity).ToDbModel());
                 break;
             default:
@@ -158,61 +163,23 @@ class RavenCharacterRepository : ICharacterRepository
 
         await session.SaveChangesAsync();
     }
-
+    
     public async Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal)
     {
-        var oid = oidOf(principal);
+        var userId = await userRepository.GetUserIdAsync(principal);
 
-        var remainingTries = 5;
-        while (remainingTries-- > 0)
-        {
-            var ourTask = new TaskCompletionSource<RavenCharacterRepositorySubscription>();
-            var ourSubscription = ourTask.Task;
-            var installedSubscription = handles.GetOrAdd(oid, ourSubscription);
-            if (installedSubscription == ourSubscription)
-            {
-                try
-                {
-                    var subscription = await RavenCharacterRepositorySubscription.OpenAsync(store, oid, log);
-                    ourTask.SetResult(subscription);
-                }
-                catch (Exception ex)
-                {
-                    ourTask.SetException(ex);
-                    handles.TryRemove(oid, out _);
-                    throw;
-                }
-            }
-            else
-            {
-                log.Log(LogLevel.Debug, "Trying to join existing subscription for {Oid}", oid);
-            }
-
-            if ((await installedSubscription).TryGetHandle() is { } handle)
-            {
-                return handle;
-            }
-            else
-            {
-                // The subscription has been disposed of. Clear it from the dictionary (but only if it matches)
-                // and try again.
-                log.Log(LogLevel.Information, "Subscription for {Oid} was disposed of. Retrying.", oid);
-                handles.TryRemove(new(oid, installedSubscription));
-            }
-        }
-        
-        throw new InvalidOperationException("Failed to open a handle.");
+        return await handles.TryCreateSubscription(
+            userId,
+            createSubscription: async () => await RavenCharacterRepositorySubscription.OpenAsync(store, userId, log),
+            onExistingSubscription: () =>
+                log.Log(LogLevel.Debug, "Trying to join existing character subscription for {UserId}", userId),
+            tryGetHandle: s => s.TryGetHandle(),
+            onRetry: () => log.Log(LogLevel.Information, "Subscription for {UserId} was disposed of. Retrying.", userId)
+        ) ?? throw new InvalidOperationException("Failed to open a handle.");
     }
 
-    static string oidOf(ClaimsPrincipal principal)
+    internal static string CharacterDocIdPrefix(string userId)
     {
-        var oid = principal.Claims.FirstOrDefault(c => c.Type == OidClaimType)?.Value ??
-            throw new ArgumentException("Principal does not have an oid claim.", nameof(principal));
-        return oid;
-    }
-
-    internal static string CharacterDocIdPrefix(string oid)
-    {
-        return $"{CollectionName}/{oid}/";
+        return $"{CollectionName}/{userId["Users/".Length..]}/";
     }
 }

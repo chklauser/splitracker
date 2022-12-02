@@ -11,7 +11,7 @@ using Raven.Client.Documents.Changes;
 using Splitracker.Domain;
 using Splitracker.Persistence.Model;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Characters;
 
 /// <summary>
 /// A shared subscription for one user (object identifier, oid). Is not handed out directly to clients.
@@ -20,7 +20,7 @@ namespace Splitracker.Persistence;
 [SuppressMessage("ReSharper", "ContextualLoggerProblem")]
 class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
 {
-    internal ReaderWriterLockSlim Lock { get; } = new();
+    readonly ReaderWriterLockSlim @lock = new();
     readonly IDocumentStore store;
     readonly string oid;
     readonly ILogger<RavenCharacterRepository> log;
@@ -29,12 +29,12 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
 
     public static async ValueTask<RavenCharacterRepositorySubscription> OpenAsync(
         IDocumentStore store,
-        string oid,
+        string userId,
         ILogger<RavenCharacterRepository> log
     )
     {
         using var session = store.OpenAsyncSession();
-        var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(oid);
+        var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
         var characters = new List<RavenCharacterHandle>();
         await using var characterEnumerator = await session.Advanced.StreamAsync<CharacterModel>(docIdPrefix);
         while (await characterEnumerator.MoveNextAsync())
@@ -46,12 +46,12 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
 
         log.Log(LogLevel.Information, 
             "Initialized character repository subscription for {Oid} with {Count} characters", 
-            oid, characters.Count);
+            userId, characters.Count);
         
-        return new(store, docIdPrefix, characters, log, oid);
+        return new(store, docIdPrefix, characters, log, userId);
     }
 
-    public RavenCharacterRepositorySubscription(
+    RavenCharacterRepositorySubscription(
         IDocumentStore store,
         string docIdPrefix,
         IEnumerable<RavenCharacterHandle> characters,
@@ -71,7 +71,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
 
     public RavenCharacterRepositoryHandle? TryGetHandle()
     {
-        Lock.EnterWriteLock();
+        @lock.EnterWriteLock();
         try
         {
             if (referenceCount == 0)
@@ -83,14 +83,14 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         }
         finally
         {
-            Lock.ExitWriteLock();
+            @lock.ExitWriteLock();
         }
         return new(this);
     }
 
     public void Release()
     {
-        Lock.EnterWriteLock();
+        @lock.EnterWriteLock();
         try
         {
             referenceCount -= 1;
@@ -101,24 +101,26 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         }
         finally
         {
-            Lock.ExitWriteLock();
+            @lock.ExitWriteLock();
         }
     }
 
     public ValueTask DisposeAsync()
     {
         characterSubscription.Dispose();
-        Lock.EnterWriteLock();
+        @lock.EnterWriteLock();
+        IImmutableList<RavenCharacterHandle> cs;
         try
         {
             characterAdded = null;
+            characterDeleted = null;
+            cs = Interlocked.Exchange(ref characters, ImmutableList<RavenCharacterHandle>.Empty);
         }
         finally
         {
-            Lock.ExitWriteLock();
+            @lock.ExitWriteLock();
         }
 
-        var cs = Interlocked.Exchange(ref characters, ImmutableList<RavenCharacterHandle>.Empty);
         foreach (var handle in cs)
         {
             handle.Dispose();
@@ -127,7 +129,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         return ValueTask.CompletedTask;
     }
 
-    volatile ImmutableList<RavenCharacterHandle> characters;
+    volatile IImmutableList<RavenCharacterHandle> characters;
 
     public IReadOnlyList<ICharacterHandle> Characters => characters;
     EventHandler? characterAdded;
@@ -135,26 +137,26 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
     {
         add
         {
-            Lock.EnterWriteLock();
+            @lock.EnterWriteLock();
             try
             {
                 characterAdded += value;
             }
             finally
             {
-                Lock.ExitWriteLock();
+                @lock.ExitWriteLock();
             }
         }
         remove
         {
-            Lock.EnterWriteLock();
+            @lock.EnterWriteLock();
             try
             {
                 characterAdded -= value;
             }
             finally
             {
-                Lock.ExitWriteLock();
+                @lock.ExitWriteLock();
             }
         }
     }
@@ -164,26 +166,26 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
     {
         add
         {
-            Lock.EnterWriteLock();
+            @lock.EnterWriteLock();
             try
             {
                 characterDeleted += value;
             }
             finally
             {
-                Lock.ExitWriteLock();
+                @lock.ExitWriteLock();
             }
         }
         remove
         {
-            Lock.EnterWriteLock();
+            @lock.EnterWriteLock();
             try
             {
                 characterDeleted -= value;
             }
             finally
             {
-                Lock.ExitWriteLock();
+                @lock.ExitWriteLock();
             }
         }
     }
@@ -212,7 +214,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
                 log.Log(LogLevel.Debug, "Character {Id} was deleted from {Oid}", value.Id, oid);
                 characters = characters.Remove(handle);
                 handle.Dispose();
-                Lock.EnterReadLock();
+                @lock.EnterReadLock();
                 EventHandler? characterDeletedHandler;
                 try
                 {
@@ -220,7 +222,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
                 }
                 finally
                 {
-                    Lock.ExitReadLock();
+                    @lock.ExitReadLock();
                 }
                 
                 characterDeletedHandler?.Invoke(this, EventArgs.Empty);
@@ -233,7 +235,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
                     if (handle == null)
                     {
                         characters = characters.Add(new(newChar));
-                        Lock.EnterReadLock();
+                        @lock.EnterReadLock();
                         EventHandler? characterAddedHandler;
                         try
                         {
@@ -241,7 +243,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
                         }
                         finally
                         {
-                            Lock.ExitReadLock();
+                            @lock.ExitReadLock();
                         }
 
                         characterAddedHandler?.Invoke(this, EventArgs.Empty);

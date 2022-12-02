@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Splitracker.Domain;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Characters;
 
 /// <summary>
 /// A wrapper around a <see cref="RavenCharacterRepositorySubscription"/> implement

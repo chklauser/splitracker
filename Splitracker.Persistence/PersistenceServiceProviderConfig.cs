@@ -1,17 +1,38 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
+using Raven.Client.Json.Serialization.NewtonsoftJson;
 using Splitracker.Domain;
+using Splitracker.Persistence.Characters;
+using Splitracker.Persistence.Model;
+using Splitracker.Persistence.Timelines;
+using Splitracker.Persistence.Users;
 
 namespace Splitracker.Persistence;
 
+[SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public static class PersistenceServiceProviderConfig
 {
+    public static IServiceCollection AlsoAddAsHostedService<T>(this IServiceCollection services) where T : class, IHostedService
+    {
+        services.AddHostedService(p => p.GetRequiredService<T>());
+        return services;
+    }
+    public static IServiceCollection AlsoAddAsSingleton<TInterface, TRegistration>(this IServiceCollection services) 
+        where TRegistration : class, TInterface
+        where TInterface : class
+    {
+        services.AddSingleton<TInterface>(p => p.GetRequiredService<TRegistration>());
+        return services;
+    }
+    
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<RavenOptions>()
@@ -36,6 +57,11 @@ public static class PersistenceServiceProviderConfig
             logger.Log(LogLevel.Information, "Document store initialized");
             return store;
         });
+
+        services.AddSingleton<RavenUserRepository>()
+            .AlsoAddAsSingleton<IUserRepository, RavenUserRepository>()
+            .AlsoAddAsHostedService<RavenUserRepository>();
+
         services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
         services.AddSingleton<IGroupRepository, FakeGroupRepository>();
         services.AddSingleton<ITimelineRepository, FakeTimelineRepository>();

@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Splitracker.Domain;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Characters;
 
 /// <summary>
 /// Mutable container for a <see cref="Character"/>. Triggers the <see cref="CharacterUpdated"/> event whenever

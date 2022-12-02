@@ -4,6 +4,7 @@
 @implements IAsyncDisposable
 
 @inject ITimelineRepository repository
+@inject NavigationManager nav
 
 <PageTitle>Ticks - Splitracker</PageTitle>
 
@@ -69,8 +70,16 @@
 
         await base.OnInitializedAsync();
         var auth = await AuthenticationState;
-        handle = await repository.OpenSingleAsync(auth.User, "whocares");
-        handle.Updated += (_, _) => StateHasChanged();
+        var newHandle = await repository.OpenSingleAsync(auth.User, "Groups/0000000000000000021-A");
+        if (newHandle == null)
+        {
+            nav.NavigateTo("/not-found");
+        }
+        else
+        {
+            newHandle.Updated += (_, _) => StateHasChanged();
+            handle = newHandle;
+        }
     }
 
     public async ValueTask DisposeAsync()

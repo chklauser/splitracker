@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 
@@ -58,6 +59,18 @@ class FakeGroupRepositoryHandle : IGroupRepositoryHandle
     public IReadOnlyList<IGroupHandle> Groups { get; }
     public event EventHandler? GroupAdded;
     public event EventHandler? GroupRemoved;
+
+    [PublicAPI]
+    public void TriggerGroupAdded()
+    {
+        GroupAdded?.Invoke(this, EventArgs.Empty);
+    }
+    
+    [PublicAPI]
+    public void TriggerGroupRemoved()
+    {
+        GroupRemoved?.Invoke(this, EventArgs.Empty);
+    }
 }
 
 class FakeGroupHandle : IGroupHandle
@@ -75,4 +88,10 @@ class FakeGroupHandle : IGroupHandle
 
     public Group Group { get; }
     public event EventHandler? GroupUpdated;
+    
+    [PublicAPI]
+    public void TriggerGroupUpdated()
+    {
+        GroupUpdated?.Invoke(this, EventArgs.Empty);
+    }
 }

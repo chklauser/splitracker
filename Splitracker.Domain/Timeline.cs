@@ -2,8 +2,11 @@
 
 namespace Splitracker.Domain;
 
-public record Timeline(string GroupName, 
+public record Timeline(
+    string GroupId,
+    string GroupName, 
     IImmutableDictionary<string, Character> Characters,
+    IImmutableDictionary<string, Effect> Effects,
     IImmutableList<Character> Ready,
     IImmutableList<Tick> Ticks);
 
@@ -30,7 +33,7 @@ public abstract record Tick(int At)
 
 public record Effect(
     string Id,
-    string Name,
+    string Description,
     int StartsAt,
     int TotalDuration,
     IImmutableList<Character> Affects,

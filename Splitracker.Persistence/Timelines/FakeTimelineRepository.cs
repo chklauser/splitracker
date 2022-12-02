@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 
-namespace Splitracker.Persistence;
+namespace Splitracker.Persistence.Timelines;
 
 class FakeTimelineRepository : ITimelineRepository
 {
-    public Task<ITimelineHandle> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
+    public Task<ITimelineHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
         var char1 = new Character("x", "Alvin Buckmeyer", new LpPool(10), new(10));
         var char2 = new Character("y", "Brahm", new LpPool(12), new(8));
@@ -24,11 +26,13 @@ class FakeTimelineRepository : ITimelineRepository
         var dazed = new Effect("d", "Benommen", 3, 7, ImmutableArray.Create(char5));
         
         return Task.FromResult(
-            (ITimelineHandle)new FakeTimelineHandle(new Timeline(
+            (ITimelineHandle?)new FakeTimelineHandle(new Timeline(
+                "x",
                 "Sandkasten",
                 ImmutableDictionary.CreateRange(
                     new[] { char1, char2, char3, char4, char5, char6 }.Select(c =>
                         new KeyValuePair<string, Character>(c.Id, c))),
+                ImmutableDictionary.CreateRange(new[]{poison, dazed}.Select(e => new KeyValuePair<string, Effect>(e.Id, e))),
                 ImmutableList.Create(char3),
                 ImmutableList.Create<Tick>(
                     new Tick.Recovers(char1, 3),
@@ -48,9 +52,14 @@ class FakeTimelineRepository : ITimelineRepository
         );
     }
 
-    public Task ApplyAsync(ClaimsPrincipal principal, ITimelineCommand timelineCommand)
+    public Task ApplyAsync(ClaimsPrincipal principal, ITimelineCommand groupCommand)
     {
         throw new NotImplementedException();
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }
 
@@ -69,4 +78,10 @@ class FakeTimelineHandle : ITimelineHandle
 
     public Timeline Timeline { get; }
     public event EventHandler? Updated;
+    
+    [PublicAPI]
+    public void TriggerUpdate(Timeline timeline)
+    {
+        Updated?.Invoke(this, EventArgs.Empty);
+    }
 }
