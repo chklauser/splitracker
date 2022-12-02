@@ -22,7 +22,7 @@
     <PackageVersion Include="Pulumi.DigitalOcean" Version="4.16.0" />
     <PackageVersion Include="Pulumi.Kubernetes" Version="3.22.1" />
     <PackageVersion Include="Pulumi.Random" Version="4.8.2" />
-    <PackageVersion Include="RavenDB.Client" Version="5.4.4" />
+    <PackageVersion Include="RavenDB.Client" Version="5.4.5" />
     <PackageVersion Include="Riok.Mapperly" Version="2.5.0" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
