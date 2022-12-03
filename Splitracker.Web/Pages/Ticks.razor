@@ -1,20 +1,11 @@
 ﻿@page "/Ticks"
 @using Splitracker.Web.Shared.Characters
 @using Splitracker.Domain
-@implements IAsyncDisposable
-
-@inject ITimelineRepository repository
-@inject NavigationManager nav
 
 <PageTitle>Ticks - Splitracker</PageTitle>
 
 <MudStack
     Row="@true">
-    <MudStack
-        Style="width: 12rem">
-        <CharacterCardSkeleton/>
-        <CharacterCardSkeleton/>
-    </MudStack>
     @if (handle != null)
     {
         var timelineWithTracks = allocateTracks(handle.Timeline.Ticks).ToList();
@@ -25,9 +16,12 @@
             Labels="@timelineLabels(timelineWithTracks)">
             @foreach (var (track, lastOffset) in timelineWithTracks.GroupBy(y => y.Track).Select(track => (track.Key, track.Max(t => t.Offset))))
             {
-                <MultiTimelineTrack @key="@track" Index="@track" Length="@(track == 0 ? timelineWithTracks.Count : lastOffset + 1)" />
+                <MultiTimelineTrack
+                    @key="@track"
+                    Index="@track"
+                    Length="@(track == 0 ? timelineWithTracks.Count : lastOffset + 1)"/>
             }
-            @foreach(var (tick, track, offset) in timelineWithTracks)
+            @foreach (var (tick, track, offset) in timelineWithTracks)
             {
                 @if (tick is not Empty)
                 {
@@ -36,58 +30,35 @@
                         Track="@track"
                         Offset="@offset"
                         Size="@Size.Medium">
+                        <ItemDot>
+                            @if (tick is Tick.IHasCharacter { Character: var c})
+                            {
+                                <MudAvatar>
+                                    @string.Join("", c.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
+                                </MudAvatar>
+                            }
+                            else if (tick is Tick.IHasEffect)
+                            {
+                                <MudIcon
+                                    Icon="@Icons.Material.Filled.CrisisAlert"/>
+                            }
+                        </ItemDot>
                         <ItemContent>
-                            <MudCard>
-                            @tick
-                            </MudCard>
+                            <TickSummary
+                                Tick="@tick"/>
                         </ItemContent>
                     </MultiTimelineItem>
                 }
                 else
                 {
-                    <MultiTimelineItem @key="@($"synth-tick:{tick.At}")" Track="@track" Offset="@offset" Size="@Size.Small"/>
+                    <MultiTimelineItem
+                        @key="@($"synth-tick:{tick.At}")"
+                        Track="@track"
+                        Offset="@offset"
+                        Size="@Size.Small"
+                        Variant="Variant.Outlined"/>
                 }
             }
         </MultiTimeline>
     }
 </MudStack>
-
-@code {
-
-    [CascadingParameter]
-    public required Task<AuthenticationState> AuthenticationState { get; set; }
-
-    ITimelineHandle? handle;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (handle != null)
-        {
-            await handle.DisposeAsync();
-        }
-        handle = null;
-        StateHasChanged();
-
-        await base.OnInitializedAsync();
-        var auth = await AuthenticationState;
-        var newHandle = await repository.OpenSingleAsync(auth.User, "Groups/0000000000000000021-A");
-        if (newHandle == null)
-        {
-            nav.NavigateTo("/not-found");
-        }
-        else
-        {
-            newHandle.Updated += (_, _) => InvokeAsync(StateHasChanged);
-            handle = newHandle;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (handle != null)
-        {
-            await handle.DisposeAsync();
-        }
-    }
-
-}

@@ -14,7 +14,7 @@ namespace Splitracker.Web.Shared;
 public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
 {
     const int SkipColumns = 1;
-    const int SpanColumns = 3;
+    const int SpanColumns = 7;
     
     string classnames =>
         new CssBuilder("multi-timeline-item")

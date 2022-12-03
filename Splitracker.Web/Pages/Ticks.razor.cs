@@ -1,43 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Splitracker.Domain;
 
 namespace Splitracker.Web.Pages;
 
-partial class Ticks
+partial class Ticks : IAsyncDisposable
 {
-    IEnumerable<string?> timelineLabels()
-    {
-        var timeline = handle?.Timeline.Ticks;
-        if (timeline == null || timeline.Count == 0)
-        {
-            foreach (var i in Enumerable.Range(1,15))
-            {
-                yield return i.ToString();
-            }
-            yield break;
-        }
-        
-        var (startTick, endTick) = allocateTicks(timeline);
-        var currentTick = startTick - 1;
-        foreach (var tick in timeline)
-        {
-            if (tick.At != currentTick)
-            {
-                currentTick = tick.At;
-                yield return currentTick.ToString();
-            }
-            else
-            {
-                yield return null;
-            }
-        }
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+    
+    [Inject]
+    public required ITimelineRepository Repository { get; set; }
+    
+    [Inject]
+    public required NavigationManager Nav { get; set; }
 
-        while (currentTick < endTick)
+    ITimelineHandle? handle;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
         {
-            currentTick += 1;
-            yield return currentTick.ToString();
+            await handle.DisposeAsync();
+        }
+        handle = null;
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+        var auth = await AuthenticationState;
+        var newHandle = await Repository.OpenSingleAsync(auth.User, "Groups/0000000000000000021-A");
+        if (newHandle == null)
+        {
+            Nav.NavigateTo("/not-found");
+        }
+        else
+        {
+            newHandle.Updated += (_, _) => InvokeAsync(StateHasChanged);
+            handle = newHandle;
         }
     }
 
@@ -108,4 +111,13 @@ partial class Ticks
     }
 
     record Empty(int At) : Tick(At);
+    
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+    }
 }

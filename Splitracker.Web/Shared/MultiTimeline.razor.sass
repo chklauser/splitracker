@@ -10,7 +10,7 @@ $label-row-width: 48px
 		position: relative
 		display: grid
 		grid-template-columns: [tick] $label-row-width
-		grid-auto-columns: calc(210px / 3)
+		grid-auto-columns: 32px
 		grid-auto-rows: minmax(48px, auto)
 	
 	&.multi-timeline-vertical
@@ -84,21 +84,13 @@ $label-row-width: 48px
 				height: 14px
 				width: 14px
 	
-		//&.multi-timeline-dot-size-medium
-		//	width: 38px
-		//	height: 38px
-		//
-		//	.multi-timeline-item-dot-inner
-		//		height: 30px
-		//		width: 30px
-
 		&.multi-timeline-dot-size-medium
-			width: 24px
-			height: 24px
+			width: 38px
+			height: 38px
 
 			.multi-timeline-item-dot-inner
-				height: 18px
-				width: 18px
+				height: 30px
+				width: 30px
 
 		&.multi-timeline-dot-size-large
 			width: 52px

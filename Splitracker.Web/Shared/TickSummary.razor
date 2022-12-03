@@ -1,0 +1,65 @@
+﻿@using Splitracker.Domain
+<MudPaper Class="pa-2 mb-4 ml-n1">
+    <MudText>
+    @switch (Tick)
+    {
+        case Tick.Recovers t:
+            <text>@t.Character.Name ist bereit</text>
+            break;
+        case Tick.ActionEnds { Description: {} description } t:
+            <text>@t.Character.Name ist fertig mit: @description (@t.TotalDuration Ticks)</text>
+            break;
+        case Tick.ActionEnds t:
+            <text>@t.Character.Name hat kontinuierliche Aktion abgeschlossen (@t.TotalDuration Ticks)</text>
+            break;
+        case Tick.EffectTicks { Effect.Affects.Count: 0 } t:
+            <text>
+                @t.Effect.Description zeigt Wirkung
+                (alle @t.Effect.TickInterval Ticks; hält noch @remainingEffectDuration(t) Ticks an)
+            </text>
+            break;
+        case Tick.EffectTicks { Effect.Affects: { Count: > 0 } chars } t:
+            <text>
+                @t.Effect.Description betrifft
+                @foreach (var c in chars)
+                {
+                    <MudChip
+                        Variant="Variant.Outlined">
+                        @c.Name
+                    </MudChip>
+                }
+                (alle @t.Effect.TickInterval Ticks; hält noch @remainingEffectDuration(t) Ticks an)
+            </text>
+            break;
+        case Tick.EffectEnds { Effect.Affects.Count: 0 } t:
+            <text>@t.Effect.Description endet (total @t.Effect.TotalDuration Ticks)</text>
+            break;
+        case Tick.EffectEnds {Effect.Affects: {Count: >0} chars} t:
+            <text>
+                @t.Effect.Description endet für
+                @foreach (var c in chars)
+                {
+                    <MudChip
+                        Variant="Variant.Outlined">
+                        @c.Name
+                    </MudChip>
+                }
+                (total @t.Effect.TotalDuration Ticks)
+            </text>
+            break;
+        case var otherTick:
+            throw new ArgumentOutOfRangeException(nameof(Tick), "Unknown tick type " + otherTick.GetType().Name);
+    }
+    </MudText>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required Tick Tick { get; set; }
+
+    int remainingEffectDuration(Tick.EffectTicks tick) =>
+        tick.Effect.StartsAt + tick.Effect.TotalDuration - tick.At;
+
+}

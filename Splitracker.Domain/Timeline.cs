@@ -12,22 +12,32 @@ public record Timeline(
 
 public abstract record Tick(int At)
 {
-    public record Recovers(Character Character, int At) : Tick(At)
+    public record Recovers(Character Character, int At) : Tick(At), IHasCharacter
     {
         public override string ToString() => $"{At}:recover:{Character.Id}";
     }
-    public record ActionEnds(Character Character, int At, int StartedAt, string? Description = null) : Tick(At)
+    public record ActionEnds(Character Character, int At, int TotalDuration, string? Description = null) : Tick(At), IHasCharacter
     {
         public override string ToString() => $"{At}:end:{Character.Id}";
     }
 
-    public record EffectEnds(Effect Effect, int At) : Tick(At)
+    public record EffectEnds(Effect Effect, int At) : Tick(At), IHasEffect
     {
         public override string ToString() => $"{At}:effect:end:{Effect.Id}";
     }
-    public record EffectTicks(Effect Effect, int At) : Tick(At)
+    public record EffectTicks(Effect Effect, int At) : Tick(At), IHasEffect
     {
         public override string ToString() => $"{At}:effect:tick:{Effect.Id}";
+    }
+    
+    public interface IHasCharacter
+    {
+        Character Character { get; }
+    }
+    
+    public interface IHasEffect
+    {
+        Effect Effect { get; }
     }
 }
 

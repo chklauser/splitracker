@@ -26,7 +26,7 @@ class Tick
 {
     public required TickType Type { get; set; }
     public required int At { get; set; }
-    public int? StartedAt { get; set; }
+    public int? TotalDuration { get; set; }
     public string? CharacterId { get; set; }
     public string? EffectId { get; set; }
     public string? Description { get; set; }
@@ -58,9 +58,9 @@ static class TimelineModelMapper
                 { Type: TickType.Recovers, CharacterId: { } cid, At: var at } =>
                     (Domain.Tick)new Splitracker.Domain.Tick.Recovers(charactersById[cid], at),
                 {
-                    Type: TickType.ActionEnds, CharacterId: { } cid, At: var at, StartedAt: { } startedAt,
+                    Type: TickType.ActionEnds, CharacterId: { } cid, At: var at, TotalDuration: { } totalDuration,
                     Description: var description
-                } => new Domain.Tick.ActionEnds(charactersById[cid], at, startedAt, description),
+                } => new Domain.Tick.ActionEnds(charactersById[cid], at, totalDuration, description),
                 {
                     Type: TickType.EffectEnds, EffectId: { } eid, At: var at
                 } => new Domain.Tick.EffectEnds(effectsById[eid], at),
