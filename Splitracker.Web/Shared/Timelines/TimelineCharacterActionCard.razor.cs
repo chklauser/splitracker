@@ -16,6 +16,10 @@ partial class TimelineCharacterActionCard
     public required bool IsReadyNow { get; set; }
 
     [Parameter]
+    [EditorRequired]
+    public required bool CanReact { get; set; }
+
+    [Parameter]
     public required CharacterActionData ActionData { get; set; }
 
     [Parameter]
@@ -166,6 +170,17 @@ partial class TimelineCharacterActionCard
         Min: 0,
         Max: 0,
         Default: 0);
+
+    static readonly ActionTemplate Reaction = new(
+        "__reaction",
+        "Reaktion",
+        ActionTemplateType.Reaction);
+
+    static readonly ActionTemplate ActiveDefense = new(
+        "__active_defense",
+        "Aktive Abwehr",
+        ActionTemplateType.Reaction,
+        Default: 3);
 
     #endregion
 }

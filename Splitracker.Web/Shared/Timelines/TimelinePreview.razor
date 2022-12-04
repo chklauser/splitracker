@@ -51,6 +51,7 @@ else
                                 <TimelineCharacterActionCard 
                                     Tick="ct" 
                                     IsReadyNow="@(offset == 0)"
+                                    CanReact="@(offset - allocatedTimeline[0].Tick.At < 30)"
                                     @bind-ActionData:get="getCharacterActionData(ct.Character)"
                                     @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
                                     />

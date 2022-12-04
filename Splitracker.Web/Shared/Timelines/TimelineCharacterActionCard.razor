@@ -26,7 +26,20 @@
         </MudCardHeader>
         <MudCardContent
             Class="pb-0">
-            <MudText>ist bereit für die nächste Aktion</MudText>
+            <MudText>
+                @if (IsReadyNow)
+                {
+                    <text>ist bereit für die nächste Aktion.</text> 
+                }
+                else if(CanReact)
+                {
+                    <text>könnte reagieren.</text>
+                }
+                else
+                {
+                    <text>muss sich erst wieder Überblick verschaffen.</text>
+                }
+            </MudText>
             <MudStack
                 Row="true"
                 Class="align-center justify-space-between">
@@ -68,28 +81,38 @@
                 Value="@this">
                 @if (ActionData.NumberOfTicks > 0)
                 {
+                    if (!IsReadyNow)
+                    {
+                        <TimelineActionButton
+                            Action="@Reaction"/>
+                        <TimelineActionButton
+                            Action="@ActiveDefense"/>
+                    }
                     <TimelineActionButton
                         Action="@Ready"/>
                     <TimelineActionButton
                         Action="@Continuous"/>
                     <TimelineActionButton
                         Action="@Immediate"/>
-                    <TimelineActionButton
-                        Action="@Move"/>
-                    <TimelineActionButton
-                        Action="@Sprint"/>
-                    <TimelineActionButton
-                        Action="@LookForGap"/>
-                    <TimelineActionButton
-                        Action="@PrepareRanged"/>
-                    <TimelineActionButton
-                        Action="@Aim"/>
-                    <TimelineActionButton
-                        Action="@Shoot"/>
-                    <TimelineActionButton
-                        Action="@Focus"/>
-                    <TimelineActionButton
-                        Action="@CastSpell"/>
+                    if (IsReadyNow)
+                    {
+                        <TimelineActionButton
+                            Action="@Move"/>
+                        <TimelineActionButton
+                            Action="@Sprint"/>
+                        <TimelineActionButton
+                            Action="@LookForGap"/>
+                        <TimelineActionButton
+                            Action="@PrepareRanged"/>
+                        <TimelineActionButton
+                            Action="@Aim"/>
+                        <TimelineActionButton
+                            Action="@Shoot"/>
+                        <TimelineActionButton
+                            Action="@Focus"/>
+                        <TimelineActionButton
+                            Action="@CastSpell"/>
+                    }
                 }
                 else
                 {
