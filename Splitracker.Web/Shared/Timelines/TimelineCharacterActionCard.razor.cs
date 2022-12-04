@@ -72,15 +72,41 @@ partial class TimelineCharacterActionCard
                 NumberOfTicks = next is { Default: { } defaultTicks }
                     ? defaultTicks
                     : Math.Clamp(ActionData.NumberOfTicks, minNumberOfTicks(next), maxNumberOfTicks(next)),
+                Description = next is {Description: {} defaultDescription} 
+                    ? defaultDescription 
+                    : ActionData.Description,
             });
         }
+    }
+
+    async Task descriptionChanged(string newDescription)
+    {
+        if (ActionDataChanged is not { } changed)
+        {
+            return;
+        }
+
+        await changed.InvokeAsync(ActionData with {
+            Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription
+        });
     }
 
     #region Pre-defined actions
 
     static readonly ActionTemplate Immediate = new("__immediate", "Sofort", ActionTemplateType.Immediate);
     static readonly ActionTemplate Continuous = new("__continuous", "Kont.", ActionTemplateType.Continuous);
-    static readonly ActionTemplate Move = new("__move", "Bewegen", ActionTemplateType.Continuous, Default: 5);
+    static readonly ActionTemplate Move = new(
+        "__move",
+        "Bewegen",
+        ActionTemplateType.Continuous,
+        Default: 5,
+        Description: "Bewegen");
+    static readonly ActionTemplate Sprint = new(
+        "__sprint",
+        "Sprinten",
+        ActionTemplateType.Continuous,
+        Default: 10,
+        Description: "Sprinten");
     static readonly ActionTemplate Ready = new("__ready", "Abwarten", ActionTemplateType.Ready);
 
     static readonly ActionTemplate Focus = new(
@@ -89,10 +115,38 @@ partial class TimelineCharacterActionCard
         ActionTemplateType.Continuous,
         Description: "Magie fokussieren");
 
+    static readonly ActionTemplate CastSpell = new(
+        "__cast_spell",
+        "Zauber auslösen",
+        ActionTemplateType.Immediate,
+        Default: 3);
+
+    static readonly ActionTemplate PrepareRanged = new(
+        "__prepare_ranged",
+        "Fernk. vorbereiten",
+        ActionTemplateType.Continuous,
+        Description: "Fernkampf vorbereiten");
+
     static readonly ActionTemplate Aim = new(
         "__aim",
         "Zielen",
         ActionTemplateType.Continuous,
+        Description: "Zielen",
+        Default: 1,
+        Max: 3,
+        Multiplier: 2);
+
+    static readonly ActionTemplate Shoot = new(
+        "__aim",
+        "Fernk. auslösen",
+        ActionTemplateType.Immediate,
+        Default: 3);
+
+    static readonly ActionTemplate LookForGap = new(
+        "__look_for_gap",
+        "Lücke suchen",
+        ActionTemplateType.Continuous,
+        Description: "Lücke suchen",
         Default: 1,
         Max: 3,
         Multiplier: 2);

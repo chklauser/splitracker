@@ -24,7 +24,8 @@
                     Icon="@Icons.Material.Filled.CheckCircle"/>
             </CardHeaderActions>
         </MudCardHeader>
-        <MudCardContent Class="pb-0">
+        <MudCardContent
+            Class="pb-0">
             <MudText>ist bereit für die nächste Aktion</MudText>
             <MudStack
                 Row="true"
@@ -32,15 +33,16 @@
                 <MudSlider
                     T="int"
                     Min="@minNumberOfTicks(SelectedActionTemplate)"
-                    Max="@(Math.Min(maxNumberOfTicks(SelectedActionTemplate),20))"
+                    Max="@(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20))"
                     @bind-Value:get="numberOfTicks"
                     @bind-Value:set="changeNumberOfTicks"
-                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks(SelectedActionTemplate),20) - minNumberOfTicks(SelectedActionTemplate)) < 10)"
+                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20) - minNumberOfTicks(SelectedActionTemplate)) < 10)"
                     Disabled="@(!hasTicksParameter)"
                     Size="Size.Large">
                 </MudSlider>
                 <MudNumericField
                     T="int"
+                    Variant="@Variant.Outlined"
                     @bind-Value:get="numberOfTicks"
                     @bind-Value:set="changeNumberOfTicks"
                     Min="@minNumberOfTicks(SelectedActionTemplate)"
@@ -50,8 +52,18 @@
                     Disabled="@(!hasTicksParameter)"
                     HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
             </MudStack>
+            <MudTextField
+                Variant="@Variant.Outlined"
+                @bind-Value:get="ActionData.Description"
+                @bind-Value:set="descriptionChanged"
+                Immediate="@false"
+                Disabled="@(ActionData.Template is null or { Type: not ActionTemplateType.Continuous })"
+                HelperText="Beschreibung der kontinuierlichen Aktion"
+                HelperTextOnFocus="false"
+                Clearable="@true"/>
         </MudCardContent>
-        <MudCardActions Class="pb-3">
+        <MudCardActions
+            Class="pb-3">
             <CascadingValue
                 Value="@this">
                 @if (ActionData.NumberOfTicks > 0)
@@ -65,9 +77,19 @@
                     <TimelineActionButton
                         Action="@Move"/>
                     <TimelineActionButton
+                        Action="@Sprint"/>
+                    <TimelineActionButton
+                        Action="@LookForGap"/>
+                    <TimelineActionButton
+                        Action="@PrepareRanged"/>
+                    <TimelineActionButton
                         Action="@Aim"/>
                     <TimelineActionButton
+                        Action="@Shoot"/>
+                    <TimelineActionButton
                         Action="@Focus"/>
+                    <TimelineActionButton
+                        Action="@CastSpell"/>
                 }
                 else
                 {
