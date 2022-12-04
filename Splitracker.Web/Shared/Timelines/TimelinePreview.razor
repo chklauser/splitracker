@@ -48,7 +48,12 @@ else
                                     OverflowBehavior="OverflowBehavior.FlipOnOpen" Open="@(actionCardOpen && selectedIndex == offset)">
                             @if (tick is Tick.CharacterTick ct)
                             {
-                                <TimelineCharacterActionCard Tick="ct" IsReadyNow="@(offset == 0)"/>
+                                <TimelineCharacterActionCard 
+                                    Tick="ct" 
+                                    IsReadyNow="@(offset == 0)"
+                                    @bind-ActionData:get="getCharacterActionData(ct.Character)"
+                                    @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
+                                    />
                             }
                             else if (tick is Tick.EffectTick et)
                             {

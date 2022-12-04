@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Splitracker.Domain;
 
@@ -9,42 +10,69 @@ partial class TimelineCharacterActionCard
     [Parameter]
     [EditorRequired]
     public required Tick.CharacterTick Tick { get; set; }
-    
+
     [Parameter]
     [EditorRequired]
     public required bool IsReadyNow { get; set; }
-    
-    internal ActionTemplate? SelectedActionTemplate;
+
+    [Parameter]
+    public required CharacterActionData ActionData { get; set; }
+
+    [Parameter]
+    public EventCallback<CharacterActionData>? ActionDataChanged { get; set; }
+
+    internal ActionTemplate? SelectedActionTemplate => ActionData.Template;
+
+    int numberOfTicks => ActionData.NumberOfTicks;
 
     internal EventCallback<ActionTemplate> ActionTemplateSelected;
 
-    int numberOfTicks = 1;
-    
-    int minNumberOfTicks => SelectedActionTemplate is { Min: var customMin } ? customMin : 0;
-    int maxNumberOfTicks => SelectedActionTemplate is { Max: { } customMax } ? customMax : 100;
+    static int minNumberOfTicks(ActionTemplate? selectedActionTemplate) => 
+        selectedActionTemplate is { Min: var customMin } ? customMin : 0;
+
+    static int maxNumberOfTicks(ActionTemplate? selectedActionTemplate) => 
+        selectedActionTemplate is { Max: { } customMax } ? customMax : 100;
+
     bool hasTicksParameter => SelectedActionTemplate is null or { Type: not ActionTemplateType.Ready };
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         ActionTemplateSelected = new EventCallbackFactory().Create<ActionTemplate>(
-            this, 
+            this,
             actionTemplateSelectedHandler);
     }
 
-    void actionTemplateSelectedHandler(ActionTemplate e)
+    async Task changeNumberOfTicks(int newNumberOfTicks)
     {
-        // Clicking an already selected action should deselect it
-        if (ReferenceEquals(e, SelectedActionTemplate))
+        if (ActionDataChanged is not { } changed)
         {
-            SelectedActionTemplate = null;
+            return;
+        }
+
+        await changed.InvokeAsync(ActionData with { NumberOfTicks = newNumberOfTicks });
+    }
+    
+    async Task actionTemplateSelectedHandler(ActionTemplate next)
+    {
+        if (ActionDataChanged is not { } changed)
+        {
+            return;
+        }
+
+        // Clicking an already selected action should deselect it
+        if (ReferenceEquals(next, SelectedActionTemplate))
+        {
+            await changed.InvokeAsync(ActionData with { Template = null });
         }
         else
         {
-            SelectedActionTemplate = e;
-            numberOfTicks = SelectedActionTemplate is { Default: { } defaultTicks }
-                ? defaultTicks
-                : Math.Clamp(numberOfTicks, minNumberOfTicks, maxNumberOfTicks);
+            await changed.InvokeAsync(ActionData with {
+                Template = next,
+                NumberOfTicks = next is { Default: { } defaultTicks }
+                    ? defaultTicks
+                    : Math.Clamp(ActionData.NumberOfTicks, minNumberOfTicks(next), maxNumberOfTicks(next)),
+            });
         }
     }
 
@@ -68,20 +96,21 @@ partial class TimelineCharacterActionCard
         Default: 1,
         Max: 3,
         Multiplier: 2);
-    
+
     static readonly ActionTemplate BumpForward = new(
-        "__bump_forward", 
-        "Position", 
-        ActionTemplateType.Bump, 
-        Min: 0, 
-        Max: 0, 
+        "__bump_forward",
+        "Position",
+        ActionTemplateType.Bump,
+        Min: 0,
+        Max: 0,
         Default: 0);
+
     static readonly ActionTemplate BumpBackward = new(
-        "__bump_backward", 
-        "Position", 
-        ActionTemplateType.Bump, 
-        Min: 0, 
-        Max: 0, 
+        "__bump_backward",
+        "Position",
+        ActionTemplateType.Bump,
+        Min: 0,
+        Max: 0,
         Default: 0);
 
     #endregion

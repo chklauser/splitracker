@@ -18,7 +18,7 @@
             </CardHeaderContent>
             <CardHeaderActions>
                 <MudIconButton
-                    Disabled="@(SelectedActionTemplate == null || numberOfTicks <= 0)"
+                    Disabled="@(SelectedActionTemplate == null || ActionData.NumberOfTicks <= 0)"
                     Size="Size.Large"
                     Color="@Color.Success"
                     Icon="@Icons.Material.Filled.CheckCircle"/>
@@ -31,18 +31,20 @@
                 Class="align-center justify-space-between">
                 <MudSlider
                     T="int"
-                    Min="@minNumberOfTicks"
-                    Max="@(Math.Min(maxNumberOfTicks,20))"
-                    @bind-Value="numberOfTicks"
-                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks,20) - minNumberOfTicks) < 10)"
+                    Min="@minNumberOfTicks(SelectedActionTemplate)"
+                    Max="@(Math.Min(maxNumberOfTicks(SelectedActionTemplate),20))"
+                    @bind-Value:get="numberOfTicks"
+                    @bind-Value:set="changeNumberOfTicks"
+                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks(SelectedActionTemplate),20) - minNumberOfTicks(SelectedActionTemplate)) < 10)"
                     Disabled="@(!hasTicksParameter)"
                     Size="Size.Large">
                 </MudSlider>
                 <MudNumericField
                     T="int"
-                    @bind-Value="numberOfTicks"
-                    Min="@minNumberOfTicks"
-                    Max="@maxNumberOfTicks"
+                    @bind-Value:get="numberOfTicks"
+                    @bind-Value:set="changeNumberOfTicks"
+                    Min="@minNumberOfTicks(SelectedActionTemplate)"
+                    Max="@maxNumberOfTicks(SelectedActionTemplate)"
                     Style="width: 100px"
                     DebounceInterval="300"
                     Disabled="@(!hasTicksParameter)"
@@ -52,7 +54,7 @@
         <MudCardActions Class="pb-3">
             <CascadingValue
                 Value="@this">
-                @if (numberOfTicks > 0)
+                @if (ActionData.NumberOfTicks > 0)
                 {
                     <TimelineActionButton
                         Action="@Ready"/>

@@ -18,6 +18,8 @@ partial class TimelinePreview
 
     bool actionCardOpen = false;
 
+    #region Selection Management
+
     int selectedIndex = 0;
     int lastIndexClicked = 0;
 
@@ -39,6 +41,22 @@ partial class TimelinePreview
 
         lastIndexClicked = selectedIndex;
     }
+
+    #endregion
+
+    #region Action Card Data
+
+    readonly Dictionary<string, CharacterActionData> characterActionData = new();
+
+    CharacterActionData getCharacterActionData(Character character) =>
+        characterActionData.TryGetValue(character.Id, out var data) ? data : CharacterActionData.Default;
+    void storeCharacterActionData(Character character, CharacterActionData data) =>
+        characterActionData[character.Id] = data;
+    
+
+    #endregion
+    
+    #region Timeline Layout
 
     protected override void OnParametersSet()
     {
@@ -118,4 +136,6 @@ partial class TimelinePreview
     }
 
     record Empty(int At) : Tick(At);
+    
+    #endregion
 } 
