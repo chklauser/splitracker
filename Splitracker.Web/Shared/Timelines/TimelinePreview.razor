@@ -1,0 +1,105 @@
+﻿@using Splitracker.Domain
+
+@if (allocatedTimeline == null)
+{
+    <MudProgressCircular Color="Color.Primary"/>
+}
+else
+{
+    <MultiTimeline
+        DisableModifiers="@true"
+        TimelinePosition="@TimelinePosition.Alternate"
+        TimelineAlign="@TimelineAlign.Start"
+        Labels="@timelineLabels()"
+        @bind-SelectedIndex:get="selectedIndex"
+        @bind-SelectedIndex:set="changeSelectedIndex"
+        @onclick="timelineClicked">
+        @foreach (var (track, lastOffset) in allocatedTimeline.GroupBy(y => y.Track).Select(track => (track.Key, track.Max(t => t.Offset))))
+        {
+            <MultiTimelineTrack
+                @key="@track"
+                Index="@track"
+                Length="@(track == 0 ? allocatedTimeline.Count : lastOffset + 1)"/>
+        }
+        @foreach (var (tick, track, offset) in allocatedTimeline)
+        {
+            @if (tick is not Empty)
+            {
+                <MultiTimelineItem
+                    @key="tick.ToString()"
+                    Track="@track"
+                    Offset="@offset"
+                    Size="@Size.Medium"
+                    Color="@(offset == selectedIndex ? Color.Primary : Color.Default)">
+                    <ItemDot>
+                        @if (tick is Tick.IHasCharacter { Character: var c})
+                        {
+                            <MudAvatar
+                                Color="@(offset == selectedIndex ? Color.Primary : Color.Default)">
+                                @string.Join("", c.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
+                            </MudAvatar>
+                        }
+                        else if (tick is Tick.IHasEffect)
+                        {
+                            <MudIcon
+                                Color="@(offset == selectedIndex ? Color.Default : Color.Dark)"
+                                Icon="@Icons.Material.Filled.CrisisAlert"/>
+                        }
+                    </ItemDot>
+                    <ItemContent>
+                        <MudPopover AnchorOrigin="@Origin.TopCenter" TransformOrigin="@Origin.BottomCenter"
+                                    OverflowBehavior="OverflowBehavior.FlipOnOpen" Open="@(actionCardOpen && selectedIndex == offset)">
+                            <MudCard Elevation="0">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText
+                                            Typo="@Typo.h6">
+                                            @if (tick is Tick.IHasCharacter {Character: {} c})
+                                            {
+                                                @c.Name
+                                            }
+                                            else if (tick is Tick.IHasEffect {Effect: {} e})
+                                            {
+                                                @e.Description
+                                            }
+                                        </MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText>ist bereit für die nächste Aktion</MudText>
+                                    <MudStack
+                                        Row="true">
+                                        <MudSlider
+                                            T="int"
+                                            Min="0"
+                                            Max="100"></MudSlider>
+                                        <MudText>15</MudText>
+                                    </MudStack>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButtonGroup>
+                                        <MudButton>Abwarten</MudButton>
+                                        <MudButton>Kontinuierlich</MudButton>
+                                        <MudButton>Sofort</MudButton>
+                                    </MudButtonGroup>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudPopover>
+                        <TickSummary
+                            Tick="@tick"/>
+                    </ItemContent>
+                </MultiTimelineItem>
+            }
+            else
+            {
+                <MultiTimelineItem
+                    @key="@($"synth-tick:{tick.At}")"
+                    Track="@track"
+                    Offset="@offset"
+                    Size="@Size.Small"
+                    Variant="Variant.Outlined"
+                    Color="@(offset == selectedIndex ? Color.Primary : Color.Default)"/>
+            }
+        }
+    </MultiTimeline>
+}

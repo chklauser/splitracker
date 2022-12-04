@@ -9,7 +9,7 @@ using MudBlazor;
 using MudBlazor.Extensions;
 using MudBlazor.Utilities;
 
-namespace Splitracker.Web.Shared;
+namespace Splitracker.Web.Shared.Timelines;
 
 public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
 {

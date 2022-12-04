@@ -4,7 +4,7 @@ using MudBlazor;
 using MudBlazor.Extensions;
 using MudBlazor.Utilities;
 
-namespace Splitracker.Web.Shared;
+namespace Splitracker.Web.Shared.Timelines;
 
 public partial class MultiTimeline
 {
