@@ -1,0 +1,82 @@
+﻿@using Splitracker.Domain
+<div
+    class="timeline-character-action-card">
+    <MudCard
+        Elevation="0">
+        <MudCardHeader
+            Class="pb-0">
+            <CardHeaderAvatar>
+                <CharacterAvatar
+                    Character="@Tick.Character"
+                    IsSelected="@true"/>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText
+                    Typo="@Typo.h6">
+                    @Tick.Character.Name
+                </MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton
+                    Disabled="@(SelectedActionTemplate == null || numberOfTicks <= 0)"
+                    Size="Size.Large"
+                    Color="@Color.Success"
+                    Icon="@Icons.Material.Filled.CheckCircle"/>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent Class="pb-0">
+            <MudText>ist bereit für die nächste Aktion</MudText>
+            <MudStack
+                Row="true"
+                Class="align-center justify-space-between">
+                <MudSlider
+                    T="int"
+                    Min="@minNumberOfTicks"
+                    Max="@(Math.Min(maxNumberOfTicks,20))"
+                    @bind-Value="numberOfTicks"
+                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks,20) - minNumberOfTicks) < 10)"
+                    Disabled="@(!hasTicksParameter)"
+                    Size="Size.Large">
+                </MudSlider>
+                <MudNumericField
+                    T="int"
+                    @bind-Value="numberOfTicks"
+                    Min="@minNumberOfTicks"
+                    Max="@maxNumberOfTicks"
+                    Style="width: 100px"
+                    DebounceInterval="300"
+                    Disabled="@(!hasTicksParameter)"
+                    HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
+            </MudStack>
+        </MudCardContent>
+        <MudCardActions Class="pb-3">
+            <CascadingValue
+                Value="@this">
+                @if (numberOfTicks > 0)
+                {
+                    <TimelineActionButton
+                        Action="@Ready"/>
+                    <TimelineActionButton
+                        Action="@Continuous"/>
+                    <TimelineActionButton
+                        Action="@Immediate"/>
+                    <TimelineActionButton
+                        Action="@Move"/>
+                    <TimelineActionButton
+                        Action="@Aim"/>
+                    <TimelineActionButton
+                        Action="@Focus"/>
+                }
+                else
+                {
+                    <TimelineActionButton
+                        StartIcon="@Icons.Material.Filled.ArrowCircleUp"
+                        Action="@BumpBackward"/>
+                    <TimelineActionButton
+                        EndIcon="@Icons.Material.Filled.ArrowCircleDown"
+                        Action="@BumpForward"/>
+                }
+            </CascadingValue>
+        </MudCardActions>
+    </MudCard>
+</div>

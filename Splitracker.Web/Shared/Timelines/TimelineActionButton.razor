@@ -1,0 +1,33 @@
+﻿@using Splitracker.Domain
+
+<MudButton
+    Variant="@Variant.Filled"
+    Color="@buttonColor"
+    StartIcon="@StartIcon"
+    EndIcon="@EndIcon"
+    OnClick="async () => await Parent.ActionTemplateSelected.InvokeAsync(Action)">
+    @Action.Label
+</MudButton>
+
+@code {
+
+    [CascadingParameter]
+    public required TimelineCharacterActionCard Parent { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required ActionTemplate Action { get; set; }
+
+    [Parameter]
+    public string? StartIcon { get; set; }
+
+    [Parameter]
+    public string? EndIcon { get; set; }
+
+    Color buttonColor => Action switch {
+        { Type: ActionTemplateType.Bump } => Color.Success,
+        var a when Parent.SelectedActionTemplate == a => Color.Primary,
+        _ => Color.Default,
+    };
+
+}

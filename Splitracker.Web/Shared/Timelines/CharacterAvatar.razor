@@ -1,0 +1,13 @@
+﻿@using Splitracker.Domain
+<MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)">
+    @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
+</MudAvatar>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required Character Character { get; set; }
+    
+    [Parameter]
+    public bool IsSelected { get; set; }
+}
