@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Splitracker.Domain;
+using Splitracker.Web.Shared.Timelines;
 
 namespace Splitracker.Web.Pages;
 
-partial class Ticks : IAsyncDisposable
+partial class Ticks : IAsyncDisposable, ITimelineDispatcher
 {
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
@@ -34,7 +36,7 @@ partial class Ticks : IAsyncDisposable
 
         await base.OnInitializedAsync();
         var auth = await AuthenticationState;
-        var newHandle = await Repository.OpenSingleAsync(auth.User, "Groups/0000000000000000021-A");
+        var newHandle = await Repository.OpenSingleAsync(auth.User, groupId);
         if (newHandle == null)
         {
             Nav.NavigateTo("/not-found");
@@ -52,6 +54,14 @@ partial class Ticks : IAsyncDisposable
         addEffectPanelOpen = !addEffectPanelOpen;
     }
 
+    bool addCharacterPanelOpen;
+    string groupId = "Groups/0000000000000000021-A";
+
+    void toggleAddCharacterPanel()
+    {
+        addCharacterPanelOpen = !addCharacterPanelOpen;
+    }
+
     void tickSelected(Tick tick)
     {
         selectedTick = tick;
@@ -64,5 +74,11 @@ partial class Ticks : IAsyncDisposable
         {
             await handle.DisposeAsync();
         }
+    }
+
+    public async Task<IEnumerable<Character>> SearchCharactersAsync(string searchTerm, CancellationToken cancellationToken)
+    {
+        var auth = await AuthenticationState;
+        return await Repository.SearchCharactersAsync(searchTerm, groupId, auth.User, cancellationToken);
     }
 }

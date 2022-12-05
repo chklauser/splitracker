@@ -8,10 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
-using Raven.Client.Json.Serialization.NewtonsoftJson;
 using Splitracker.Domain;
 using Splitracker.Persistence.Characters;
-using Splitracker.Persistence.Model;
 using Splitracker.Persistence.Timelines;
 using Splitracker.Persistence.Users;
 
@@ -62,7 +60,9 @@ public static class PersistenceServiceProviderConfig
             .AlsoAddAsSingleton<IUserRepository, RavenUserRepository>()
             .AlsoAddAsHostedService<RavenUserRepository>();
 
-        services.AddSingleton<ICharacterRepository, RavenCharacterRepository>();
+        services.AddSingleton<RavenCharacterRepository>()
+            .AlsoAddAsSingleton<ICharacterRepository, RavenCharacterRepository>()
+            .AlsoAddAsHostedService<RavenCharacterRepository>();
         services.AddSingleton<IGroupRepository, FakeGroupRepository>();
 
         services.AddSingleton<RavenTimelineRepository>()

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -7,9 +9,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Session;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
+using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
+using Group = Splitracker.Persistence.Model.Group;
+using Timeline = Splitracker.Persistence.Model.Timeline;
 
 namespace Splitracker.Persistence.Timelines;
 
@@ -40,11 +46,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         var userId = await userRepository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
-        log.LogInformation("Checking access to timeline of group {GroupId} for user {UserId}", groupId, userId);
-        var timelineId = await session.Query<Timeline_ByGroup.IndexEntry, Timeline_ByGroup>()
-            .Where(t => t.GroupId == groupId && t.MemberUserId == userId)
-            .Select(t => t.Id)
-            .SingleOrDefaultAsync();
+        var timelineId = await accessTimelineAsync(groupId, userId, session);
         if (timelineId == null)
         {
             return null;
@@ -62,6 +64,49 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         ) ?? throw new InvalidOperationException("Failed to open a handle for the timeline.");
     }
 
+    async Task<string?> accessTimelineAsync(string groupId, string userId, IAsyncDocumentSession session)
+    {
+        log.LogInformation("Checking access to timeline of group {GroupId} for user {UserId}", groupId, userId);
+        return await session.Query<Timeline_ByGroup.IndexEntry, Timeline_ByGroup>()
+            .Where(t => t.GroupId == groupId && t.MemberUserId == userId)
+            .Select(t => t.Id)
+            .SingleOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<Character>> SearchCharactersAsync(
+        string searchTerm,
+        string groupId,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken
+    )
+    {
+        var userId = await userRepository.GetUserIdAsync(principal);
+
+        using var session = store.OpenAsyncSession();
+        var timelineId = await accessTimelineAsync(groupId, userId, session);
+        if (timelineId == null)
+        {
+            return Enumerable.Empty<Character>();
+        }
+
+        var timeline = await LoadTimelineAsync(session, timelineId);
+        var dbCharacters = await session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+            .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
+            .Not.WhereIn(c => c.Id, timeline.Characters.Keys)
+            .Search(c => c.Name, $"{searchTerm}*")
+            .Take(100)
+            .ToListAsync(cancellationToken);
+        if (dbCharacters == null)
+        {
+            log.Log(LogLevel.Warning, "Unexpectedly got `null` from search query for characters.");
+            return Enumerable.Empty<Character>();
+        }
+
+        log.Log(LogLevel.Debug, "Searching for characters for timeline {TimelineId} returned {Count} results. UserId={UserId}",
+            timelineId, dbCharacters.Count, userId);
+        return dbCharacters.Select(c => c.ToDomain()).OrderBy(c => c.Name).ToImmutableArray();
+    }
+    
     #endregion
 
     #region Writing
@@ -81,5 +126,19 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
+    }
+
+    internal static async Task<Domain.Timeline> LoadTimelineAsync(IAsyncDocumentSession session, string timelineId)
+    {
+        var dbTimeline = await session
+            .LoadAsync<Timeline>(timelineId);
+        var group = await session.LoadAsync<Group>(dbTimeline.GroupId);
+        var characters = await session.LoadAsync<CharacterModel>(
+            dbTimeline.Ticks
+                .Select(k => k.CharacterId)
+                .Where(cid => cid != null)
+                .Concat(dbTimeline.ReadyCharacterIds)
+                .Concat(group.CharacterIds));
+        return TimelineModelMapper.ToDomain(dbTimeline, group, characters.Values);
     }
 }

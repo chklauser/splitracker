@@ -1,0 +1,63 @@
+﻿@using Splitracker.Domain
+<MudCard
+    Elevation="0">
+    <MudCardHeader
+        Class="pb-0">
+        <CardHeaderAvatar>
+            <MudIcon
+                Color="Color.Primary"
+                Icon="@Icons.Material.Filled.EmojiPeople"/>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText
+                Typo="@Typo.h6">
+                Effekt hinzufügen
+            </MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudTooltip
+                Text="@(addCharacterButtonTooltip)">
+                <MudIconButton
+                    Disabled="@(selectedCharacter == null)"
+                    Size="Size.Large"
+                    Color="@Color.Success"
+                    Icon="@Icons.Material.Filled.AddCircle"
+                    @onclick="addCharacterButtonClicked"/>
+            </MudTooltip>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent
+        Class="pt-0">
+        <MudAutocomplete
+            T="Character"
+            @bind-Value="selectedCharacter"
+            Variant="Variant.Outlined"
+            PopoverClass="mud-popover-fixed"
+            Required="true"
+            Label="Charakter"
+            Placeholder="Name..."
+            SearchFuncWithCancel="@searchCharacters"
+            ResetValueOnEmptyText="@true"
+            CoerceText="@true">
+            <ItemTemplate
+                Context="c">
+                @c.Name
+            </ItemTemplate>
+        </MudAutocomplete>
+        <MudSwitch
+            @bind-Checked="directToReady"
+            Label="Direkt abwarten"
+            LabelPosition="LabelPosition.Start"/>
+        <MudNumericField
+            T="int"
+            Required="@true"
+            Label="Einreihen bei"
+            @bind-Value="at"
+            Adornment="Adornment.Start"
+            AdornmentText="Tick"
+            Min="-100"
+            Max="998"
+            Disabled="@directToReady"
+            DebounceInterval="300"/>
+    </MudCardContent>
+</MudCard>

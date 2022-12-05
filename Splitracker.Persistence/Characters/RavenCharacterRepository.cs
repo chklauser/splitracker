@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
 using Splitracker.Domain;
@@ -11,7 +13,7 @@ using Splitracker.Persistence.Model;
 
 namespace Splitracker.Persistence.Characters;
 
-class RavenCharacterRepository : ICharacterRepository
+class RavenCharacterRepository : ICharacterRepository, IHostedService
 {
     internal const string CollectionName = "Characters";
 
@@ -181,5 +183,15 @@ class RavenCharacterRepository : ICharacterRepository
     internal static string CharacterDocIdPrefix(string userId)
     {
         return $"{CollectionName}/{userId["Users/".Length..]}/";
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await new Character_ByName().ExecuteAsync(store, token: cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }

@@ -57,6 +57,19 @@ class FakeTimelineRepository : ITimelineRepository
         throw new NotImplementedException();
     }
 
+    public async Task<IEnumerable<Character>> SearchCharactersAsync(
+        string searchTerm,
+        string groupId,
+        ClaimsPrincipal authUser,
+        CancellationToken cancellationToken
+    )
+    {
+        var h = await OpenSingleAsync(authUser, groupId);
+        return h?.Timeline.Characters.Values
+            .Where(c => c.Name.ToUpperInvariant().Contains(searchTerm.ToUpperInvariant()))
+            ?? Enumerable.Empty<Character>();
+    }
+
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;

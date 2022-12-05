@@ -28,7 +28,8 @@ class RavenTimelineSubscription : IObserver<DocumentChange>, IDisposable
         ILogger<RavenTimelineRepository> log
     )
     {
-        return new(store, timelineId, await loadTimelineAsync(store, timelineId), log);
+        using var session = store.OpenAsyncSession();
+        return new(store, timelineId, await RavenTimelineRepository.LoadTimelineAsync(session, timelineId), log);
     }
 
     RavenTimelineSubscription(
@@ -65,7 +66,8 @@ class RavenTimelineSubscription : IObserver<DocumentChange>, IDisposable
 
     async Task refreshTimelineAsync()
     {
-        var timeline = await loadTimelineAsync(store, timelineId);
+        using var session = store.OpenAsyncSession();
+        var timeline = await RavenTimelineRepository.LoadTimelineAsync(session, timelineId);
         Timeline = timeline;
         synchronizeSubscriptions(timeline);
 
@@ -130,21 +132,6 @@ class RavenTimelineSubscription : IObserver<DocumentChange>, IDisposable
         {
             @lock.ExitWriteLock();
         }
-    }
-
-    static async Task<Domain.Timeline> loadTimelineAsync(IDocumentStore store, string timelineId)
-    {
-        using var session = store.OpenAsyncSession();
-        var dbTimeline = await session
-            .LoadAsync<Timeline>(timelineId);
-        var group = await session.LoadAsync<Group>(dbTimeline.GroupId);
-        var characters = await session.LoadAsync<CharacterModel>(
-            dbTimeline.Ticks
-                .Select(k => k.CharacterId)
-                .Where(cid => cid != null)
-                .Concat(dbTimeline.ReadyCharacterIds)
-                .Concat(group.CharacterIds));
-        return TimelineModelMapper.ToDomain(dbTimeline, group, characters.Values);
     }
 
     public Domain.Timeline Timeline { get; set; }
