@@ -13,6 +13,9 @@ partial class TimelinePreview
 {
     [Parameter]
     public required Timeline Timeline { get; set; }
+    
+    [Parameter]
+    public EventCallback<Tick> OnTickSelected { get; set; }
 
     IReadOnlyList<(Tick Tick, int Track, int Offset)>? allocatedTimeline;
 
@@ -23,11 +26,17 @@ partial class TimelinePreview
     int selectedIndex = 0;
     int lastIndexClicked = 0;
 
-    void changeSelectedIndex(int newIndex)
+    async Task changeSelectedIndex(int newIndex)
     {
         if (selectedIndex != newIndex)
         {
             actionCardOpen = true;
+            if (allocatedTimeline != null 
+                && newIndex >= 0 
+                && newIndex < allocatedTimeline.Count)
+            {
+                await OnTickSelected.InvokeAsync(allocatedTimeline[newIndex].Tick);
+            }
         }
         selectedIndex = newIndex;
     }

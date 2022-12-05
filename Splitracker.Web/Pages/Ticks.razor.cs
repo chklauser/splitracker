@@ -21,6 +21,8 @@ partial class Ticks : IAsyncDisposable
 
     ITimelineHandle? handle;
 
+    Tick? selectedTick;
+
     protected override async Task OnParametersSetAsync()
     {
         if (handle != null)
@@ -43,8 +45,17 @@ partial class Ticks : IAsyncDisposable
             handle = newHandle;
         }
     }
-
     
+    bool addEffectPanelOpen;
+    void toggleAddEffectPanel()
+    {
+        addEffectPanelOpen = !addEffectPanelOpen;
+    }
+
+    void tickSelected(Tick tick)
+    {
+        selectedTick = tick;
+    }
     
     public async ValueTask DisposeAsync()
     {

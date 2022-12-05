@@ -5,10 +5,37 @@
 
 <PageTitle>Ticks - Splitracker</PageTitle>
 
-<MudStack
-    Row="@true">
-    @if (handle != null)
-    {
-        <TimelinePreview Timeline="handle.Timeline" />
-    }
-</MudStack>
+@if (handle != null)
+{
+    <TimelinePreview
+        Timeline="handle.Timeline"
+        OnTickSelected="@tickSelected" />
+    <MudBadge
+        Icon="@Icons.Material.Filled.Add"
+        Bordered="@true"
+        Overlap="@true"
+        Color="@Color.Primary"
+            Style="right: 1.5rem; bottom: 1.5rem;"
+        Class="fixed z-100">
+        <MudFab
+            DisableRipple="@true"
+            StartIcon="@Icons.Material.Filled.CrisisAlert"
+            Color="@Color.Primary"
+            @onclick="toggleAddEffectPanel"/>
+    <MudPopover
+        Open="@addEffectPanelOpen"
+        AnchorOrigin="@Origin.TopRight"
+        TransformOrigin="@Origin.BottomRight"
+        Fixed="@true"
+        Style="max-width: 320px; z-index: 500">
+        <TimelineCreateEffectCard
+            SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
+            OnEffectCreated="() => addEffectPanelOpen = false"
+            />
+    </MudPopover>
+    </MudBadge>
+}
+else
+{
+    <MudProgressCircular Size="@Size.Large" Indeterminate="@true"/>
+}

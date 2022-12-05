@@ -4,14 +4,17 @@
 
 <AuthorizeView>
     <Authorized>
+        <div class="d-none d-sm-block">
         @if (canEditProfile)
         {
-            <a href="MicrosoftIdentity/Account/EditProfile">Hallo, @GetUserName(context)</a>
+            <a
+                href="MicrosoftIdentity/Account/EditProfile">Hallo, @GetUserName(context)</a>
         }
         else
         {
             <text>Hallo, @GetUserName(context)</text>
         }
+        </div>
     </Authorized>
     <NotAuthorized>
         <a href="MicrosoftIdentity/Account/SignIn">Log in</a>

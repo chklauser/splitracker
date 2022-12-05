@@ -1,0 +1,77 @@
+﻿<EditForm
+    EditContext="@editContext">
+    <MudCard
+        Elevation="0">
+        <MudCardHeader
+            Class="pb-0">
+            <CardHeaderAvatar>
+                <MudIcon
+                    Color="Color.Primary"
+                    Icon="@Icons.Material.Filled.CrisisAlert"/>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText
+                    Typo="@Typo.h6">
+                    Effekt hinzufügen
+                </MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton
+                    Disabled="@(hasValidationMessages || string.IsNullOrEmpty(model.Description))"
+                    Size="Size.Large"
+                    Color="@Color.Success"
+                    Icon="@Icons.Material.Filled.AddCircle"
+                    @onclick="createEffectButtonClicked"/>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent
+            Class="pt-0">
+            @if (hasValidationMessages)
+            {
+                <MudAlert Severity="Severity.Warning">
+                    <ValidationSummary/>
+                </MudAlert>
+            }
+            <MudTextField
+                Label="Beschreibung"
+                @bind-Value="model.Description"
+                Required="@true"
+                Variant="Variant.Outlined"
+                Immediate="@true"
+                Placeholder="z.B. &quot;Benommen&quot;"
+                OnlyValidateIfDirty="@true"
+                Clearable="@true"
+                OnBlur="() => editContext?.Validate()"/>
+            <MudNumericField
+                T="int"
+                Required="@true"
+                Label="Start bei"
+                @bind-Value="model.At"
+                Adornment="Adornment.Start"
+                AdornmentText="Tick"
+                Min="@SelectedTick"
+                Max="998"
+                DebounceInterval="300"
+                OnBlur="() => editContext?.Validate()"/>
+            <MudNumericField
+                T="int"
+                Required="@true"
+                Label="Dauer"
+                @bind-Value="model.Duration"
+                HelperText="Total"
+                Adornment="Adornment.End"
+                AdornmentText="Ticks"
+                Min="1"
+                Max="999"
+                DebounceInterval="300"
+                OnBlur="() => editContext?.Validate()"/>
+            <MudNumericField
+                T="int?"
+                Label="Intervall"
+                @bind-Value="model.Interval"
+                HelperText="Wiederkehrend innerhalb der Dauer (oder leer lassen)"
+                DebounceInterval="300"
+                OnBlur="() => editContext?.Validate()"/>
+        </MudCardContent>
+    </MudCard>
+</EditForm>
