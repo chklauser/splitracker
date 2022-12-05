@@ -52,6 +52,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher
     void toggleAddEffectPanel()
     {
         addEffectPanelOpen = !addEffectPanelOpen;
+        addCharacterPanelOpen = false;
     }
 
     bool addCharacterPanelOpen;
@@ -60,6 +61,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher
     void toggleAddCharacterPanel()
     {
         addCharacterPanelOpen = !addCharacterPanelOpen;
+        addEffectPanelOpen = false;
     }
 
     void tickSelected(Tick tick)
