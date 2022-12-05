@@ -21,5 +21,6 @@ public enum ActionTemplateType
     Continuous,
     Reaction,
     Ready,
+    Reset,
     Bump,
 }

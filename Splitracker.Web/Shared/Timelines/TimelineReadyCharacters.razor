@@ -1,0 +1,71 @@
+﻿
+<MudExpansionPanels>
+    <MudExpansionPanel
+        @bind-IsExpanded="isExpanded" >
+        <TitleContent>
+            <div
+                class="d-flex gap-2 align-center align-content-center justify-start">
+                <MudText
+                    Class="flex-none"
+                    Typo="@Typo.h6">
+                    Abwartende<br/>Charaktere
+                </MudText>
+                @if (!isExpanded)
+                {
+                    <MudAvatarGroup
+                        Class="flex-grow-1"
+                        Max="3"
+                        Spacing="3">
+                        @foreach (var c in Characters)
+                        {
+                            <CharacterAvatar
+                                @key="c.Id"
+                                Character="@c"/>
+                        }
+                    </MudAvatarGroup>
+                }
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <div
+                class="d-flex flex-row flex-wrap flex-none justify-start align-content-start align-center gap-2">
+                @foreach (var c in Characters)
+                {
+                    <CharacterAvatar
+                        @key="c.Id"
+                        Character="@c"
+                        IsSelected="@(ReferenceEquals(c, selectedCharacter))"
+                        OnClick="@selectCharacter"/>
+                }
+            </div>
+            <MudDivider DividerType="DividerType.FullWidth" Class="my-3"/>
+            <MudStack
+                Row="true"
+                Class="justify-start align-content-center align-baseline"
+                Style="max-width: 280px">
+                <MudText Class="align-self-center flex-none">Bei</MudText>
+                <MudNumericField
+                    T="int"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Min="1"
+                    Max="999"
+                    Required="true"
+                    @bind-Value="insertionTick"
+                    Adornment="Adornment.Start"
+                    AdornmentText="Tick"/>
+                <MudTooltip 
+                    Class="flex-none" Text="@(selectedCharacter == null ? "Bitte zuerst einen Charakter auswählen (oben)" : $"{selectedCharacter.Name} bei Tick {insertionTick} einreihen!")" >
+                <MudButton
+                    Color="@Color.Success"
+                    Variant="Variant.Filled"
+                    @onclick="addCharacterClicked"
+                    Disabled="@(selectedCharacter == null)"
+                >
+                    Einreihen!
+                </MudButton>
+                </MudTooltip>
+            </MudStack>
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>

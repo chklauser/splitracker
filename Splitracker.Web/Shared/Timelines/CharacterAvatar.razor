@@ -1,5 +1,5 @@
 ﻿@using Splitracker.Domain
-<MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)">
+<MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)" @onclick="avatarClicked">
     @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
 </MudAvatar>
 
@@ -10,4 +10,12 @@
     
     [Parameter]
     public bool IsSelected { get; set; }
+    
+    [Parameter]
+    public EventCallback<Character> OnClick { get; set; }
+
+    async Task avatarClicked()
+    {
+        await OnClick.InvokeAsync(Character);
+    }
 }

@@ -87,6 +87,10 @@
                             Action="@Reaction"/>
                         <TimelineActionButton
                             Action="@ActiveDefense"/>
+                        @if (Tick is Tick.ActionEnds)
+                        {
+                            <TimelineActionButton Action="@AbortContinuousAction" />
+                        }
                     }
                     <TimelineActionButton
                         Action="@Ready"/>

@@ -7,6 +7,12 @@
 
 @if (handle != null)
 {
+    @if (handle.Timeline.Ready.Count > 0)
+    {
+        <TimelineReadyCharacters
+            Characters="@handle.Timeline.Ready"
+            SelectedTick="@selectedTick"/>
+    }
     <TimelinePreview
         Timeline="handle.Timeline"
         OnTickSelected="@tickSelected" />

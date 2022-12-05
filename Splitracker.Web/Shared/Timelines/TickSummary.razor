@@ -24,6 +24,7 @@
                 @foreach (var c in chars)
                 {
                     <MudChip
+                        @key="c.Id"
                         Variant="Variant.Outlined">
                         @c.Name
                     </MudChip>
@@ -40,6 +41,7 @@
                 @foreach (var c in chars)
                 {
                     <MudChip
+                        @key="c.Id"
                         Variant="Variant.Outlined">
                         @c.Name
                     </MudChip>

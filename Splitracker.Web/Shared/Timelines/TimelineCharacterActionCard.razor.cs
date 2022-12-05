@@ -37,7 +37,8 @@ partial class TimelineCharacterActionCard
     static int maxNumberOfTicks(ActionTemplate? selectedActionTemplate) => 
         selectedActionTemplate is { Max: { } customMax } ? customMax : 100;
 
-    bool hasTicksParameter => SelectedActionTemplate is null or { Type: not ActionTemplateType.Ready };
+    bool hasTicksParameter =>
+        SelectedActionTemplate is null or { Type: not (ActionTemplateType.Ready or ActionTemplateType.Reset) };
 
     protected override void OnInitialized()
     {
@@ -181,6 +182,12 @@ partial class TimelineCharacterActionCard
         "Aktive Abwehr",
         ActionTemplateType.Reaction,
         Default: 3);
+
+    static readonly ActionTemplate AbortContinuousAction = new(
+        "__abort_action",
+        "Kontinuierliche Aktion abbrechen",
+        ActionTemplateType.Reset,
+        CustomLabel: "Aktion abbrechen");
 
     #endregion
 }
