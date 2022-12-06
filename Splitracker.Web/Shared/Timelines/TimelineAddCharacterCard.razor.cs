@@ -52,4 +52,9 @@ public partial class TimelineAddCharacterCard
             directToReady ? null : at));
         await OnCharacterAdded.InvokeAsync();
     }
+    
+    string renderCharacterForCompletion(Character c)
+    {
+        return c?.Name ?? string.Empty;
+    }
 }

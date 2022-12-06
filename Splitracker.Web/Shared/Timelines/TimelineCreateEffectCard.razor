@@ -1,4 +1,9 @@
-﻿<EditForm
+﻿@using Splitracker.Domain
+
+@code {
+}
+
+<EditForm
     EditContext="@editContext">
     <MudCard
         Elevation="0">
@@ -52,6 +57,7 @@
                 Min="@SelectedTick"
                 Max="998"
                 DebounceInterval="300"
+                Variant="@Variant.Outlined"
                 OnBlur="() => editContext?.Validate()"/>
             <MudNumericField
                 T="int"
@@ -64,6 +70,7 @@
                 Min="1"
                 Max="999"
                 DebounceInterval="300"
+                Variant="@Variant.Outlined"
                 OnBlur="() => editContext?.Validate()"/>
             <MudNumericField
                 T="int?"
@@ -72,6 +79,15 @@
                 HelperText="Wiederkehrend innerhalb der Dauer (oder leer lassen)"
                 DebounceInterval="300"
                 OnBlur="() => editContext?.Validate()"/>
+            <MudAutocomplete T="Character" ToStringFunc="renderCharacter" CoerceText="@true" @bind-Value="model.SelectedCharacter"
+                             SearchFunc="completeCharacters" Variant="@Variant.Outlined" PopoverClass="mud-popover-fixed"
+                             ResetValueOnEmptyText="@true" OnKeyUp="characterSelectionKeyUp"/>
+            <MudChipSet AllClosable="@true" SelectedChip="@null" >
+                @foreach (var c in model.AffectedCharacters)
+                {
+                    <MudChip  @key="c.Id" OnClose="() => model.AffectedCharacters.Remove(c)" Text="@c.Name"/>
+                }
+            </MudChipSet>
         </MudCardContent>
     </MudCard>
 </EditForm>

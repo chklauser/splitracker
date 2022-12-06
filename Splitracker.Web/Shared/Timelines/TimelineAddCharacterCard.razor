@@ -1,4 +1,5 @@
 ﻿@using Splitracker.Domain
+
 <MudCard
     Elevation="0">
     <MudCardHeader
@@ -38,7 +39,7 @@
             Placeholder="Name..."
             SearchFuncWithCancel="@searchCharacters"
             ResetValueOnEmptyText="@true"
-            ToStringFunc="c => c.Name"
+            ToStringFunc="renderCharacterForCompletion"
             CoerceText="@true">
             <ItemTemplate
                 Context="c">

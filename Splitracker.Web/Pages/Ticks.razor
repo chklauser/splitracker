@@ -2,6 +2,7 @@
 @using Splitracker.Web.Shared.Characters
 @using Splitracker.Web.Shared.Timelines
 @using Splitracker.Domain
+@using System.Collections.Immutable
 
 <PageTitle>Ticks - Splitracker</PageTitle>
 
@@ -67,6 +68,7 @@
                 Style="max-width: 320px; z-index: 500">
                 <CascadingValue TValue="ITimelineDispatcher" Value="@this" IsFixed="@true">
                     <TimelineCreateEffectCard
+                        TimelineCharacters="@handle.Timeline.Characters.Values.ToImmutableArray()"
                         SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
                         OnEffectCreated="() => addEffectPanelOpen = false"/>
                 </CascadingValue>

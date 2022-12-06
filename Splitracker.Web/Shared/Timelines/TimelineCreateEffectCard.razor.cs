@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 
@@ -27,6 +29,10 @@ public partial class TimelineCreateEffectCard : IDisposable
     
     [CascadingParameter]
     public required ITimelineDispatcher Dispatcher { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyList<Character> TimelineCharacters { get; set; }
 
     ValidationMessageStore? customValidationMessages;
 
@@ -92,6 +98,28 @@ public partial class TimelineCreateEffectCard : IDisposable
             model.At = SelectedTick;
         }
     }
+    
+    Task<IEnumerable<Character>> completeCharacters(string? searchTerm)
+    {
+        return string.IsNullOrWhiteSpace(searchTerm)
+            ? Task.FromResult((IEnumerable<Character>)TimelineCharacters)
+            : Task.FromResult(TimelineCharacters
+                .Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+    }
+    
+    string renderCharacter(Character? character)
+    {
+        return character?.Name ?? string.Empty;
+    }
+    
+    void characterSelectionKeyUp(KeyboardEventArgs obj)
+    {
+        if (obj.Code == "Enter" && model.SelectedCharacter is {} selected)
+        {
+            model.AffectedCharacters.Add(selected);
+            model.SelectedCharacter = null;
+        } 
+    }
 
     async Task createEffectButtonClicked()
     {
@@ -107,7 +135,7 @@ public partial class TimelineCreateEffectCard : IDisposable
             model.At,
             model.Duration,
             model.Interval,
-            ImmutableArray<string>.Empty));
+            model.AffectedCharacters.Select(c => c.Id).ToImmutableArray()));
         
         await OnEffectCreated.InvokeAsync();
     }
@@ -126,5 +154,9 @@ public partial class TimelineCreateEffectCard : IDisposable
         public int Duration { get; set; } = 1;
         
         public int? Interval { get; set; }
+        
+        public List<Character> AffectedCharacters { get; set; } = new();
+        
+        public Character? SelectedCharacter { get; set; }
     }
 }
