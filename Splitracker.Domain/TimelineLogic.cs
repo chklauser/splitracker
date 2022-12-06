@@ -27,7 +27,8 @@ public class TimelineLogic
                 new TimelineCommand.SetCharacterReady(gid, characterId),
             { Type: ActionTemplateType.Reset } =>
                 new TimelineCommand.SetCharacterRecovered(gid, characterId, now, 1),
-            { Type: ActionTemplateType.Reaction } when currentTick is null =>
+            { Type: ActionTemplateType.Reaction } when currentTick is null or Tick.ActionEnds =>
+                // reactions during continuous actions will abort the continuous action
                 new TimelineCommand.SetCharacterRecovered(gid, characterId, now + ticks),
             { Type: ActionTemplateType.Reaction } =>
                 new TimelineCommand.SetCharacterRecovered(gid, characterId, currentTick.At + ticks),
