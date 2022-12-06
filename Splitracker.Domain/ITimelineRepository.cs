@@ -10,7 +10,7 @@ namespace Splitracker.Domain;
 public interface ITimelineRepository
 {
     Task<ITimelineHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
-    Task ApplyAsync(ClaimsPrincipal principal, ITimelineCommand groupCommand);
+    Task ApplyAsync(ClaimsPrincipal principal, TimelineCommand command);
     Task<IEnumerable<Character>> SearchCharactersAsync(
         string searchTerm,
         string groupId,

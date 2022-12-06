@@ -5,7 +5,7 @@
     Color="@buttonColor"
     StartIcon="@StartIcon"
     EndIcon="@EndIcon"
-    OnClick="async () => await Parent.ActionTemplateSelected.InvokeAsync(Action)">
+    OnClick="buttonClicked">
     @Action.Label
 </MudButton>
 
@@ -23,11 +23,20 @@
 
     [Parameter]
     public string? EndIcon { get; set; }
+    
+    [Parameter]
+    public EventCallback<ActionTemplate> OnClick { get; set; }
 
     Color buttonColor => Action switch {
         { Type: ActionTemplateType.Bump } => Color.Success,
         var a when Parent.SelectedActionTemplate == a => Color.Primary,
         _ => Color.Default,
     };
+
+    async Task buttonClicked()
+    {
+        await Parent.ActionTemplateSelected.InvokeAsync(Action);
+        await OnClick.InvokeAsync(Action);
+    }
 
 }

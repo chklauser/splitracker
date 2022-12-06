@@ -65,9 +65,11 @@
                 TransformOrigin="@Origin.BottomRight"
                 Fixed="@true"
                 Style="max-width: 320px; z-index: 500">
-                <TimelineCreateEffectCard
-                    SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
-                    OnEffectCreated="() => addEffectPanelOpen = false"/>
+                <CascadingValue TValue="ITimelineDispatcher" Value="@this" IsFixed="@true">
+                    <TimelineCreateEffectCard
+                        SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
+                        OnEffectCreated="() => addEffectPanelOpen = false"/>
+                </CascadingValue>
             </MudPopover>
         </MudBadge>
     </CascadingValue>

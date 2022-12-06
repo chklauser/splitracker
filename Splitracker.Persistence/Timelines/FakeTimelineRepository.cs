@@ -52,7 +52,7 @@ class FakeTimelineRepository : ITimelineRepository
         );
     }
 
-    public Task ApplyAsync(ClaimsPrincipal principal, ITimelineCommand groupCommand)
+    public Task ApplyAsync(ClaimsPrincipal principal, TimelineCommand command)
     {
         throw new NotImplementedException();
     }

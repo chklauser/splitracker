@@ -1,4 +1,5 @@
 ﻿@using Splitracker.Domain
+
 <div
     class="timeline-character-action-card">
     <MudCard
@@ -21,7 +22,8 @@
                     Disabled="@(SelectedActionTemplate == null || ActionData.NumberOfTicks <= 0)"
                     Size="Size.Large"
                     Color="@Color.Success"
-                    Icon="@Icons.Material.Filled.CheckCircle"/>
+                    Icon="@Icons.Material.Filled.CheckCircle"
+                    OnClick="() => OnApplyActionClicked.InvokeAsync(ActionData)"/>
             </CardHeaderActions>
         </MudCardHeader>
         <MudCardContent
@@ -78,6 +80,7 @@
         <MudCardActions
             Class="pb-3">
             <CascadingValue
+                IsFixed="@true"
                 Value="@this">
                 @if (ActionData.NumberOfTicks > 0)
                 {
@@ -117,15 +120,19 @@
                         <TimelineActionButton
                             Action="@CastSpell"/>
                     }
+                    <TimelineActionButton
+                        Action="@LeaveTimeline"/>
                 }
                 else
                 {
                     <TimelineActionButton
                         StartIcon="@Icons.Material.Filled.ArrowCircleUp"
-                        Action="@BumpBackward"/>
+                        Action="@BumpBackward"
+                        OnClick="async b => await applyBump(b, -1)"/>
                     <TimelineActionButton
                         EndIcon="@Icons.Material.Filled.ArrowCircleDown"
-                        Action="@BumpForward"/>
+                        Action="@BumpForward"
+                        OnClick="async b => await applyBump(b, 1)"/>
                 }
             </CascadingValue>
         </MudCardActions>

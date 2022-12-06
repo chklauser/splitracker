@@ -16,6 +16,12 @@ partial class TimelinePreview
     
     [Parameter]
     public EventCallback<Tick> OnTickSelected { get; set; }
+    
+    [CascadingParameter]
+    public required ITimelineDispatcher Dispatcher { get; set; }
+    
+    [Inject]
+    public required TimelineLogic Logic { get; set; }
 
     IReadOnlyList<(Tick Tick, int Track, int Offset)>? allocatedTimeline;
 
@@ -61,7 +67,21 @@ partial class TimelinePreview
         characterActionData.TryGetValue(character.Id, out var data) ? data : CharacterActionData.Default;
     void storeCharacterActionData(Character character, CharacterActionData data) =>
         characterActionData[character.Id] = data;
-    
+
+    async Task characterActionApplyClicked(CharacterActionData data, Character character)
+    {
+        if (data.Template == null)
+        {
+            return;
+        }
+
+        var cmd = Logic.ApplyAction(Timeline,
+            data.Template,
+            character,
+            data.NumberOfTicks,
+            data.Description);
+        await Dispatcher.ApplyCommandAsync(cmd);
+    }
 
     #endregion
     

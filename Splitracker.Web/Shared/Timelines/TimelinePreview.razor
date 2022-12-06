@@ -1,5 +1,9 @@
 ﻿@using Splitracker.Domain
 
+@code {
+    
+}
+
 @if (allocatedTimeline == null)
 {
     <MudProgressCircular Color="Color.Primary"/>
@@ -54,11 +58,14 @@ else
                                     CanReact="@(offset - allocatedTimeline[0].Tick.At < 30)"
                                     @bind-ActionData:get="getCharacterActionData(ct.Character)"
                                     @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
+                                    OnApplyActionClicked="d => characterActionApplyClicked(d, ct.Character)"
                                     />
                             }
                             else if (tick is Tick.EffectTick et)
                             {
-                                <TimelineEffectActionCard Tick="et" IsHappeningNow="@(offset == 0)" />
+                                <CascadingValue TValue="ITimelineDispatcher" Value="@Dispatcher" IsFixed="@true">
+                                    <TimelineEffectActionCard Tick="et" IsHappeningNow="@(offset == 0)" />
+                                </CascadingValue>
                             }
                         </MudPopover>
                         <TickSummary

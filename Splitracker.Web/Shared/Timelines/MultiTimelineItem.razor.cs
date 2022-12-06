@@ -122,8 +122,8 @@ public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
 
     void selectItem()
     {
-        var myIndex = Parent?.Items.IndexOf(this);
-        Parent?.MoveTo(myIndex ?? 0);
+        var myIndex = Offset;
+        Parent?.MoveTo(myIndex);
     }
 
     public void Dispose()

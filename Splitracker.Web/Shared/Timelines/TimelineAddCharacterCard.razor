@@ -38,6 +38,7 @@
             Placeholder="Name..."
             SearchFuncWithCancel="@searchCharacters"
             ResetValueOnEmptyText="@true"
+            ToStringFunc="c => c.Name"
             CoerceText="@true">
             <ItemTemplate
                 Context="c">

@@ -14,6 +14,7 @@ using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
+using Splitracker.Domain;
 using Splitracker.Persistence;
 using Splitracker.Web.Shared;
 
@@ -62,6 +63,7 @@ builder.Services.AddHttpLogging(logging =>
 
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddScoped<FlagContextHolder>();
+builder.Services.AddSingleton<TimelineLogic>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

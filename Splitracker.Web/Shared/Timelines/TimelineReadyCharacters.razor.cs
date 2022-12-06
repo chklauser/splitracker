@@ -1,6 +1,8 @@
 ﻿using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Splitracker.Domain;
+using Splitracker.Domain.Commands;
 
 namespace Splitracker.Web.Shared.Timelines;
 
@@ -12,6 +14,9 @@ public partial class TimelineReadyCharacters
     
     [Parameter]
     public Tick? SelectedTick { get; set; }
+    
+    [CascadingParameter]
+    public required ITimelineDispatcher Dispatcher { get; set; }
     
     bool isExpanded;
 
@@ -39,10 +44,16 @@ public partial class TimelineReadyCharacters
             selectedCharacter = null;
         }
     }
-    
-    
-    void addCharacterClicked()
+
+
+    async Task addCharacterClicked()
     {
+        if (selectedCharacter == null)
+        {
+            return;
+        }
+
+        await Dispatcher.ApplyCommandAsync(new TimelineCommand.SetCharacterRecovered(null!, selectedCharacter.Id, insertionTick, 1));
         selectedCharacter = null;
     }
 

@@ -23,7 +23,10 @@ partial class TimelineCharacterActionCard
     public required CharacterActionData ActionData { get; set; }
 
     [Parameter]
-    public EventCallback<CharacterActionData>? ActionDataChanged { get; set; }
+    public EventCallback<CharacterActionData> ActionDataChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<CharacterActionData> OnApplyActionClicked { get; set; }
 
     internal ActionTemplate? SelectedActionTemplate => ActionData.Template;
 
@@ -38,7 +41,8 @@ partial class TimelineCharacterActionCard
         selectedActionTemplate is { Max: { } customMax } ? customMax : 100;
 
     bool hasTicksParameter =>
-        SelectedActionTemplate is null or { Type: not (ActionTemplateType.Ready or ActionTemplateType.Reset) };
+        SelectedActionTemplate is null or
+            { Type: not (ActionTemplateType.Ready or ActionTemplateType.Reset or ActionTemplateType.Leave) };
 
     protected override void OnInitialized()
     {
@@ -50,29 +54,19 @@ partial class TimelineCharacterActionCard
 
     async Task changeNumberOfTicks(int newNumberOfTicks)
     {
-        if (ActionDataChanged is not { } changed)
-        {
-            return;
-        }
-
-        await changed.InvokeAsync(ActionData with { NumberOfTicks = newNumberOfTicks });
+        await ActionDataChanged.InvokeAsync(ActionData with { NumberOfTicks = newNumberOfTicks });
     }
     
     async Task actionTemplateSelectedHandler(ActionTemplate next)
     {
-        if (ActionDataChanged is not { } changed)
-        {
-            return;
-        }
-
         // Clicking an already selected action should deselect it
         if (ReferenceEquals(next, SelectedActionTemplate))
         {
-            await changed.InvokeAsync(ActionData with { Template = null });
+            await ActionDataChanged.InvokeAsync(ActionData with { Template = null });
         }
         else
         {
-            await changed.InvokeAsync(ActionData with {
+            await ActionDataChanged.InvokeAsync(ActionData with {
                 Template = next,
                 NumberOfTicks = next is { Default: { } defaultTicks }
                     ? defaultTicks
@@ -86,14 +80,14 @@ partial class TimelineCharacterActionCard
 
     async Task descriptionChanged(string newDescription)
     {
-        if (ActionDataChanged is not { } changed)
-        {
-            return;
-        }
-
-        await changed.InvokeAsync(ActionData with {
+        await ActionDataChanged.InvokeAsync(ActionData with {
             Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription
         });
+    }
+
+    async Task applyBump(ActionTemplate bump, int delta)
+    {
+        await OnApplyActionClicked.InvokeAsync(new(bump, delta, null));
     }
 
     #region Pre-defined actions
@@ -188,6 +182,13 @@ partial class TimelineCharacterActionCard
         "Kontinuierliche Aktion abbrechen",
         ActionTemplateType.Reset,
         CustomLabel: "Aktion abbrechen");
+
+
+    static readonly ActionTemplate LeaveTimeline = new(
+        "__leave_timeline",
+        "Charakter Entfernen",
+        ActionTemplateType.Leave,
+        CustomLabel: "Entfernen");
 
     #endregion
 }

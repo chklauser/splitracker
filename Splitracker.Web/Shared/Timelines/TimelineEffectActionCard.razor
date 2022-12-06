@@ -1,4 +1,5 @@
 ﻿@using Splitracker.Domain
+@using Splitracker.Domain.Commands
 <MudCard Elevation="0">
     <MudCardHeader>
         <CardHeaderContent>
@@ -9,14 +10,18 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-        <MudText>
-            (Effekt wird entfernt)
-        </MudText>
+        @if (!IsHappeningNow)
+        {
+            <MudText>
+                (Effekt wird entfernt)
+            </MudText>
+        }
     </MudCardContent>
     <MudCardActions>
         <MudButton
             Variant="Variant.Filled"
-            Color="@(IsHappeningNow ? Color.Primary : Color.Warning)">
+            Color="@(IsHappeningNow ? Color.Primary : Color.Warning)"
+            OnClick="removeEventButtonClicked">
             @if (IsHappeningNow)
             {
                 <text>Ist abgehandelt!</text>
@@ -37,4 +42,22 @@
     [Parameter]
     [EditorRequired]
     public required bool IsHappeningNow { get; set; }
+    
+    [CascadingParameter]
+    public required ITimelineDispatcher Dispatcher { get; set; }
+
+    async Task removeEventButtonClicked()
+    {
+        if (IsHappeningNow && Tick is Tick.EffectTicks)
+        {
+            // Remove just this tick instance
+            await Dispatcher.ApplyCommandAsync(new TimelineCommand.RemoveEffectTick(null!, Tick.Effect.Id, Tick.At));
+        }
+        else
+        {
+            // Remove the entire effect (with all its tick instances)
+            await Dispatcher.ApplyCommandAsync(new TimelineCommand.RemoveEffect(null!, Tick.Effect.Id));
+        }
+    }
+
 }

@@ -23,4 +23,5 @@ public enum ActionTemplateType
     Ready,
     Reset,
     Bump,
+    Leave
 }

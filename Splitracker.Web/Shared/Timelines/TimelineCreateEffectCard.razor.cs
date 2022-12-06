@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Splitracker.Domain;
+using Splitracker.Domain.Commands;
 
 namespace Splitracker.Web.Shared.Timelines;
 
@@ -21,6 +24,9 @@ public partial class TimelineCreateEffectCard : IDisposable
     
     [Parameter]
     public EventCallback OnEffectCreated { get; set; }
+    
+    [CascadingParameter]
+    public required ITimelineDispatcher Dispatcher { get; set; }
 
     ValidationMessageStore? customValidationMessages;
 
@@ -93,8 +99,15 @@ public partial class TimelineCreateEffectCard : IDisposable
         {
             return;
         }
-        
-        // TODO: actually create the effect
+
+        await Dispatcher.ApplyCommandAsync(new TimelineCommand.AddEffect(
+            null!,
+            IdGenerator.RandomId(), 
+            model.Description,
+            model.At,
+            model.Duration,
+            model.Interval,
+            ImmutableArray<string>.Empty));
         
         await OnEffectCreated.InvokeAsync();
     }
