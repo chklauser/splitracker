@@ -27,10 +27,18 @@ partial class TimelinePreview
 
     bool actionCardOpen = false;
 
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        allocatedTimeline = allocateTracks(Timeline.Ticks).ToImmutableArray();
+        trackFocusedTick();
+    }
+    
     #region Selection Management
 
     int selectedIndex = 0;
     int lastIndexClicked = 0;
+    Tick? focusLock = null;
 
     async Task changeSelectedIndex(int newIndex)
     {
@@ -45,6 +53,7 @@ partial class TimelinePreview
             }
         }
         selectedIndex = newIndex;
+        lockOn();
     }
     
     void timelineClicked()
@@ -57,6 +66,56 @@ partial class TimelinePreview
         lastIndexClicked = selectedIndex;
     }
 
+    void lockOn()
+    {
+        if (allocatedTimeline != null
+            && selectedIndex >= 0 && selectedIndex < allocatedTimeline.Count
+            && allocatedTimeline[selectedIndex] is var focusCandidate and not (Empty, _, _))
+        {
+            focusLock = focusCandidate.Tick;
+        }
+        else
+        {
+            breakFocusLock();
+        }
+    }
+
+    void breakFocusLock()
+    {
+        focusLock = null;
+    }
+    
+    void trackFocusedTick()
+    {
+        if (focusLock == null || allocatedTimeline == null)
+        {
+            return;
+        }
+
+        static bool matchesFocusLock(Tick tick, Tick focusLock) =>
+            (tick, focusLock) is (Tick.CharacterTick { Character.Id: var candidateCharId }, Tick.CharacterTick {
+                Character.Id: var focusCharId,
+            }) && candidateCharId == focusCharId
+            || (tick, focusLock) is (Tick.EffectTick { Effect.Id: var candidateEffectId }, Tick.EffectTick {
+                Effect.Id: var focusEffectId,
+            }) && candidateEffectId == focusEffectId;
+
+        var lockedOnIndex = allocatedTimeline
+            .RadialSearch(selectedIndex)
+            .Where( t => matchesFocusLock(t.Tick, focusLock) )
+            .Select(x => (int?)x.Offset)
+            .FirstOrDefault();
+        if (lockedOnIndex is {} newSelectedIndex)
+        {
+            selectedIndex = newSelectedIndex;
+        }
+        else
+        {
+            // lost lock
+            breakFocusLock();
+        }
+    }
+
     #endregion
 
     #region Action Card Data
@@ -65,8 +124,9 @@ partial class TimelinePreview
 
     CharacterActionData getCharacterActionData(Character character) =>
         characterActionData.TryGetValue(character.Id, out var data) ? data : CharacterActionData.Default;
-    void storeCharacterActionData(Character character, CharacterActionData data) =>
+    void storeCharacterActionData(Character character, CharacterActionData data) {
         characterActionData[character.Id] = data;
+    }
 
     async Task characterActionApplyClicked(CharacterActionData data, Character character)
     {
@@ -80,18 +140,24 @@ partial class TimelinePreview
             character,
             data.NumberOfTicks,
             data.Description);
+
+        // Depending on the type of action, we either want to "follow" the
+        // character along the timeline (and issue another action) or 
+        // we want to break the lock to focus on the next character in line instead.
+        if (data.Template.Type is not (
+            ActionTemplateType.Bump 
+            or ActionTemplateType.Reset
+            or ActionTemplateType.Reaction))
+        {
+            breakFocusLock();
+        }
+
         await Dispatcher.ApplyCommandAsync(cmd);
     }
 
     #endregion
     
     #region Timeline Layout
-
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-        allocatedTimeline = allocateTracks(Timeline.Ticks).ToImmutableArray();
-    }
 
     IEnumerable<string?> timelineLabels()
     {

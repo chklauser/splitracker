@@ -9,7 +9,9 @@ public record ActionTemplate(
     int Min = 1,
     int? Max = null,
     int Multiplier = 1,
-    int? Default = null
+    int? Default = null,
+    ActionTemplate? FollowUp = null,
+    bool AvoidRepetition = false
 )
 {
     public string Label => CustomLabel ?? Name;

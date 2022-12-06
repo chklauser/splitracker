@@ -52,6 +52,21 @@ partial class TimelineCharacterActionCard
             actionTemplateSelectedHandler);
     }
 
+    async Task applyActionClicked()
+    {
+        var data = ActionData;
+        if (data.Template?.FollowUp is { } followUp)
+        {
+            await ActionDataChanged.InvokeAsync(applyTemplateToActionData(followUp));
+        }
+        else if (data.Template?.AvoidRepetition is true)
+        {
+            await ActionDataChanged.InvokeAsync(ActionData with { Template = null });
+        }
+
+        await OnApplyActionClicked.InvokeAsync(data);
+    }
+    
     async Task changeNumberOfTicks(int newNumberOfTicks)
     {
         await ActionDataChanged.InvokeAsync(ActionData with { NumberOfTicks = newNumberOfTicks });
@@ -66,16 +81,21 @@ partial class TimelineCharacterActionCard
         }
         else
         {
-            await ActionDataChanged.InvokeAsync(ActionData with {
-                Template = next,
-                NumberOfTicks = next is { Default: { } defaultTicks }
-                    ? defaultTicks
-                    : Math.Clamp(ActionData.NumberOfTicks, minNumberOfTicks(next), maxNumberOfTicks(next)),
-                Description = next is {Description: {} defaultDescription} 
-                    ? defaultDescription 
-                    : ActionData.Description,
-            });
+            await ActionDataChanged.InvokeAsync(applyTemplateToActionData(next));
         }
+    }
+
+    CharacterActionData applyTemplateToActionData(ActionTemplate next)
+    {
+        return ActionData with {
+            Template = next,
+            NumberOfTicks = next is { Default: { } defaultTicks }
+                ? defaultTicks
+                : Math.Clamp(ActionData.NumberOfTicks, minNumberOfTicks(next), maxNumberOfTicks(next)),
+            Description = next is {Description: {} defaultDescription} 
+                ? defaultDescription 
+                : ActionData.Description,
+        };
     }
 
     async Task descriptionChanged(string newDescription)
@@ -108,23 +128,33 @@ partial class TimelineCharacterActionCard
         Description: "Sprinten");
     static readonly ActionTemplate Ready = new("__ready", "Abwarten", ActionTemplateType.Ready);
 
-    static readonly ActionTemplate Focus = new(
-        "__focus",
-        "Fokus",
-        ActionTemplateType.Continuous,
-        Description: "Magie fokussieren");
-
     static readonly ActionTemplate CastSpell = new(
         "__cast_spell",
         "Zauber auslösen",
         ActionTemplateType.Immediate,
-        Default: 3);
+        Default: 3,
+        AvoidRepetition: true);
 
+    static readonly ActionTemplate Focus = new(
+        "__focus",
+        "Fokus",
+        ActionTemplateType.Continuous,
+        Description: "Magie fokussieren",
+        FollowUp: CastSpell);
+
+    static readonly ActionTemplate Shoot = new(
+        "__aim",
+        "Fernk. auslösen",
+        ActionTemplateType.Immediate,
+        Default: 3,
+        AvoidRepetition: true);
+    
     static readonly ActionTemplate PrepareRanged = new(
         "__prepare_ranged",
         "Fernk. vorbereiten",
         ActionTemplateType.Continuous,
-        Description: "Fernkampf vorbereiten");
+        Description: "Fernkampf vorbereiten",
+        FollowUp: Shoot);
 
     static readonly ActionTemplate Aim = new(
         "__aim",
@@ -133,13 +163,9 @@ partial class TimelineCharacterActionCard
         Description: "Zielen",
         Default: 1,
         Max: 3,
-        Multiplier: 2);
-
-    static readonly ActionTemplate Shoot = new(
-        "__aim",
-        "Fernk. auslösen",
-        ActionTemplateType.Immediate,
-        Default: 3);
+        Multiplier: 2,
+        FollowUp: Shoot,
+        AvoidRepetition: true);
 
     static readonly ActionTemplate LookForGap = new(
         "__look_for_gap",
@@ -148,7 +174,8 @@ partial class TimelineCharacterActionCard
         Description: "Lücke suchen",
         Default: 1,
         Max: 3,
-        Multiplier: 2);
+        Multiplier: 2,
+        AvoidRepetition: true);
 
     static readonly ActionTemplate BumpForward = new(
         "__bump_forward",
@@ -169,7 +196,8 @@ partial class TimelineCharacterActionCard
     static readonly ActionTemplate Reaction = new(
         "__reaction",
         "Reaktion",
-        ActionTemplateType.Reaction);
+        ActionTemplateType.Reaction,
+        AvoidRepetition: true);
 
     static readonly ActionTemplate ActiveDefense = new(
         "__active_defense",
@@ -181,7 +209,8 @@ partial class TimelineCharacterActionCard
         "__abort_action",
         "Kontinuierliche Aktion abbrechen",
         ActionTemplateType.Reset,
-        CustomLabel: "Aktion abbrechen");
+        CustomLabel: "Aktion abbrechen",
+        AvoidRepetition: true);
 
 
     static readonly ActionTemplate LeaveTimeline = new(
