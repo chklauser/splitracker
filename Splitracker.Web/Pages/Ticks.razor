@@ -8,13 +8,58 @@
 
 @if (handle != null)
 {
-    <CascadingValue TValue="ITimelineDispatcher" Value="@this" IsFixed="@true">
-        @if (handle.Timeline.Ready.Count > 0)
-        {
-            <TimelineReadyCharacters
-                Characters="@handle.Timeline.Ready"
-                SelectedTick="@selectedTick"/>
-        }
+    <CascadingValue
+        TValue="ITimelineDispatcher"
+        Value="@this"
+        IsFixed="@true">
+        <MudExpansionPanels MultiExpansion="@true">
+            <CascadingValue
+                TValue="ICharacterCommandRouter"
+                IsFixed="true"
+                Value="@this">
+                <MudExpansionPanel
+                    @bind-IsExpanded="characterEditPanelOpen">
+                    <TitleContent>
+                        <div
+                            class="d-flex gap-2 align-center align-content-center justify-start">
+                            <MudText
+                                Class="flex-none"
+                                Typo="@Typo.h6">
+                                Deine<br/>Charaktere
+                            </MudText>
+                            <MudAvatarGroup
+                                Class="flex-grow-1"
+                                Max="3"
+                                Spacing="3">
+                                @foreach (var c in PlayerCharacters)
+                                {
+                                    <CharacterAvatar
+                                        @key="c.Id"
+                                        Character="@c"/>
+                                }
+                            </MudAvatarGroup>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <div class="d-flex flex-row flex-wrap gap-4">
+                        @foreach (var character in PlayerCharacters)
+                        {
+                            <CharacterCard
+                                @key="character.Id"
+                                CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                EditMode="@false"/>
+                        }
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
+            </CascadingValue>
+            @if (handle.Timeline.Ready.Count > 0)
+            {
+                <TimelineReadyCharacters
+                    Characters="@handle.Timeline.Ready"
+                    SelectedTick="@selectedTick"/>
+            }
+        </MudExpansionPanels>
         <TimelinePreview
             Timeline="handle.Timeline"
             OnTickSelected="@tickSelected"/>
@@ -54,7 +99,10 @@
                 TransformOrigin="@Origin.BottomRight"
                 Fixed="@true"
                 Style="max-width: 320px; z-index: 500">
-                <CascadingValue TValue="ITimelineDispatcher" Value="@this" IsFixed="@true">
+                <CascadingValue
+                    TValue="ITimelineDispatcher"
+                    Value="@this"
+                    IsFixed="@true">
                     <TimelineAddCharacterCard
                         SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
                         OnCharacterAdded="() => addCharacterPanelOpen = false"/>
@@ -66,7 +114,10 @@
                 TransformOrigin="@Origin.BottomRight"
                 Fixed="@true"
                 Style="max-width: 320px; z-index: 500">
-                <CascadingValue TValue="ITimelineDispatcher" Value="@this" IsFixed="@true">
+                <CascadingValue
+                    TValue="ITimelineDispatcher"
+                    Value="@this"
+                    IsFixed="@true">
                     <TimelineCreateEffectCard
                         TimelineCharacters="@handle.Timeline.Characters.Values.ToImmutableArray()"
                         SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"

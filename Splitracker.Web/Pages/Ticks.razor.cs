@@ -7,17 +7,21 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
+using Splitracker.Web.Shared;
 using Splitracker.Web.Shared.Timelines;
 
 namespace Splitracker.Web.Pages;
 
-partial class Ticks : IAsyncDisposable, ITimelineDispatcher
+partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRouter
 {
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
 
     [Inject]
     public required ITimelineRepository Repository { get; set; }
+    
+    [Inject]
+    public required ICharacterRepository CharacterRepository { get; set; }
 
     [Inject]
     public required NavigationManager Nav { get; set; }
@@ -111,4 +115,34 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher
                 _ => throw new ArgumentOutOfRangeException(nameof(command)),
             });
     }
+
+    class NonSubscribingCharacterHandle : ICharacterHandle
+    {
+        public NonSubscribingCharacterHandle(Character character)
+        {
+            Character = character;
+        }
+
+        public Character Character { get; }
+        public event EventHandler? CharacterUpdated
+        {
+            add { }
+            remove { }
+        }
+    }
+
+    #region Character editing support
+
+    bool characterEditPanelOpen;
+
+    public IEnumerable<Character> PlayerCharacters =>
+        handle?.Timeline.Characters.Values ?? Enumerable.Empty<Character>();
+
+    public async Task ApplyAsync(ICharacterCommand command)
+    {
+        var auth = await AuthenticationState;
+        await CharacterRepository.ApplyAsync(auth.User, command);
+    }
+    
+    #endregion
 }

@@ -1,5 +1,5 @@
 ﻿
-<MudExpansionPanels>
+
     <MudExpansionPanel
         @bind-IsExpanded="isExpanded" >
         <TitleContent>
@@ -35,7 +35,8 @@
                         @key="c.Id"
                         Character="@c"
                         IsSelected="@(ReferenceEquals(c, selectedCharacter))"
-                        OnClick="@selectCharacter"/>
+                        OnClick="@selectCharacter"
+                        ShowPenalty="@true"/>
                 }
             </div>
             <MudDivider DividerType="DividerType.FullWidth" Class="my-3"/>
@@ -68,4 +69,3 @@
             </MudStack>
         </ChildContent>
     </MudExpansionPanel>
-</MudExpansionPanels>

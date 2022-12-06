@@ -1,7 +1,15 @@
 ﻿@using Splitracker.Domain
-<MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)" @onclick="avatarClicked">
-    @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
-</MudAvatar>
+
+@{
+    var penalty = Character.Penalty;
+}
+<MudBadge Visible="@(ShowPenalty && penalty > 0)" @onclick="avatarClicked" Overlap="@true"
+          Origin="@Origin.BottomCenter"
+          Bordered="true" Color="Color.Error" Content="@($"-{Character.Penalty}")">
+    <MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)">
+        @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
+    </MudAvatar>
+</MudBadge>
 
 @code {
     [Parameter]
@@ -13,6 +21,9 @@
     
     [Parameter]
     public EventCallback<Character> OnClick { get; set; }
+    
+    [Parameter]
+    public bool ShowPenalty { get; set; }
 
     async Task avatarClicked()
     {

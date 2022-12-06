@@ -38,7 +38,7 @@ else
                     <ItemDot>
                         @if (tick is Tick.CharacterTick { Character: var c})
                         {
-                            <CharacterAvatar Character="@c" IsSelected="@(offset == selectedIndex)" />
+                            <CharacterAvatar Character="@c" IsSelected="@(offset == selectedIndex)" ShowPenalty="@true" />
                         }
                         else if (tick is Tick.EffectTick)
                         {

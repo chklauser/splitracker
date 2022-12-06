@@ -21,7 +21,7 @@
 <MudSnackbarProvider/>
 
 <MudLayout Class="@CssClass.Rendered(("dark", isDarkMode))">
-    <MudAppBar>
+    <MudAppBar Fixed="false">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="@Color.Inherit" Edge="@Edge.Start" OnClick="@drawerToggle"/>
         <MudText
             Typo="Typo.h5"
@@ -40,7 +40,7 @@
     <MudDrawer @bind-Open="drawerOpen" ClipMode="@DrawerClipMode.Always" >
         <NavMenu/>
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent Class="pt-0">
         <MudContainer Class="mb-16 pt-2">
             @Body
         </MudContainer>

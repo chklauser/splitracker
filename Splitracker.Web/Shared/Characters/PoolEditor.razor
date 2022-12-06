@@ -9,7 +9,8 @@
     BadgeData="@(ShowPenalties ? $"{(penalty > 0 ? '-' : '±')}{penalty}" : null)"
     BadgeColor="@Color.Error"
     Text="@($"{Title} ({TotalCapacity(baseCapacity) - lost})")"
-    Icon="@Icon">
+    Icon="@Icon"
+    >
     <MudStack Class="pt-3">
         <div class="mx-auto">
             <PointsBlock
@@ -74,6 +75,6 @@
 
     IImmutableList<int> channelings => Pool.Channelings;
 
-    int penalty => (int)Math.Min(Math.Floor(Math.Pow(2, Math.Ceiling((double)(points.Exhausted + points.Consumed + points.Channeled) / baseCapacity) - 2)), 8);
+    int penalty => Character.PenaltyDueToLowLp(points, baseCapacity);
 
 }
