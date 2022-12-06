@@ -18,12 +18,13 @@ else
         @bind-SelectedIndex:get="selectedIndex"
         @bind-SelectedIndex:set="changeSelectedIndex"
         @onclick="timelineClicked">
-        @foreach (var (track, lastOffset) in allocatedTimeline.GroupBy(y => y.Track).Select(track => (track.Key, track.Max(t => t.Offset))))
+        @foreach (var lengths in allocatedTimeline.GroupBy(y => y.Track, y => y.Offset + 1))
         {
+            var track = lengths.Key;
             <MultiTimelineTrack
                 @key="@track"
                 Index="@track"
-                Length="@(track == 0 ? allocatedTimeline.Count : lastOffset + 1)"/>
+                Lengths="@(track == 0 ? new[]{allocatedTimeline.Count} : lengths)"/>
         }
         @foreach (var (tick, track, offset) in allocatedTimeline)
         {

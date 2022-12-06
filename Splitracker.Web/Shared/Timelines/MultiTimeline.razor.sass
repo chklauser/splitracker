@@ -1,5 +1,6 @@
 ﻿$mud-palette-colors: primary, secondary, tertiary, info, success, warning, error, dark
 $label-row-width: 48px
+$track-width: 48px
 
 // adapted from https://github.com/MudBlazor/MudBlazor/blob/dev/src/MudBlazor/Styles/components/_timeline.scss
 // licensed under MIT
@@ -11,7 +12,7 @@ $label-row-width: 48px
 		display: grid
 		grid-template-columns: [tick] $label-row-width
 		grid-auto-columns: 32px
-		grid-auto-rows: minmax(48px, auto)
+		grid-auto-rows: minmax($track-width, auto)
 	
 	&.multi-timeline-vertical
 		padding-top: 24px
@@ -20,8 +21,14 @@ $label-row-width: 48px
 		.multi-timeline-track
 			z-index: 0
 			content: ""
-			margin-bottom: 24px
+			margin-bottom: -20px
 			width: 2px
+			background: var(--mud-palette-divider)	
+		.multi-timeline-connector
+			z-index: 0
+			content: ""
+			margin-top: 20px
+			height: 2px
 			background: var(--mud-palette-divider)
 	
 		.multi-timeline-item	

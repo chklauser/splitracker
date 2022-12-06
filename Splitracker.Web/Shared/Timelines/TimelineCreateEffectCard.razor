@@ -78,10 +78,12 @@
                 @bind-Value="model.Interval"
                 HelperText="Wiederkehrend innerhalb der Dauer (oder leer lassen)"
                 DebounceInterval="300"
+                Variant="@Variant.Outlined"
                 OnBlur="() => editContext?.Validate()"/>
             <MudAutocomplete T="Character" ToStringFunc="renderCharacter" CoerceText="@true" @bind-Value="model.SelectedCharacter"
                              SearchFunc="completeCharacters" Variant="@Variant.Outlined" PopoverClass="mud-popover-fixed"
-                             ResetValueOnEmptyText="@true" OnKeyUp="characterSelectionKeyUp"/>
+                             ResetValueOnEmptyText="@true" OnKeyUp="characterSelectionKeyUp"
+                             Label="Betroffene Charaktere" Placeholder="Name + &lt;Enter&gt;"/>
             <MudChipSet AllClosable="@true" SelectedChip="@null" >
                 @foreach (var c in model.AffectedCharacters)
                 {
