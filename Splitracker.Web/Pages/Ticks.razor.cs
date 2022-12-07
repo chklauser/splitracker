@@ -181,7 +181,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
 
     public IEnumerable<Character> PlayerCharacters =>
         handle?.Timeline.Characters.Values
-            .Where(c => characterPermissions[c.Id].HasFlag(CharacterPermissions.InteractOnTimeline)) 
+            .Where(c => characterPermissions[c.Id].HasFlag(CharacterPermissions.EditStats)) 
         ?? Enumerable.Empty<Character>();
 
     public async Task ApplyAsync(ICharacterCommand command)
