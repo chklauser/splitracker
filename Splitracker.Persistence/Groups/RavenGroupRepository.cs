@@ -12,7 +12,6 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Session;
 using Splitracker.Domain;
-using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
 
@@ -270,32 +269,6 @@ class RavenGroupRepository : IGroupRepository, IHostedService
                 character.Id,
                 group.Id);
         }
-    }
-
-    public async Task ApplyAsync(ClaimsPrincipal principal, GroupCommand command)
-    {
-        var userId = await userRepository.GetUserIdAsync(principal);
-
-        using var session = store.OpenAsyncSession();
-        if (await accessGroupAsync(command.GroupId, userId, session) is not { } role)
-        {
-            throw new ArgumentException($"User {userId} does not have access to group of group {command.GroupId}");
-        }
-
-        var dbGroup = await session.LoadAsync<Model.Group>(command.GroupId);
-        if (dbGroup == null)
-        {
-            throw new ArgumentException($"Group {command.GroupId} does not exist.");
-        }
-
-        switch (command)
-        {
-            default:
-                throw new ArgumentException($"Unsupported command type {command.GetType().Name}");
-        }
-
-        enforceGroupInvariants(dbGroup);
-        await session.SaveChangesAsync();
     }
 
     void enforceGroupInvariants(Model.Group dbGroup)

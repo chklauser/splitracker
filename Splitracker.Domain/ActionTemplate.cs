@@ -6,7 +6,6 @@ public record ActionTemplate(
     ActionTemplateType Type,
     string? Description = null,
     string? CustomLabel = null,
-    int Min = 1,
     int? Max = null,
     int Multiplier = 1,
     int? Default = null,

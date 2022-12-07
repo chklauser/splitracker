@@ -29,13 +29,15 @@ static class GroupModelMapper
             hasTimeline,
             JoinCode: dbGroup.JoinCode,
             Members: dbGroup.Members.ToImmutableDictionary(m => m.UserId,
-                m => new GroupMembership(m.UserId,
-                    m.Role switch {
-                        GroupRole.Member => Domain.GroupRole.Member,
-                        GroupRole.GameMaster => Domain.GroupRole.GameMaster,
-                        _ => throw new ArgumentOutOfRangeException(nameof(GroupMember.Role),
-                            m.Role,
-                            "Unknown group role"),
-                    })));
+                m => new GroupMembership(m.UserId, m.Role.ToDomain())));
+    }
+    
+    public static Domain.GroupRole ToDomain(this GroupRole role)
+    {
+        return role switch {
+            GroupRole.Member => Domain.GroupRole.Member,
+            GroupRole.GameMaster => Domain.GroupRole.GameMaster,
+            _ => throw new ArgumentOutOfRangeException(nameof(role), role, "Unknown group role"),
+        };
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Riok.Mapperly.Abstractions;
+using Splitracker.Domain;
 
 namespace Splitracker.Persistence.Model;
 
@@ -44,19 +44,31 @@ class Effect
 
 static class TimelineModelMapper
 {
-    public static Splitracker.Domain.Timeline ToDomain(
+    public static Domain.Timeline ToDomain(
         this Timeline timeline,
         Group group,
         IEnumerable<CharacterModel> characters
     )
     {
-        var charactersById = characters.ToImmutableDictionary(c => c.Id, c => c.ToDomain());
-        var effectsById = timeline.Effects.ToImmutableDictionary(e => e.Id, e => e.toDomain(charactersById));
-        return new(timeline.Id!, group.Id!, group.Name, charactersById, effectsById,
+        var charactersById = characters.ToImmutableDictionary(
+            c => c.Id,
+            c => c.ToDomain());
+        var effectsById = timeline.Effects.ToImmutableDictionary(
+            e => e.Id,
+            e => e.toDomain(charactersById));
+        var rolesByUserId = group.Members.ToImmutableDictionary(
+            m => m.UserId,
+            m => m.Role.ToDomain());
+        return new(timeline.Id!,
+            group.Id!,
+            group.Name,
+            rolesByUserId,
+            charactersById,
+            effectsById,
             timeline.ReadyCharacterIds.Select(cid => charactersById[cid]).ToImmutableArray(),
             timeline.Ticks.Select(t => t switch {
                 { Type: TickType.Recovers, CharacterId: { } cid, At: var at } =>
-                    (Domain.Tick)new Splitracker.Domain.Tick.Recovers(charactersById[cid], at),
+                    (Domain.Tick)new Domain.Tick.Recovers(charactersById[cid], at),
                 {
                     Type: TickType.ActionEnds, CharacterId: { } cid, At: var at, TotalDuration: { } totalDuration,
                     Description: var description
@@ -73,7 +85,7 @@ static class TimelineModelMapper
 
     static Domain.Effect toDomain(
         this Effect effect,
-        IReadOnlyDictionary<string, Splitracker.Domain.Character> charactersById
+        IReadOnlyDictionary<string, Character> charactersById
     )
     {
         return new(

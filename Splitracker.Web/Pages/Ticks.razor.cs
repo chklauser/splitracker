@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +18,9 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
 {
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
+    
+    [CascadingParameter]
+    public required IPermissionService Permissions { get; set; }
 
     [Parameter]
     public required string GroupIdRaw { get; set; }
@@ -33,6 +37,8 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     public required NavigationManager Nav { get; set; }
 
     ITimelineHandle? handle;
+
+    IImmutableDictionary<string, CharacterPermissions> characterPermissions= ImmutableDictionary<string, CharacterPermissions>.Empty;
 
     Tick? selectedTick;
 
@@ -74,9 +80,22 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
         }
         else
         {
-            newHandle.Updated += (_, _) => InvokeAsync(StateHasChanged);
+            newHandle.Updated += (_, _) => InvokeAsync(() =>
+            {
+                characterPermissions = permissionsForTimeline(newHandle.Timeline);    
+                StateHasChanged();
+            });
+            characterPermissions = permissionsForTimeline(newHandle.Timeline);
             handle = newHandle;
         }
+    }
+
+    ImmutableDictionary<string, CharacterPermissions> permissionsForTimeline(Timeline timeline)
+    {
+        return timeline.Characters.Values.ToImmutableDictionary(
+            c => c.Id,
+            c => Permissions.InTheContextOf(c, timeline)
+        );
     }
 
     bool addEffectPanelOpen;
@@ -161,7 +180,9 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     bool characterEditPanelOpen;
 
     public IEnumerable<Character> PlayerCharacters =>
-        handle?.Timeline.Characters.Values ?? Enumerable.Empty<Character>();
+        handle?.Timeline.Characters.Values
+            .Where(c => characterPermissions[c.Id].HasFlag(CharacterPermissions.InteractOnTimeline)) 
+        ?? Enumerable.Empty<Character>();
 
     public async Task ApplyAsync(ICharacterCommand command)
     {

@@ -12,9 +12,11 @@ public partial class TimelineAddCharacterCard
     [Parameter]
     [EditorRequired]
     public required int SelectedTick { get; set; }
-
     [Parameter]
     public EventCallback OnCharacterAdded { get; set; }
+    
+    [Parameter]
+    public EventCallback OnCloseButtonClicked { get; set; }
 
     [CascadingParameter]
     public required ITimelineDispatcher Dispatcher { get; set; }

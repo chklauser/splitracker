@@ -14,7 +14,8 @@
         TValue="ITimelineDispatcher"
         Value="@this"
         IsFixed="@true">
-        <MudExpansionPanels MultiExpansion="@true">
+        <MudExpansionPanels
+            MultiExpansion="@true">
             <CascadingValue
                 TValue="ICharacterCommandRouter"
                 IsFixed="true"
@@ -43,14 +44,15 @@
                         </div>
                     </TitleContent>
                     <ChildContent>
-                        <div class="d-flex flex-row flex-wrap gap-4">
-                        @foreach (var character in PlayerCharacters)
-                        {
-                            <CharacterCard
-                                @key="character.Id"
-                                CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
-                                EditMode="@false"/>
-                        }
+                        <div
+                            class="d-flex flex-row flex-wrap gap-4">
+                            @foreach (var character in PlayerCharacters)
+                            {
+                                <CharacterCard
+                                    @key="character.Id"
+                                    CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                    EditMode="@false"/>
+                            }
                         </div>
                     </ChildContent>
                 </MudExpansionPanel>
@@ -59,11 +61,13 @@
             {
                 <TimelineReadyCharacters
                     Characters="@handle.Timeline.Ready"
+                    Permissions="@characterPermissions"
                     SelectedTick="@selectedTick"/>
             }
         </MudExpansionPanels>
         <TimelinePreview
-            Timeline="handle.Timeline"
+            Timeline="@handle.Timeline"
+            Permissions="@characterPermissions"
             OnTickSelected="@tickSelected"/>
 
         @* add character *@
@@ -107,7 +111,8 @@
                     IsFixed="@true">
                     <TimelineAddCharacterCard
                         SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
-                        OnCharacterAdded="() => addCharacterPanelOpen = false"/>
+                        OnCharacterAdded="() => addCharacterPanelOpen = false"
+                        OnCloseButtonClicked="() => addCharacterPanelOpen = false"/>
                 </CascadingValue>
             </MudPopover>
             <MudPopover
@@ -123,7 +128,8 @@
                     <TimelineCreateEffectCard
                         TimelineCharacters="@handle.Timeline.Characters.Values.ToImmutableArray()"
                         SelectedTick="@((selectedTick ?? handle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
-                        OnEffectCreated="() => addEffectPanelOpen = false"/>
+                        OnEffectCreated="() => addEffectPanelOpen = false"
+                        OnCloseButtonClicked="() => addEffectPanelOpen = false"/>
                 </CascadingValue>
             </MudPopover>
         </MudBadge>

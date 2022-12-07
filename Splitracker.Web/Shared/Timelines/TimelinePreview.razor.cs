@@ -13,7 +13,11 @@ partial class TimelinePreview
 {
     [Parameter]
     public required Timeline Timeline { get; set; }
-    
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyDictionary<string, CharacterPermissions> Permissions { get; set; }
+
     [Parameter]
     public EventCallback<Tick> OnTickSelected { get; set; }
     

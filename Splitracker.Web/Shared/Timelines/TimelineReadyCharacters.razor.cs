@@ -1,6 +1,8 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 
@@ -13,6 +15,10 @@ public partial class TimelineReadyCharacters
     public required IImmutableList<Character> Characters { get; set; }
     
     [Parameter]
+    [EditorRequired]
+    public required IReadOnlyDictionary<string, CharacterPermissions> Permissions { get; set; }
+
+    [Parameter]
     public Tick? SelectedTick { get; set; }
     
     [CascadingParameter]
@@ -24,6 +30,13 @@ public partial class TimelineReadyCharacters
 
     int insertionTick = 1;
 
+    MudNumericField<int>? insertionTickField;
+
+    bool canInteractWith(Character character)
+    {
+        return Permissions[character.Id].HasFlag(CharacterPermissions.InteractOnTimeline);
+    }
+    
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
@@ -33,11 +46,15 @@ public partial class TimelineReadyCharacters
         }
     }
 
-    void selectCharacter(Character c)
+    async Task selectCharacter(Character c)
     {
         if (!ReferenceEquals(selectedCharacter, c))
         {
             selectedCharacter = c;
+            if (insertionTickField is { } field)
+            {
+                await field.SelectAsync();
+            }
         }
         else
         {

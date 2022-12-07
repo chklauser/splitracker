@@ -1,7 +1,14 @@
 ﻿@using Splitracker.Domain
 @using Splitracker.Domain.Commands
-<MudCard Elevation="0">
+<MudCard
+    Elevation="0">
     <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudIconButton
+                Color="Color.Primary"
+                Icon="@Icons.Material.Filled.CrisisAlert"
+                OnClick="OnCloseButtonClicked"/>
+        </CardHeaderAvatar>
         <CardHeaderContent>
             <MudText
                 Typo="@Typo.h6">
@@ -35,27 +42,31 @@
 </MudCard>
 
 @code {
+
     [Parameter]
     [EditorRequired]
     public required Tick.EffectTick Tick { get; set; }
-    
+
     [Parameter]
     [EditorRequired]
     public required bool IsHappeningNow { get; set; }
-    
+
     [CascadingParameter]
     public required ITimelineDispatcher Dispatcher { get; set; }
+
+    [Parameter]
+    public EventCallback OnCloseButtonClicked { get; set; }
 
     async Task removeEventButtonClicked()
     {
         if (IsHappeningNow && Tick is Tick.EffectTicks)
         {
-            // Remove just this tick instance
+    // Remove just this tick instance
             await Dispatcher.ApplyCommandAsync(new TimelineCommand.RemoveEffectTick(null!, Tick.Effect.Id, Tick.At));
         }
         else
         {
-            // Remove the entire effect (with all its tick instances)
+    // Remove the entire effect (with all its tick instances)
             await Dispatcher.ApplyCommandAsync(new TimelineCommand.RemoveEffect(null!, Tick.Effect.Id));
         }
     }

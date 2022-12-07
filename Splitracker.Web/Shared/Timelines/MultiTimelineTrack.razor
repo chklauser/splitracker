@@ -9,11 +9,14 @@
         </div>
     }
 }
-<div
-    class="multi-timeline-track"
-    style="grid-column: @(Index + 2) / @(Index + 3); grid-row: 1/@Lengths.Last()">
-    
-</div>
+@if (Lengths.Last() > 1)
+{
+    <div
+        class="multi-timeline-track"
+        style="grid-column: @(Index + 2) / @(Index + 3); grid-row: 1/@Lengths.Last()">
+
+    </div>
+}
 
 @code {
     [Parameter]

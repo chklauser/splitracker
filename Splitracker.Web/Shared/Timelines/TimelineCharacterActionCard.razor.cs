@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Splitracker.Domain;
 
 namespace Splitracker.Web.Shared.Timelines;
@@ -10,6 +11,10 @@ partial class TimelineCharacterActionCard
     [Parameter]
     [EditorRequired]
     public required Tick.CharacterTick Tick { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required CharacterPermissions Permissions { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -27,6 +32,9 @@ partial class TimelineCharacterActionCard
 
     [Parameter]
     public EventCallback<CharacterActionData> OnApplyActionClicked { get; set; }
+    
+    [Parameter]
+    public EventCallback OnCloseButtonClicked { get; set; }
 
     internal ActionTemplate? SelectedActionTemplate => ActionData.Template;
 
@@ -34,11 +42,12 @@ partial class TimelineCharacterActionCard
 
     internal EventCallback<ActionTemplate> ActionTemplateSelected;
 
-    static int minNumberOfTicks(ActionTemplate? selectedActionTemplate) => 
-        selectedActionTemplate is { Min: var customMin } ? customMin : 0;
+    bool canInteract => Permissions.HasFlag(CharacterPermissions.InteractOnTimeline);
+
+    static int minNumberOfTicks(ActionTemplate? selectedActionTemplate) => 0;
 
     static int maxNumberOfTicks(ActionTemplate? selectedActionTemplate) => 
-        selectedActionTemplate is { Max: { } customMax } ? customMax : 100;
+        selectedActionTemplate is { Max: { } customMax } ? Math.Max(1, customMax) : 100;
 
     bool hasTicksParameter =>
         SelectedActionTemplate is null or
@@ -72,6 +81,8 @@ partial class TimelineCharacterActionCard
         await ActionDataChanged.InvokeAsync(ActionData with { NumberOfTicks = newNumberOfTicks });
     }
     
+    MudNumericField<int>? numberOfTicksField;
+    
     async Task actionTemplateSelectedHandler(ActionTemplate next)
     {
         // Clicking an already selected action should deselect it
@@ -82,6 +93,10 @@ partial class TimelineCharacterActionCard
         else
         {
             await ActionDataChanged.InvokeAsync(applyTemplateToActionData(next));
+            if (hasTicksParameter && numberOfTicksField != null)
+            {
+                await numberOfTicksField.SelectAsync();
+            }
         }
     }
 
@@ -181,7 +196,6 @@ partial class TimelineCharacterActionCard
         "__bump_forward",
         "Position",
         ActionTemplateType.Bump,
-        Min: 0,
         Max: 0,
         Default: 0);
 
@@ -189,7 +203,6 @@ partial class TimelineCharacterActionCard
         "__bump_backward",
         "Position",
         ActionTemplateType.Bump,
-        Min: 0,
         Max: 0,
         Default: 0);
 

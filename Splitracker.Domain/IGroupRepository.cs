@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Splitracker.Domain.Commands;
 
 namespace Splitracker.Domain;
 
 public interface IGroupRepository
 {
     Task<IGroupHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
-    Task ApplyAsync(ClaimsPrincipal principal, GroupCommand groupCommand);
     Task<JoinResult> GetByJoinCodeAsync(ClaimsPrincipal principal, string joinCode);
     Task<IReadOnlyList<GroupInfo>> ListGroupsAsync(ClaimsPrincipal principal);
     Task JoinWithExistingCharacterAsync(ClaimsPrincipal user, Group group, Character character);

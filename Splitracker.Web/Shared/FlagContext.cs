@@ -2,7 +2,10 @@
 
 namespace Splitracker.Web.Shared;
 
-public record FlagContext(bool Experimental = false);
+public record FlagContext(
+    bool Experimental = false,
+    bool? DarkMode = null
+    );
 
 public class FlagContextHolder
 {

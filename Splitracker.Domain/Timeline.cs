@@ -5,7 +5,8 @@ namespace Splitracker.Domain;
 public record Timeline(
     string Id,
     string GroupId,
-    string GroupName, 
+    string GroupName,
+    IImmutableDictionary<string, GroupRole> MemberRoles,
     IImmutableDictionary<string, Character> Characters,
     IImmutableDictionary<string, Effect> Effects,
     IImmutableList<Character> Ready,

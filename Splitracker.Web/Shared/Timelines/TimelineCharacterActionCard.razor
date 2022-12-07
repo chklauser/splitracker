@@ -2,140 +2,158 @@
 
 <div
     class="timeline-character-action-card">
-    <MudCard
-        Elevation="0">
-        <MudCardHeader
-            Class="pb-0">
-            <CardHeaderAvatar>
-                <CharacterAvatar
-                    ShowPenalty="@true"
-                    Character="@Tick.Character"
-                    IsSelected="@true"/>
-            </CardHeaderAvatar>
-            <CardHeaderContent>
-                <MudText
-                    Typo="@Typo.h6">
-                    @Tick.Character.Name
+    <MudFocusTrap
+        DefaultFocus="DefaultFocus.None">
+        <MudCard
+            Elevation="0">
+            <MudCardHeader
+                Class="pb-0">
+                <CardHeaderAvatar>
+                    <CharacterAvatar
+                        ShowPenalty="@true"
+                        Character="@Tick.Character"
+                        Selected="@canInteract"
+                        OnClick="@OnCloseButtonClicked"/>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText
+                        Typo="@Typo.h6">
+                        @Tick.Character.Name
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    @if (canInteract)
+                    {
+                        <MudIconButton
+                            tabindex="10"
+                            Disabled="@(SelectedActionTemplate == null || ActionData.NumberOfTicks <= 0)"
+                            Size="Size.Large"
+                            Color="@Color.Success"
+                            Icon="@Icons.Material.Filled.CheckCircle"
+                            OnClick="applyActionClicked"/>
+                    }
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent
+                Class="@(canInteract ? "pb-0" : "")">
+                <MudText>
+                    @if (IsReadyNow)
+                    {
+                        <text>ist bereit für die nächste Aktion.</text>
+                    }
+                    else if (CanReact)
+                    {
+                        <text>könnte reagieren.</text>
+                    }
+                    else
+                    {
+                        <text>muss sich erst wieder Überblick verschaffen.</text>
+                    }
                 </MudText>
-            </CardHeaderContent>
-            <CardHeaderActions>
-                <MudIconButton
-                    Disabled="@(SelectedActionTemplate == null || ActionData.NumberOfTicks <= 0)"
-                    Size="Size.Large"
-                    Color="@Color.Success"
-                    Icon="@Icons.Material.Filled.CheckCircle"
-                    OnClick="applyActionClicked"/>
-            </CardHeaderActions>
-        </MudCardHeader>
-        <MudCardContent
-            Class="pb-0">
-            <MudText>
-                @if (IsReadyNow)
+                @if (canInteract)
                 {
-                    <text>ist bereit für die nächste Aktion.</text> 
+                    <MudStack
+                        Row="true"
+                        Class="align-center justify-space-between">
+                        <MudSlider
+                            T="int"
+                            Min="@minNumberOfTicks(SelectedActionTemplate)"
+                            Max="@(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20))"
+                            @bind-Value:get="numberOfTicks"
+                            @bind-Value:set="changeNumberOfTicks"
+                            TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20) - minNumberOfTicks(SelectedActionTemplate)) < 10)"
+                            Disabled="@(!hasTicksParameter)"
+                            Size="Size.Large">
+                        </MudSlider>
+                        <MudNumericField
+                            tabindex="0"
+                            T="int"
+                            Variant="@Variant.Outlined"
+                            @ref="numberOfTicksField"
+                            @bind-Value:get="numberOfTicks"
+                            @bind-Value:set="changeNumberOfTicks"
+                            Min="@minNumberOfTicks(SelectedActionTemplate)"
+                            Max="@maxNumberOfTicks(SelectedActionTemplate)"
+                            Style="width: 100px"
+                            DebounceInterval="300"
+                            Disabled="@(!hasTicksParameter)"
+                            HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
+                    </MudStack>
+                    <MudTextField
+                        tabindex="1"
+                        Variant="@Variant.Outlined"
+                        @bind-Value:get="ActionData.Description"
+                        @bind-Value:set="descriptionChanged"
+                        Immediate="@false"
+                        Disabled="@(ActionData.Template is null or { Type: not ActionTemplateType.Continuous })"
+                        HelperText="Beschreibung der kontinuierlichen Aktion"
+                        HelperTextOnFocus="false"
+                        Clearable="@true"/>
                 }
-                else if(CanReact)
-                {
-                    <text>könnte reagieren.</text>
-                }
-                else
-                {
-                    <text>muss sich erst wieder Überblick verschaffen.</text>
-                }
-            </MudText>
-            <MudStack
-                Row="true"
-                Class="align-center justify-space-between">
-                <MudSlider
-                    T="int"
-                    Min="@minNumberOfTicks(SelectedActionTemplate)"
-                    Max="@(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20))"
-                    @bind-Value:get="numberOfTicks"
-                    @bind-Value:set="changeNumberOfTicks"
-                    TickMarks="@(Math.Abs(Math.Min(maxNumberOfTicks(SelectedActionTemplate), 20) - minNumberOfTicks(SelectedActionTemplate)) < 10)"
-                    Disabled="@(!hasTicksParameter)"
-                    Size="Size.Large">
-                </MudSlider>
-                <MudNumericField
-                    T="int"
-                    Variant="@Variant.Outlined"
-                    @bind-Value:get="numberOfTicks"
-                    @bind-Value:set="changeNumberOfTicks"
-                    Min="@minNumberOfTicks(SelectedActionTemplate)"
-                    Max="@maxNumberOfTicks(SelectedActionTemplate)"
-                    Style="width: 100px"
-                    DebounceInterval="300"
-                    Disabled="@(!hasTicksParameter)"
-                    HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
-            </MudStack>
-            <MudTextField
-                Variant="@Variant.Outlined"
-                @bind-Value:get="ActionData.Description"
-                @bind-Value:set="descriptionChanged"
-                Immediate="@false"
-                Disabled="@(ActionData.Template is null or { Type: not ActionTemplateType.Continuous })"
-                HelperText="Beschreibung der kontinuierlichen Aktion"
-                HelperTextOnFocus="false"
-                Clearable="@true"/>
-        </MudCardContent>
-        <MudCardActions
-            Class="pb-3">
-            <CascadingValue
-                IsFixed="@true"
-                Value="@this">
-                @if (ActionData.NumberOfTicks > 0)
-                {
-                    if (!IsReadyNow)
-                    {
-                        <TimelineActionButton
-                            Action="@Reaction"/>
-                        <TimelineActionButton
-                            Action="@ActiveDefense"/>
-                        @if (Tick is Tick.ActionEnds)
+            </MudCardContent>
+            @if (canInteract)
+            {
+                <MudCardActions
+                    Class="pb-3">
+                    <CascadingValue
+                        IsFixed="@true"
+                        Value="@this">
+                        @if (ActionData.NumberOfTicks > 0)
                         {
-                            <TimelineActionButton Action="@AbortContinuousAction" />
+                            if (!IsReadyNow)
+                            {
+                                <TimelineActionButton
+                                    Action="@Reaction"/>
+                                <TimelineActionButton
+                                    Action="@ActiveDefense"/>
+                                @if (Tick is Tick.ActionEnds)
+                                {
+                                    <TimelineActionButton
+                                        Action="@AbortContinuousAction"/>
+                                }
+                            }
+                            <TimelineActionButton
+                                Action="@Ready"/>
+                            <TimelineActionButton
+                                Action="@Continuous"/>
+                            <TimelineActionButton
+                                Action="@Immediate"/>
+                            if (IsReadyNow)
+                            {
+                                <TimelineActionButton
+                                    Action="@Move"/>
+                                <TimelineActionButton
+                                    Action="@Sprint"/>
+                                <TimelineActionButton
+                                    Action="@LookForGap"/>
+                                <TimelineActionButton
+                                    Action="@PrepareRanged"/>
+                                <TimelineActionButton
+                                    Action="@Aim"/>
+                                <TimelineActionButton
+                                    Action="@Shoot"/>
+                                <TimelineActionButton
+                                    Action="@Focus"/>
+                                <TimelineActionButton
+                                    Action="@CastSpell"/>
+                            }
+                            <TimelineActionButton
+                                Action="@LeaveTimeline"/>
                         }
-                    }
-                    <TimelineActionButton
-                        Action="@Ready"/>
-                    <TimelineActionButton
-                        Action="@Continuous"/>
-                    <TimelineActionButton
-                        Action="@Immediate"/>
-                    if (IsReadyNow)
-                    {
-                        <TimelineActionButton
-                            Action="@Move"/>
-                        <TimelineActionButton
-                            Action="@Sprint"/>
-                        <TimelineActionButton
-                            Action="@LookForGap"/>
-                        <TimelineActionButton
-                            Action="@PrepareRanged"/>
-                        <TimelineActionButton
-                            Action="@Aim"/>
-                        <TimelineActionButton
-                            Action="@Shoot"/>
-                        <TimelineActionButton
-                            Action="@Focus"/>
-                        <TimelineActionButton
-                            Action="@CastSpell"/>
-                    }
-                    <TimelineActionButton
-                        Action="@LeaveTimeline"/>
-                }
-                else
-                {
-                    <TimelineActionButton
-                        StartIcon="@Icons.Material.Filled.ArrowCircleUp"
-                        Action="@BumpBackward"
-                        OnClick="async b => await applyBump(b, -1)"/>
-                    <TimelineActionButton
-                        EndIcon="@Icons.Material.Filled.ArrowCircleDown"
-                        Action="@BumpForward"
-                        OnClick="async b => await applyBump(b, 1)"/>
-                }
-            </CascadingValue>
-        </MudCardActions>
-    </MudCard>
+                        else
+                        {
+                            <TimelineActionButton
+                                StartIcon="@Icons.Material.Filled.ArrowCircleUp"
+                                Action="@BumpBackward"
+                                OnClick="async b => await applyBump(b, -1)"/>
+                            <TimelineActionButton
+                                EndIcon="@Icons.Material.Filled.ArrowCircleDown"
+                                Action="@BumpForward"
+                                OnClick="async b => await applyBump(b, 1)"/>
+                        }
+                    </CascadingValue>
+                </MudCardActions>
+            }
+        </MudCard>
+    </MudFocusTrap>
 </div>

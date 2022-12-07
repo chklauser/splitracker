@@ -3,31 +3,49 @@
 @{
     var penalty = Character.Penalty;
 }
-<MudBadge Visible="@(ShowPenalty && penalty > 0)" @onclick="avatarClicked" Overlap="@true"
-          Origin="@Origin.BottomCenter"
-          Class="flex-none"
-          Bordered="true" Color="Color.Error" Content="@($"-{Character.Penalty}")">
-    <MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)" @onclick="avatarClicked">
-        @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
-    </MudAvatar>
+<MudBadge
+    Visible="@(ShowPenalty && penalty > 0)"
+    @onclick="avatarClicked"
+    Overlap="@true"
+    Origin="@Origin.BottomCenter"
+    Class="flex-none"
+    Bordered="true"
+    Color="Color.Error"
+    Content="@($"-{Character.Penalty}")">
+    <MudTooltip
+        Text="@Character.Name">
+        <MudAvatar
+            Color="@(Disabled ? Color.Default : Selected ? Color.Primary : Color.Dark)"
+            @onclick="avatarClicked">
+            @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
+        </MudAvatar>
+    </MudTooltip>
 </MudBadge>
 
 @code {
+
     [Parameter]
     [EditorRequired]
     public required Character Character { get; set; }
-    
+
     [Parameter]
-    public bool IsSelected { get; set; }
-    
+    public bool Selected { get; set; }
+
     [Parameter]
     public EventCallback<Character> OnClick { get; set; }
-    
+
     [Parameter]
     public bool ShowPenalty { get; set; }
 
+    [Parameter]
+    public bool Disabled { get; set; }
+
     async Task avatarClicked()
     {
-        await OnClick.InvokeAsync(Character);
+        if (!Disabled)
+        {
+            await OnClick.InvokeAsync(Character);
+        }
     }
+
 }

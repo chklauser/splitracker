@@ -1,15 +1,23 @@
 @inherits LayoutComponentBase
 
+@inject FlagContextHolder holder;
+
 @code {
-    bool isDarkMode;
+    [CascadingParameter]
+    public required FlagContext Flag { get; set; }
+
+    bool isDarkMode
+    {
+        get => Flag.DarkMode ?? false;
+        set => holder.Context = holder.Context with {DarkMode = value};
+    }
     MudThemeProvider? mudThemeProvider;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && holder.Context.DarkMode == null)
         {
             isDarkMode = await mudThemeProvider!.GetSystemPreference();
-            StateHasChanged();
         }
     }
 }

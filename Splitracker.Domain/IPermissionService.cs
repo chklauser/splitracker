@@ -4,5 +4,6 @@ namespace Splitracker.Domain;
 
 public interface IPermissionService
 {
-    CharacterPermissions InTheContextOfGroup(Character character, Group group);
+    CharacterPermissions InTheContextOf(Character character, Group group);
+    CharacterPermissions InTheContextOf(Character character, Timeline timeline);
 }

@@ -200,7 +200,7 @@ else
     {
         return handle != null ? handle.Group.Characters.Values
             .OrderBy(c => c.Name)
-            .Select(c => (c, Permissions.InTheContextOfGroup(c, handle.Group)))
+            .Select(c => (c, Permissions.InTheContextOf(c, handle.Group)))
             .Where(c => c.Item2.HasFlag(CharacterPermissions.ViewInfo))
             .ToImmutableArray() : ImmutableList<(Character Character, CharacterPermissions Permissions)>.Empty;
     }

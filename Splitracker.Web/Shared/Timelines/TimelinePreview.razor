@@ -39,7 +39,7 @@ else
                     <ItemDot>
                         @if (tick is Tick.CharacterTick { Character: var c})
                         {
-                            <CharacterAvatar Character="@c" IsSelected="@(offset == selectedIndex)" ShowPenalty="@true" />
+                            <CharacterAvatar Character="@c" Selected="@(offset == selectedIndex)" ShowPenalty="@true" />
                         }
                         else if (tick is Tick.EffectTick)
                         {
@@ -54,18 +54,20 @@ else
                             @if (tick is Tick.CharacterTick ct)
                             {
                                 <TimelineCharacterActionCard 
-                                    Tick="ct" 
+                                    Tick="ct"
+                                    Permissions="@Permissions[ct.Character.Id]"
                                     IsReadyNow="@(offset == 0)"
                                     CanReact="@(offset - allocatedTimeline[0].Tick.At < 30)"
                                     @bind-ActionData:get="getCharacterActionData(ct.Character)"
                                     @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
                                     OnApplyActionClicked="d => characterActionApplyClicked(d, ct.Character)"
+                                    OnCloseButtonClicked="() => actionCardOpen = false"
                                     />
                             }
                             else if (tick is Tick.EffectTick et)
                             {
                                 <CascadingValue TValue="ITimelineDispatcher" Value="@Dispatcher" IsFixed="@true">
-                                    <TimelineEffectActionCard Tick="et" IsHappeningNow="@(offset == 0)" />
+                                    <TimelineEffectActionCard Tick="et" IsHappeningNow="@(offset == 0)" OnCloseButtonClicked="() => actionCardOpen = false" />
                                 </CascadingValue>
                             }
                         </MudPopover>

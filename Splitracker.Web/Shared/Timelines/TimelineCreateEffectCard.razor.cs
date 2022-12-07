@@ -27,6 +27,9 @@ public partial class TimelineCreateEffectCard : IDisposable
     [Parameter]
     public EventCallback OnEffectCreated { get; set; }
     
+    [Parameter]
+    public EventCallback OnCloseButtonClicked { get; set; }
+
     [CascadingParameter]
     public required ITimelineDispatcher Dispatcher { get; set; }
     
