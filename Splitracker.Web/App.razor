@@ -18,11 +18,10 @@
             </CascadingValue>
         </Found>
         <NotFound>
-            <PageTitle>Not found</PageTitle>
+            <PageTitle>Nicht gefunden</PageTitle>
             <LayoutView
                 Layout="@typeof(MainLayout)">
-                <p
-                    role="alert">Sorry, there's nothing at this address.</p>
+                <MudAlert Severity="Severity.Warning">Hoppla, was du suchst gibt's irgendwie nicht 😶</MudAlert>
             </LayoutView>
         </NotFound>
     </Router>

@@ -1,5 +1,3 @@
 ﻿namespace Splitracker.Domain.Commands;
 
-public interface IGroupCommand
-{
-}
+public abstract record GroupCommand(string GroupId);

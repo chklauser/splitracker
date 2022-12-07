@@ -1,10 +1,12 @@
-﻿@page "/Ticks"
+﻿@page "/Groups/{GroupIdRaw}/Ticks"
 @using Splitracker.Web.Shared.Characters
 @using Splitracker.Web.Shared.Timelines
-@using Splitracker.Domain
 @using System.Collections.Immutable
 
 <PageTitle>Ticks - Splitracker</PageTitle>
+
+<MudBreadcrumbs
+    Items="breadcrumbs"/>
 
 @if (handle != null)
 {

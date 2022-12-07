@@ -3,6 +3,7 @@
 namespace Splitracker.Domain;
 
 public record Timeline(
+    string Id,
     string GroupId,
     string GroupName, 
     IImmutableDictionary<string, Character> Characters,

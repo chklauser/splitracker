@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Queries;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Model;
@@ -165,7 +169,28 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
 
         await session.SaveChangesAsync();
     }
-    
+
+    public async Task<IReadOnlyList<Character>> SearchCharactersAsync(ClaimsPrincipal principal, string searchTerm, CancellationToken cancellationToken)
+    {
+        var userId = await userRepository.GetUserIdAsync(principal);
+        
+        using var session = store.OpenAsyncSession();
+        var dbCharacters = await session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+            .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
+            .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+        if (dbCharacters == null)
+        {
+            log.Log(LogLevel.Warning, "Unexpectedly got `null` from search query for characters.");
+            return ImmutableArray<Character>.Empty;
+        }
+
+        log.Log(LogLevel.Debug, "Searching for characters returned {Count} results. UserId={UserId}",
+            dbCharacters.Count, userId);
+        return dbCharacters.Select(c => c.ToDomain()).OrderBy(c => c.Name).ToImmutableArray();
+    }
+
     public async Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal)
     {
         var userId = await userRepository.GetUserIdAsync(principal);

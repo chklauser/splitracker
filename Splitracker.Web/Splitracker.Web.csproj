@@ -29,4 +29,8 @@
     <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="Shared\CharacterAvatar.razor" />
+  </ItemGroup>
+
 </Project>

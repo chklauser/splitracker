@@ -52,7 +52,7 @@ static class TimelineModelMapper
     {
         var charactersById = characters.ToImmutableDictionary(c => c.Id, c => c.ToDomain());
         var effectsById = timeline.Effects.ToImmutableDictionary(e => e.Id, e => e.toDomain(charactersById));
-        return new(group.Id!, group.Name, charactersById, effectsById,
+        return new(timeline.Id!, group.Id!, group.Name, charactersById, effectsById,
             timeline.ReadyCharacterIds.Select(cid => charactersById[cid]).ToImmutableArray(),
             timeline.Ticks.Select(t => t switch {
                 { Type: TickType.Recovers, CharacterId: { } cid, At: var at } =>

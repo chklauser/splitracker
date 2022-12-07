@@ -19,6 +19,7 @@ class Character_ByName : AbstractIndexCreationTask<CharacterModel>
                 Name = character.Name,
             };
         
-        Analyzers.Add(x => x.Name, "SimpleAnalyzer");
+        // undocumented https://issues.hibernatingrhinos.com/issue/RDoc-1525, but available in the studio
+        Analyzers.Add(x => x.Name, "LowerCaseWhitespaceAnalyzer");
     }
 }

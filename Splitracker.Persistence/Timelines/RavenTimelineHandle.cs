@@ -1,32 +1,15 @@
-﻿using System;
-using System.Threading.Tasks;
-using Splitracker.Domain;
+﻿using Splitracker.Domain;
+using Splitracker.Persistence.Generic;
 
 namespace Splitracker.Persistence.Timelines;
 
-class RavenTimelineHandle : ITimelineHandle
+class RavenTimelineHandle : HandleBase<RavenTimelineSubscription, Timeline>, ITimelineHandle,
+    IHandle<RavenTimelineHandle, RavenTimelineSubscription, Timeline>
 {
-    readonly RavenTimelineSubscription subscription;
-    
-    public RavenTimelineHandle(RavenTimelineSubscription subscription)
+    RavenTimelineHandle(RavenTimelineSubscription subscription) : base(subscription)
     {
-        this.subscription = subscription;
-        subscription.Updated += OnUpdated;
     }
 
-    void OnUpdated(object? sender, EventArgs e)
-    {
-        Updated?.Invoke(sender, e);
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        subscription.Updated -= OnUpdated;
-        subscription.Release();
-        Updated = null;
-        return ValueTask.CompletedTask;
-    }
-
-    public Timeline Timeline => subscription.Timeline;
-    public event EventHandler? Updated;
+    public Timeline Timeline => Value;
+    public static RavenTimelineHandle Create(RavenTimelineSubscription subscription) => new(subscription);
 }

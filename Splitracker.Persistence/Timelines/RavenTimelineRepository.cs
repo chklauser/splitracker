@@ -15,9 +15,6 @@ using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
-using Group = Splitracker.Persistence.Model.Group;
-using Tick = Splitracker.Domain.Tick;
-using Timeline = Splitracker.Persistence.Model.Timeline;
 
 namespace Splitracker.Persistence.Timelines;
 
@@ -144,7 +141,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         await session.SaveChangesAsync();
     }
 
-    void applyEffectCommand(TimelineCommand.EffectCommand command, Timeline dbTimeline)
+    void applyEffectCommand(TimelineCommand.EffectCommand command, Model.Timeline dbTimeline)
     {
         var effectId = command.EffectId;
 
@@ -204,7 +201,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         }
     }
 
-    void applyCharacterCommand(TimelineCommand.CharacterCommand command, Timeline dbTimeline)
+    void applyCharacterCommand(TimelineCommand.CharacterCommand command, Model.Timeline dbTimeline)
     {
         var characterId = command.CharacterId;
         var removedFromReadyCharacters = dbTimeline.ReadyCharacterIds.Remove(characterId);
@@ -410,8 +407,8 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
     internal static async Task<Domain.Timeline> LoadTimelineAsync(IAsyncDocumentSession session, string timelineId)
     {
         var dbTimeline = await session
-            .LoadAsync<Timeline>(timelineId);
-        var group = await session.LoadAsync<Group>(dbTimeline.GroupId);
+            .LoadAsync<Model.Timeline>(timelineId);
+        var group = await session.LoadAsync<Model.Group>(dbTimeline.GroupId);
         var characters = await session.LoadAsync<CharacterModel>(
             dbTimeline.Ticks
                 .Select(k => k.CharacterId)

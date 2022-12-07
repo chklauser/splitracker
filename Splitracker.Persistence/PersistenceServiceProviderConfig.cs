@@ -10,6 +10,7 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
 using Splitracker.Domain;
 using Splitracker.Persistence.Characters;
+using Splitracker.Persistence.Groups;
 using Splitracker.Persistence.Timelines;
 using Splitracker.Persistence.Users;
 
@@ -63,7 +64,10 @@ public static class PersistenceServiceProviderConfig
         services.AddSingleton<RavenCharacterRepository>()
             .AlsoAddAsSingleton<ICharacterRepository, RavenCharacterRepository>()
             .AlsoAddAsHostedService<RavenCharacterRepository>();
-        services.AddSingleton<IGroupRepository, FakeGroupRepository>();
+
+        services.AddSingleton<RavenGroupRepository>()
+            .AlsoAddAsSingleton<IGroupRepository, RavenGroupRepository>()
+            .AlsoAddAsHostedService<RavenGroupRepository>();
 
         services.AddSingleton<RavenTimelineRepository>()
             .AlsoAddAsHostedService<RavenTimelineRepository>()

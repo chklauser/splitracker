@@ -8,20 +8,24 @@ namespace Splitracker.Domain;
 
 public interface IGroupRepository
 {
-    Task<IGroupRepositoryHandle> OpenAsync(ClaimsPrincipal principal);
-    Task<IGroupHandle> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
-    Task ApplyAsync(ClaimsPrincipal principal, IGroupCommand groupCommand);
+    Task<IGroupHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId);
+    Task ApplyAsync(ClaimsPrincipal principal, GroupCommand groupCommand);
+    Task<JoinResult> GetByJoinCodeAsync(ClaimsPrincipal principal, string joinCode);
+    Task<IReadOnlyList<GroupInfo>> ListGroupsAsync(ClaimsPrincipal principal);
+    Task JoinWithExistingCharacterAsync(ClaimsPrincipal user, Group group, Character character);
+    Task JoinWithNewCharacterAsync(ClaimsPrincipal user, Group group, string characterName);
 }
 
-public interface IGroupRepositoryHandle : IAsyncDisposable
+public abstract record JoinResult
 {
-    IReadOnlyList<IGroupHandle> Groups { get; }
-    event EventHandler GroupAdded;
-    event EventHandler GroupRemoved;
+    public sealed record GroupExists(Group Group) : JoinResult;
+    public sealed record GroupAlreadyJoined(Group Group) : JoinResult;
+
+    public sealed record GroupNotFound : JoinResult;
 }
 
 public interface IGroupHandle : IAsyncDisposable
 {
     Group Group { get; }
-    event EventHandler GroupUpdated;
+    event EventHandler Updated;
 }

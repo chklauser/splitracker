@@ -64,6 +64,7 @@ builder.Services.AddHttpLogging(logging =>
 builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddScoped<FlagContextHolder>();
 builder.Services.AddSingleton<TimelineLogic>();
+builder.Services.AddScoped<ClipboardService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

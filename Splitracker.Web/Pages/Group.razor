@@ -1,0 +1,133 @@
+﻿@page "/Groups/{RawGroupId}"
+@using Splitracker.Domain
+@inject IGroupRepository repository
+@inject NavigationManager nav
+@inject ClipboardService clipboard
+@inject ISnackbar snackbar
+
+<PageTitle>@(handle != null ? handle.Group.Name : "Gruppe") | Splitracker</PageTitle>
+
+@if (!loaded)
+{
+    <MudProgressCircular
+        Indeterminate="@true"/>
+}
+else if (handle == null)
+{
+    <MudStack>
+        <MudAlert
+            Severity="Severity.Error">
+            Gruppe nicht gefunden
+        </MudAlert>
+        <MudText>
+            Um einer Gruppe beizutreten, musst du einmalig den Beitrittslink der Gruppe aufrufen.
+            Bitte wende dich an bestehende Gruppenmitglieder oder den*die Spielleiter*in.
+        </MudText>
+    </MudStack>
+}
+else
+{
+    <MudStack>
+        <MudText
+            Typo="Typo.h3">
+            @handle.Group.Name
+        </MudText>
+        @if (handle.Group.JoinCode is {} joinCode)
+        {
+            var joinUrl = joinCodeUrl(joinCode);
+            <MudAlert
+                NoIcon="@true"
+                Severity="Severity.Normal"
+                Variant="Variant.Outlined">
+                <strong>Beitrittslink:</strong>
+                <MudTooltip
+                    Text="In die Zwischenablage kopieren">
+                    <a
+                        href="@(joinUrl)"
+                        @onclick:preventDefault
+                        @onclick="() => copyToClipboard(joinUrl)">
+                        <code>@joinUrl</code>
+                    </a>
+                    <MudIconButton
+                        Icon="@Icons.Material.Filled.ContentCopy"
+                        OnClick="() => copyToClipboard(joinUrl)"/>
+                </MudTooltip>
+            </MudAlert>
+        }
+        <MudPaper
+            Class="pa-4">
+            <MudStack>
+                @if (handle.Group.HasTimeline)
+                {
+                    <MudText
+                        Typo="Typo.h4">
+                        Tickleiste
+                    </MudText>
+                    <MudButton
+                        EndIcon="@Icons.Material.Filled.ViewTimeline"
+                        Size="Size.Large"
+                        Variant="Variant.Filled"
+                        Color="@Color.Primary"
+                        Href="@($"{handle.Group.Url}/Ticks")">
+                        Zur Tickleiste
+                    </MudButton>
+                    <MudDivider/>
+                }
+                <MudText
+                    Typo="Typo.h4">
+                    Charaktere
+                </MudText>
+                @foreach (var character in handle.Group.Characters.Values.OrderBy(c => c.Name))
+                {
+                    <MudStack
+                        @key="@character.Id"
+                        Class="pt-4 align-baseline"
+                        Row="@true">
+                        <CharacterAvatar
+                            Character="@character"/>
+                        <MudText>@character.Name</MudText>
+                    </MudStack>
+                }
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+}
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required string RawGroupId { get; set; }
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    IGroupHandle? handle;
+    bool loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loaded = false;
+        await base.OnParametersSetAsync();
+        var auth = await AuthenticationState;
+        handle = await repository.OpenSingleAsync(auth.User, $"Groups/{RawGroupId}");
+        loaded = true;
+    }
+
+    string joinCodeUrl(string joinCode)
+    {
+        return $"{nav.BaseUri}g/{joinCode}";
+    }
+
+    async Task copyToClipboard(string joinUrl)
+    {
+        await clipboard.WriteTextAsync(joinUrl);
+        snackbar.Add("Link in die Zwischenablage kopiert!", configure: c =>
+        {
+            c.DuplicatesBehavior = SnackbarDuplicatesBehavior.Prevent;
+            c.SnackbarVariant = Variant.Outlined;
+            c.VisibleStateDuration = 3000;
+        });
+    }
+
+}

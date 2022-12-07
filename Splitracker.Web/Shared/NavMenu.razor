@@ -1,37 +1,90 @@
 ﻿@using Microsoft.AspNetCore.Hosting
+@using Splitracker.Domain
 @inject FlagContextHolder holder
 @inject IWebHostEnvironment hostEnvironment;
+@inject IGroupRepository groupRepository;
 
 <MudStack>
     <MudNavMenu>
-        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.EmojiPeople">Charaktere</MudNavLink>
+        <MudNavLink
+            Href="/"
+            Match="NavLinkMatch.All"
+            Icon="@Icons.Material.Filled.EmojiPeople">
+            Charaktere
+        </MudNavLink>
         @if (experimental)
         {
-            <MudNavLink
-                Href="/Groups"
-                Match="NavLinkMatch.Prefix"
-                Icon="@Icons.Filled.People">Gruppen</MudNavLink>
-            <MudNavLink
-                Href="/Ticks"
-                Match="NavLinkMatch.Prefix"
-                Icon="@Icons.Filled.ViewTimeline">Ticks</MudNavLink>
+            <MudNavGroup
+                Title="Gruppen"
+                Icon="@Icons.Filled.People"
+                @bind-Expanded="groupsExpanded">
+                @if (groups != null)
+                {
+                    foreach (var info in groups)
+                    {
+                        <MudNavLink
+                            Match="NavLinkMatch.All"
+                            Href="@info.Url">
+                            @info.Name
+                        </MudNavLink>
+                    }
+                }
+            </MudNavGroup>
+            <MudNavGroup
+                Title="Tickleisten"
+                Icon="@Icons.Filled.ViewTimeline"
+                @bind-Expanded="timelinesExpanded"
+                Disabled="@(groups == null || groups.All(g => !g.HasTimeline))">
+                @if (groups != null)
+                {
+                    foreach (var info in groups.Where(g => g.HasTimeline))
+                    {
+                        <MudNavLink
+                            Match="NavLinkMatch.Prefix"
+                            Href="@(info.Url + "/Ticks")">
+                            @info.Name
+                        </MudNavLink>
+                    }
+                }
+            </MudNavGroup>
         }
     </MudNavMenu>
     @if (hostEnvironment.EnvironmentName != "Production")
     {
         <MudSwitch
             @bind-Checked="experimental"
-            class="ml-2">Experimente</MudSwitch>
+            class="ml-2">
+            Experimente
+        </MudSwitch>
     }
 </MudStack>
 
 @code {
+
     [CascadingParameter]
     public required FlagContext? Flags { get; set; }
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    IReadOnlyList<GroupInfo>? groups;
+
+    bool groupsExpanded;
+    bool timelinesExpanded;
 
     bool experimental
     {
         get => Flags?.Experimental ?? false;
         set => holder.Context = holder.Context with { Experimental = value };
     }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        var auth = await AuthenticationState;
+        groups = await groupRepository.ListGroupsAsync(auth.User);
+        groupsExpanded = groups is {Count: < 7 };
+        timelinesExpanded = groups?.Count(g => g.HasTimeline) is < 7;
+    }
+
 }

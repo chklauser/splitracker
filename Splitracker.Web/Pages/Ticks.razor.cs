@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Web.Shared;
@@ -17,9 +18,14 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
 
+    [Parameter]
+    public required string GroupIdRaw { get; set; }
+
+    string groupId => GroupInfo.IdFor(GroupIdRaw);
+
     [Inject]
     public required ITimelineRepository Repository { get; set; }
-    
+
     [Inject]
     public required ICharacterRepository CharacterRepository { get; set; }
 
@@ -29,6 +35,25 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     ITimelineHandle? handle;
 
     Tick? selectedTick;
+
+    List<BreadcrumbItem> breadcrumbs
+    {
+        get
+        {
+            var bs = new List<BreadcrumbItem>();
+            var groupIcon = Icons.Filled.People!;
+            if (handle == null)
+            {
+                bs.Add(new("Gruppe", GroupInfo.UrlFor(GroupIdRaw), icon: groupIcon));
+            }
+            else
+            {
+                bs.Add(new(handle.Timeline.GroupName, GroupInfo.UrlFor(GroupIdRaw), icon: groupIcon));
+                bs.Add(new("Tickleiste", Nav.Uri, icon: Icons.Filled.ViewTimeline));
+            }
+            return bs;
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -45,7 +70,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
         var newHandle = await Repository.OpenSingleAsync(auth.User, groupId);
         if (newHandle == null)
         {
-            Nav.NavigateTo("/not-found");
+            Nav.NavigateTo("/not-found", replace: true);
         }
         else
         {
@@ -63,7 +88,6 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     }
 
     bool addCharacterPanelOpen;
-    string groupId = "Groups/0000000000000000021-A";
 
     void toggleAddCharacterPanel()
     {
@@ -97,20 +121,21 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     public async Task ApplyCommandAsync(TimelineCommand command)
     {
         var auth = await AuthenticationState;
+        var groupId1 = groupId;
         await Repository.ApplyAsync(auth.User,
             command switch {
-                TimelineCommand.AddEffect addEffect => addEffect with { GroupId = groupId },
-                TimelineCommand.BumpCharacter bumpCharacter => bumpCharacter with { GroupId = groupId },
-                TimelineCommand.AddCharacter addCharacter => addCharacter with { GroupId = groupId },
-                TimelineCommand.RemoveCharacter removeCharacter => removeCharacter with { GroupId = groupId },
-                TimelineCommand.RemoveEffect removeEffect => removeEffect with { GroupId = groupId },
-                TimelineCommand.RemoveEffectTick removeTick => removeTick with { GroupId = groupId },
+                TimelineCommand.AddEffect addEffect => addEffect with { GroupId = groupId1 },
+                TimelineCommand.BumpCharacter bumpCharacter => bumpCharacter with { GroupId = groupId1 },
+                TimelineCommand.AddCharacter addCharacter => addCharacter with { GroupId = groupId1 },
+                TimelineCommand.RemoveCharacter removeCharacter => removeCharacter with { GroupId = groupId1 },
+                TimelineCommand.RemoveEffect removeEffect => removeEffect with { GroupId = groupId1 },
+                TimelineCommand.RemoveEffectTick removeTick => removeTick with { GroupId = groupId1 },
                 TimelineCommand.SetCharacterActionEnded setCharacterActionEnded => setCharacterActionEnded with {
-                    GroupId = groupId,
+                    GroupId = groupId1,
                 },
-                TimelineCommand.SetCharacterReady setCharacterReady => setCharacterReady with { GroupId = groupId },
+                TimelineCommand.SetCharacterReady setCharacterReady => setCharacterReady with { GroupId = groupId1 },
                 TimelineCommand.SetCharacterRecovered setCharacterRecovered => setCharacterRecovered with {
-                    GroupId = groupId,
+                    GroupId = groupId1,
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(command)),
             });

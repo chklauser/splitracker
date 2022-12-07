@@ -1,0 +1,156 @@
+﻿@page "/g/{JoinCode}"
+@using Splitracker.Domain
+@using System.Threading
+@inject IGroupRepository groupRepository
+@inject ICharacterRepository characterRepository
+@inject NavigationManager nav
+
+<PageTitle>Gruppe beitreten | Splitracker</PageTitle>
+
+@if (!loaded)
+{
+    <MudProgressCircular
+        Indeterminate="true"/>
+}
+else if (group == null)
+{
+    <MudText>Sieht einsam aus hier. 😶 Bist du sicher, dass du den Gruppeneinladungslink richtig kopiert hast?</MudText>
+}
+else
+{
+    <MudStack>
+        <MudText
+            Typo="Typo.h6">
+            Schön, dass du hier bist!
+        </MudText>
+        <MudText
+            Typo="Typo.h3">
+            @group.Name
+        </MudText>
+        <MudText>Mit welchem Charakter möchtest du der Gruppe "@group.Name" beitreten?</MudText>
+        <MudPaper Class="pa-4">
+            <MudStack
+                Row="@true" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+                <MudText>
+                    Ich möchte mit
+                </MudText>
+                <MudAutocomplete
+                    T="Character"
+                    ToStringFunc="renderCharacter"
+                    SearchFuncWithCancel="searchCharacter"
+                    CoerceText="@true"
+                    @bind-Value="selectedCharacter"
+                    Label="Charakter"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
+                    Placeholder="Name&hellip;"/>
+                <MudButton
+                    Disabled="@(selectedCharacter == null)"
+                    Color="Color.Success"
+                    Variant="Variant.Filled"
+                    EndIcon="@Icons.Material.Filled.Person"
+                    OnClick="joinWithExistingCharacter">
+                    beitreten!
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+        <MudStack
+            Row="@true"
+            Style="width: 100%"
+            Justify="Justify.SpaceEvenly"
+            AlignItems="AlignItems.Center">
+            <MudDivider
+                DividerType="DividerType.Inset"/>
+            <MudText
+                Typo="Typo.h5"
+                Class="flex-none">
+                ODER
+            </MudText>
+            <MudDivider
+                DividerType="DividerType.Inset"/>
+        </MudStack>
+        <MudPaper Class="pa-4">
+            <MudStack
+                Row="@true" Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+                <MudText>
+                    Ich möchte mit einem neuen Charakter namens
+                </MudText>
+                <MudTextField
+                    Label="Name"
+                    @bind-Value="newCharacterName"
+                    Immediate="@true"
+                    Variant="Variant.Outlined"
+                    DebounceInterval="300"/>
+                <MudButton
+                    Disabled="@(string.IsNullOrWhiteSpace(newCharacterName))"
+                    Color="Color.Success"
+                    Variant="Variant.Filled"
+                    EndIcon="@Icons.Material.Filled.PersonAddAlt1"
+                    OnClick="joinWithFreshCharacter">
+                    beitreten!
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+}
+
+@code {
+
+    [Parameter]
+    public required string JoinCode { get; set; }
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    Domain.Group? group;
+    bool loaded;
+
+    Character? selectedCharacter;
+
+    string? newCharacterName;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loaded = false;
+        await base.OnParametersSetAsync();
+        var auth = await AuthenticationState;
+        switch (await groupRepository.GetByJoinCodeAsync(auth.User, JoinCode))
+        {
+            case JoinResult.GroupAlreadyJoined { Group: var theGroup}:
+                nav.NavigateTo(theGroup.Url, replace: true);
+                break;
+            case JoinResult.GroupExists { Group: var theGroup}:
+                group = theGroup;
+                break;
+            case JoinResult.GroupNotFound:
+                group = null;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        loaded = true;
+    }
+
+    static string renderCharacter(Character? character) => character?.Name ?? "";
+
+    async Task<IEnumerable<Character>> searchCharacter(string? term, CancellationToken cancellationToken)
+    {
+        var auth = await AuthenticationState;
+        return await characterRepository.SearchCharactersAsync(auth.User, term ?? "", cancellationToken);
+    }
+
+    async Task joinWithFreshCharacter()
+    {
+        var auth = await AuthenticationState;
+        await groupRepository.JoinWithNewCharacterAsync(auth.User, group!, newCharacterName!);
+        nav.NavigateTo(group!.Url);
+    }
+
+    async Task joinWithExistingCharacter()
+    {
+        var auth = await AuthenticationState;
+        await groupRepository.JoinWithExistingCharacterAsync(auth.User, group!, selectedCharacter!);
+        nav.NavigateTo(group!.Url);
+    }
+
+}
