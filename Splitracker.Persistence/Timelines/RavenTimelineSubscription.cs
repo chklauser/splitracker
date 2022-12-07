@@ -30,7 +30,7 @@ class RavenTimelineSubscription : SubscriptionBase<RavenTimelineSubscription, Ti
         ILogger<RavenTimelineRepository> log
     ) : base(log, timeline, store, documentIdsToSubscribeToFor(timeline))
     {
-         this.log = log;
+         this.Log = log;
         this.timelineId = timelineId;
 
     }

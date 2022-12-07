@@ -16,16 +16,16 @@ abstract class SubscriptionBase<TSelf, TValue, THandle> : IDisposable, ISubscrip
 where THandle : class, IHandle<THandle, TSelf, TValue>
 where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 {
-    protected readonly ReaderWriterLockSlim @lock = new();
-    protected ILogger log;
+    protected readonly ReaderWriterLockSlim Lock = new();
+    protected ILogger Log;
     protected readonly IDocumentStore Store;
     int referenceCount = 1;
     IImmutableDictionary<string, IDisposable> ravenSubscriptions;
 
     public SubscriptionBase(ILogger log, TValue initialValue, IDocumentStore store, IEnumerable<string> documentIdsToSubscribeTo)
     {
-        this.log = log;
-        this.Store = store;
+        Log = log;
+        Store = store;
         CurrentValue = initialValue;
         ravenSubscriptions = documentIdsToSubscribeTo
             .Distinct()
@@ -39,7 +39,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
     
     public THandle? TryGetHandle()
     {
-        @lock.EnterWriteLock();
+        Lock.EnterWriteLock();
         try
         {
             if (referenceCount <= 0)
@@ -51,7 +51,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         }
         finally
         {
-            @lock.ExitWriteLock();
+            Lock.ExitWriteLock();
         }
 
         return THandle.Create((TSelf)this);
@@ -67,26 +67,26 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
     {
         add
         {
-            @lock.EnterWriteLock();
+            Lock.EnterWriteLock();
             try
             {
                 updated += value;
             }
             finally
             {
-                @lock.ExitWriteLock();
+                Lock.ExitWriteLock();
             }
         }
         remove
         {
-            @lock.EnterWriteLock();
+            Lock.EnterWriteLock();
             try
             {
                 updated -= value;
             }
             finally
             {
-                @lock.ExitWriteLock();
+                Lock.ExitWriteLock();
             }
         }
     }
@@ -98,7 +98,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
     public void OnError(Exception error)
     {
-        log.Log(LogLevel.Warning, "Error while listening for changes.");
+        Log.Log(LogLevel.Warning, "Error while listening for changes.");
     }
 
     public void OnNext(DocumentChange value)
@@ -110,7 +110,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
                 _ = doRefreshAsync();
                 break;
             case var otherType:
-                log.Log(LogLevel.Warning, "Unknown document change type {Type}", otherType);
+                Log.Log(LogLevel.Warning, "Unknown document change type {Type}", otherType);
                 break;
         }
     }
@@ -127,7 +127,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
     void synchronizeSubscriptions(TValue group)
     {
-        @lock.EnterWriteLock();
+        Lock.EnterWriteLock();
         try
         {
             var existingSubscriptions = ravenSubscriptions;
@@ -144,7 +144,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
             if (requiredKeys.Count > 0 || existingKeys.Count > 0)
             {
-                log.Log(LogLevel.Information,
+                Log.Log(LogLevel.Information,
                     "Subscriptions changed, removing {ExistingCount} and adding {RequiredCount}",
                     existingKeys.Count, requiredKeys.Count);
 
@@ -171,13 +171,13 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         }
         catch (Exception e)
         {
-            log.Log(LogLevel.Critical, e,
+            Log.Log(LogLevel.Critical, e,
                 "Failed to refresh subscriptions. Memory and/or connections might have been leaked!");
             throw;
         }
         finally
         {
-            @lock.ExitWriteLock();
+            Lock.ExitWriteLock();
         }
     }
 
@@ -188,7 +188,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
     public void Dispose()
     {
-        @lock.EnterWriteLock();
+        Lock.EnterWriteLock();
         if (referenceCount <= 0)
         {
             // already disposed
@@ -202,13 +202,13 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         }
         finally
         {
-            @lock.ExitWriteLock();
+            Lock.ExitWriteLock();
         }
     }
 
     public void Release()
     {
-        @lock.EnterWriteLock();
+        Lock.EnterWriteLock();
         try
         {
             referenceCount -= 1;
@@ -219,7 +219,7 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         }
         finally
         {
-            @lock.ExitWriteLock();
+            Lock.ExitWriteLock();
         }
     }
 

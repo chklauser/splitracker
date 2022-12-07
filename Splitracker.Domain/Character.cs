@@ -16,4 +16,23 @@ public record Character(string Id, string Name, LpPool Lp, FoPool Fo)
             8);
 
     public int Penalty => PenaltyDueToLowLp(Lp.Points, Lp.BaseCapacity);
+
+    public string UserId { get; } = deriveUserId(Id);
+    
+    static string deriveUserId(string? id)
+    {
+        if (id == null)
+        {
+            return "";
+        }
+
+        var firstSlash = id.IndexOf('/');
+        var lastSlash = id.LastIndexOf('/');
+        if (firstSlash < 0 || lastSlash < 0)
+        {
+            return "";
+        }
+        
+        return $"Users/{id.Substring(firstSlash + 1, lastSlash - firstSlash - 1)}";
+    }
 }

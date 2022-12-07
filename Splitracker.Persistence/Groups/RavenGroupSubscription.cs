@@ -30,7 +30,7 @@ sealed class RavenGroupSubscription :  SubscriptionBase<RavenGroupSubscription, 
         ILogger<RavenGroupRepository> log
     ) : base(log, group, store, documentIdsToSubscribeToFor(group))
     {
-        this.log = log;
+        this.Log = log;
         this.groupId = groupId;
     }
 

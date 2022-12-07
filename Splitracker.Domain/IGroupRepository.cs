@@ -14,6 +14,7 @@ public interface IGroupRepository
     Task<IReadOnlyList<GroupInfo>> ListGroupsAsync(ClaimsPrincipal principal);
     Task JoinWithExistingCharacterAsync(ClaimsPrincipal user, Group group, Character character);
     Task JoinWithNewCharacterAsync(ClaimsPrincipal user, Group group, string characterName);
+    Task LeaveGroupAsync(ClaimsPrincipal principal, Group group, Character character);
 }
 
 public abstract record JoinResult

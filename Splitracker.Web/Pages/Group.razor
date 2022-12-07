@@ -1,5 +1,8 @@
 ﻿@page "/Groups/{RawGroupId}"
 @using Splitracker.Domain
+@using Splitracker.Web.Shared.Groups
+@using System.Collections.Immutable
+@implements IAsyncDisposable
 @inject IGroupRepository repository
 @inject NavigationManager nav
 @inject ClipboardService clipboard
@@ -39,19 +42,24 @@ else
                 NoIcon="@true"
                 Severity="Severity.Normal"
                 Variant="Variant.Outlined">
-                <strong>Beitrittslink:</strong>
-                <MudTooltip
-                    Text="In die Zwischenablage kopieren">
-                    <a
-                        href="@(joinUrl)"
-                        @onclick:preventDefault
-                        @onclick="() => copyToClipboard(joinUrl)">
-                        <code>@joinUrl</code>
-                    </a>
-                    <MudIconButton
-                        Icon="@Icons.Material.Filled.ContentCopy"
-                        OnClick="() => copyToClipboard(joinUrl)"/>
-                </MudTooltip>
+                <p>
+                    <strong>Beitrittslink:</strong>
+                    <MudTooltip
+                        Text="In die Zwischenablage kopieren">
+                        <a
+                            href="@(joinUrl)"
+                            @onclick:preventDefault
+                            @onclick="() => copyToClipboard(joinUrl)">
+                            <code>@joinUrl</code>
+                        </a>
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.ContentCopy"
+                            OnClick="() => copyToClipboard(joinUrl)"/>
+                    </MudTooltip>
+                </p>
+                <p>
+                    Andere Spieler können der Gruppe mit einem Klick auf diesen Link beitreten.
+                </p>
             </MudAlert>
         }
         <MudPaper
@@ -77,7 +85,7 @@ else
                     Typo="Typo.h4">
                     Charaktere
                 </MudText>
-                @foreach (var character in handle.Group.Characters.Values.OrderBy(c => c.Name))
+                @foreach (var (character, permissions) in charactersWithPermissions)
                 {
                     <MudStack
                         @key="@character.Id"
@@ -85,11 +93,29 @@ else
                         Row="@true">
                         <CharacterAvatar
                             Character="@character"/>
-                        <MudText>@character.Name</MudText>
+                        <MudText
+                            Class="flex-grow-1">
+                            @character.Name
+                        </MudText>
+                        @if (permissions.HasFlag(CharacterPermissions.RemoveFromGroup))
+                        {
+                            <MudTooltip
+                                Text="@($"Charakter \"{character.Name}\" aus der Gruppe entfernen")">
+                                <MudIconButton
+                                    Color="Color.Error"
+                                    Icon="@Icons.Material.Filled.PersonRemove"
+                                    OnClick="() => leaveGroupClicked(character)"/>
+                            </MudTooltip>
+                        }
                     </MudStack>
                 }
             </MudStack>
         </MudPaper>
+        <MudText>
+            Möchtest du einen weiteren Charakter zur Gruppe hinzufügen?
+        </MudText>
+        <JoinWithCharacter
+            Group="handle.Group"/>
     </MudStack>
 }
 
@@ -102,16 +128,46 @@ else
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
 
+    [CascadingParameter]
+    public required ICharacterPermissionService Permissions { get; set; }
+
     IGroupHandle? handle;
     bool loaded;
 
+    IImmutableList<(Character Character, CharacterPermissions Permissions)> charactersWithPermissions =
+        ImmutableList<(Character Character, CharacterPermissions Permissions)>.Empty;
+
     protected override async Task OnParametersSetAsync()
     {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
         loaded = false;
+
         await base.OnParametersSetAsync();
+
         var auth = await AuthenticationState;
         handle = await repository.OpenSingleAsync(auth.User, $"Groups/{RawGroupId}");
+        if (handle != null)
+        {
+            handle.Updated += (_, _) => InvokeAsync(() =>
+            {
+                charactersWithPermissions = enrichedWithPermissions();
+                StateHasChanged();
+            });
+        }
         loaded = true;
+        charactersWithPermissions = enrichedWithPermissions();
+    }
+
+    IImmutableList<(Character Character, CharacterPermissions Permissions)> enrichedWithPermissions()
+    {
+        return handle != null ? handle.Group.Characters.Values
+            .OrderBy(c => c.Name)
+            .Select(c => (c, Permissions.InTheContextOfGroup(c, handle.Group)))
+            .Where(c => c.Item2.HasFlag(CharacterPermissions.ViewInfo))
+            .ToImmutableArray() : ImmutableList<(Character Character, CharacterPermissions Permissions)>.Empty;
     }
 
     string joinCodeUrl(string joinCode)
@@ -128,6 +184,25 @@ else
             c.SnackbarVariant = Variant.Outlined;
             c.VisibleStateDuration = 3000;
         });
+    }
+
+    async Task leaveGroupClicked(Character character)
+    {
+        if (handle == null)
+        {
+            return;
+        }
+        var auth = await AuthenticationState;
+        await repository.LeaveGroupAsync(auth.User, handle.Group, character);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
     }
 
 }

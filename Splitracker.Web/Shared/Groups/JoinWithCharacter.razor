@@ -1,0 +1,117 @@
+﻿@using Splitracker.Domain
+@using Microsoft.AspNetCore.Components
+@using System.Threading
+@inject ICharacterRepository characterRepository
+@inject IGroupRepository groupRepository
+
+<MudPaper
+    Class="pa-4">
+    <MudStack
+        Row="@true"
+        Justify="Justify.FlexStart"
+        AlignItems="AlignItems.Center">
+        <MudText>
+            Ich möchte mit
+        </MudText>
+        <MudAutocomplete
+            T="Character"
+            ToStringFunc="renderCharacter"
+            SearchFuncWithCancel="searchCharacter"
+            CoerceText="@true"
+            @bind-Value="selectedCharacter"
+            Label="Charakter"
+            Variant="Variant.Outlined"
+            Margin="Margin.Dense"
+            Placeholder="Name&hellip;"/>
+        <MudButton
+            Disabled="@(selectedCharacter == null)"
+            Color="Color.Success"
+            Variant="Variant.Filled"
+            EndIcon="@Icons.Material.Filled.Person"
+            OnClick="joinWithExistingCharacter">
+            beitreten!
+        </MudButton>
+    </MudStack>
+</MudPaper>
+<MudStack
+    Row="@true"
+    Style="width: 100%"
+    Justify="Justify.SpaceEvenly"
+    AlignItems="AlignItems.Center">
+    <MudDivider/>
+    <MudText
+        Typo="Typo.h5"
+        Class="flex-none">
+        ODER
+    </MudText>
+    <MudDivider/>
+</MudStack>
+<MudPaper
+    Class="pa-4">
+    <MudStack
+        Row="@true"
+        Justify="Justify.FlexStart"
+        AlignItems="AlignItems.Center">
+        <MudText>
+            Ich möchte mit einem neuen Charakter namens
+        </MudText>
+        <MudTextField
+            Label="Name"
+            @bind-Value="newCharacterName"
+            Immediate="@true"
+            Margin="@Margin.Dense"
+            Variant="@Variant.Outlined"
+            DebounceInterval="300"/>
+        <MudButton
+            Disabled="@(string.IsNullOrWhiteSpace(newCharacterName))"
+            Color="Color.Success"
+            Variant="Variant.Filled"
+            EndIcon="@Icons.Material.Filled.PersonAddAlt1"
+            OnClick="joinWithFreshCharacter">
+            beitreten!
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required Group Group { get; set; }
+
+    [Parameter]
+    public EventCallback OnJoined { get; set; }
+
+    Character? selectedCharacter;
+
+    string? newCharacterName;
+
+    static string renderCharacter(Character? character) => character?.Name ?? "";
+
+    async Task<IEnumerable<Character>> searchCharacter(string? term, CancellationToken cancellationToken)
+    {
+        var auth = await AuthenticationState;
+        var candidates = await characterRepository.SearchCharactersAsync(auth.User, term ?? "", cancellationToken);
+        return candidates.Where(c => !Group.Characters.ContainsKey(c.Id));
+    }
+
+    async Task joinWithFreshCharacter()
+    {
+        var auth = await AuthenticationState;
+        await groupRepository.JoinWithNewCharacterAsync(auth.User, Group, newCharacterName!);
+        newCharacterName = "";
+        await OnJoined.InvokeAsync();
+    }
+
+    async Task joinWithExistingCharacter()
+    {
+        var auth = await AuthenticationState;
+        await groupRepository.JoinWithExistingCharacterAsync(auth.User, Group, selectedCharacter!);
+        selectedCharacter = null;
+        await OnJoined.InvokeAsync();
+    }
+
+}

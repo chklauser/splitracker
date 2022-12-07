@@ -50,12 +50,11 @@ class RavenGroupRepository : IGroupRepository, IHostedService
             return null;
         }
 
-        return await handles.TryCreateSubscription(
+        return await handles.TryCreateSubscription<string, RavenGroupSubscription, RavenGroupHandle, Domain.Group>(
             groupId,
             createSubscription: async () => await RavenGroupSubscription.OpenAsync(store, groupId, log),
             onExistingSubscription: () =>
                 log.Log(LogLevel.Debug, "Trying to join existing group subscription {GroupId}", groupId),
-            tryGetHandle: s => s.TryGetHandle(),
             onRetry: () =>
                 log.Log(LogLevel.Information,
                     "Group subscription for {GroupId} was disposed of, retrying",
@@ -63,7 +62,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
         ) ?? throw new InvalidOperationException("Failed to open a handle for the group.");
     }
 
-    async Task<GroupRole?> accessGroupAsync(string groupId, string userId, IAsyncDocumentSession session)
+    async Task<Model.GroupRole?> accessGroupAsync(string groupId, string userId, IAsyncDocumentSession session)
     {
         log.LogInformation("Checking access to group of group {GroupId} for user {UserId}", groupId, userId);
         var result = await session.LoadAsync<Model.Group>(groupId);
@@ -218,11 +217,11 @@ class RavenGroupRepository : IGroupRepository, IHostedService
         
         if (group.Members.Any(m => m.UserId == userId))
         {
-            log.Log(LogLevel.Warning, "User is already a member of group {GroupId}", groupId);
+            log.Log(LogLevel.Information, "User is already a member of group {GroupId}", groupId);
         }
         else
         {
-            group.Members.Add(new() { UserId = userId, Role = GroupRole.Member });
+            group.Members.Add(new() { UserId = userId, Role = Model.GroupRole.Member });
         }
         
         if (group.CharacterIds.Contains(characterId))
@@ -234,11 +233,43 @@ class RavenGroupRepository : IGroupRepository, IHostedService
             group.CharacterIds.Add(characterId);
         }
 
+        enforceGroupInvariants(group);
         log.Log(LogLevel.Information,
             "User {UserId} joined group {GroupId} with character {CharacterId}",
             userId,
             groupId,
             characterId);
+    }
+
+    public async Task LeaveGroupAsync(ClaimsPrincipal principal, Domain.Group group, Character character)
+    {
+        var userId = await userRepository.GetUserIdAsync(principal);
+        var characterDocIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
+        using var session = store.OpenAsyncSession();
+        var role = await accessGroupAsync(group.Id, userId, session);
+        if (role == null)
+        {
+            throw new DataAccessControlException("User is not a member of the group.", group.Id, userId);
+        }
+
+        if (role != Model.GroupRole.GameMaster && !character.Id.StartsWith(characterDocIdPrefix))
+        {
+            throw new DataAccessControlException($"User is not allowed to remove character {character.Id} from group.", group.Id, userId);
+        }
+        
+        var dbGroup = await session.LoadAsync<Model.Group>(group.Id);
+        if (dbGroup.CharacterIds.Remove(character.Id))
+        {
+            await session.SaveChangesAsync();
+            log.Log(LogLevel.Information, "Character {CharacterId} left group {GroupId}", character.Id, group.Id);
+        }
+        else
+        {
+            log.Log(LogLevel.Warning,
+                "Character {CharacterId} was not a member of the group {GroupId} in the first place",
+                character.Id,
+                group.Id);
+        }
     }
 
     public async Task ApplyAsync(ClaimsPrincipal principal, GroupCommand command)

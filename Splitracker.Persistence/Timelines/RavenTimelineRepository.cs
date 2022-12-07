@@ -62,7 +62,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         ) ?? throw new InvalidOperationException("Failed to open a handle for the timeline.");
     }
 
-    async Task<(string TimelineId, GroupRole Role)?> accessTimelineAsync(string groupId, string userId, IAsyncDocumentSession session)
+    async Task<(string TimelineId, Model.GroupRole Role)?> accessTimelineAsync(string groupId, string userId, IAsyncDocumentSession session)
     {
         log.LogInformation("Checking access to timeline of group {GroupId} for user {UserId}", groupId, userId);
         var result = await session.Query<Timeline_ByGroup.IndexEntry, Timeline_ByGroup>()

@@ -4,27 +4,33 @@
 @implements IDisposable
 
 <CascadingAuthenticationState>
-    <Router
-        AppAssembly="@typeof(App).Assembly">
-        <Found
-            Context="routeData">
-            <CascadingValue Value="@flags.Context">
-                <AuthorizeRouteView
-                    RouteData="@routeData"
-                    DefaultLayout="@typeof(MainLayout)"/>
-                <FocusOnNavigate
-                    RouteData="@routeData"
-                    Selector="h1"/>
-            </CascadingValue>
-        </Found>
-        <NotFound>
-            <PageTitle>Nicht gefunden</PageTitle>
-            <LayoutView
-                Layout="@typeof(MainLayout)">
-                <MudAlert Severity="Severity.Warning">Hoppla, was du suchst gibt's irgendwie nicht 😶</MudAlert>
-            </LayoutView>
-        </NotFound>
-    </Router>
+    <CascadingPermissionService>
+        <Router
+            AppAssembly="@typeof(App).Assembly">
+            <Found
+                Context="routeData">
+                <CascadingValue
+                    Value="@flags.Context">
+                    <AuthorizeRouteView
+                        RouteData="@routeData"
+                        DefaultLayout="@typeof(MainLayout)"/>
+                    <FocusOnNavigate
+                        RouteData="@routeData"
+                        Selector="h1"/>
+                </CascadingValue>
+            </Found>
+            <NotFound>
+                <PageTitle>Nicht gefunden</PageTitle>
+                <LayoutView
+                    Layout="@typeof(MainLayout)">
+                    <MudAlert
+                        Severity="Severity.Warning">
+                        Hoppla, was du suchst gibt's irgendwie nicht 😶
+                    </MudAlert>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingPermissionService>
 </CascadingAuthenticationState>
 
 @code {

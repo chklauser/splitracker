@@ -1,0 +1,65 @@
+﻿@using Splitracker.Domain
+@inject IUserRepository userRepository
+@implements ICharacterPermissionService
+
+<CascadingValue
+    TValue="ICharacterPermissionService"
+    Value="@this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    string? userId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        var auth = await AuthenticationState;
+        userId = await userRepository.GetUserIdAsync(auth.User);
+    }
+
+    public CharacterPermissions InTheContextOfGroup(Character character, Group group)
+    {
+        if (userId == null)
+        {
+            return CharacterPermissions.None;
+        }
+
+        if (character.UserId == userId)
+        {
+            // All permissions
+            return CharacterPermissions.ViewInfo 
+                | CharacterPermissions.ViewStats 
+                | CharacterPermissions.EditStats
+                | CharacterPermissions.InteractOnTimeline 
+                | CharacterPermissions.RemoveFromGroup;
+        }
+        
+        var permissions = CharacterPermissions.None;
+        
+        var characterIsInGroup = group.Characters.ContainsKey(character.Id);
+        var memberOfTheSameGroup = characterIsInGroup && group.Members.ContainsKey(userId);
+        var gmOfTheSameGroup = memberOfTheSameGroup && group.Members[userId].Role == GroupRole.GameMaster;
+
+        if (memberOfTheSameGroup)
+        {
+            permissions |= CharacterPermissions.ViewInfo;
+        }
+        
+        if (gmOfTheSameGroup)
+        {
+            permissions |= CharacterPermissions.ViewStats;
+            permissions |= CharacterPermissions.InteractOnTimeline;
+            permissions |= CharacterPermissions.RemoveFromGroup;
+        }
+        
+        return permissions;
+    }
+
+}

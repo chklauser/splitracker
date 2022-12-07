@@ -8,8 +8,17 @@ public record Group(
     string Name,
     IImmutableDictionary<string, Character> Characters,
     bool HasTimeline,
-    string? JoinCode = null
+    IImmutableDictionary<string, GroupMembership> Members,
+string? JoinCode = null
 ) : GroupInfo(Id, Name, HasTimeline);
+
+public record GroupMembership(string UserId, GroupRole Role);
+
+public enum GroupRole
+{
+    Member,
+    GameMaster,
+}
 
 public record GroupInfo(string Id, string Name, bool HasTimeline)
 {

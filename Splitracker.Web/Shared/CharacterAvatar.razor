@@ -5,6 +5,7 @@
 }
 <MudBadge Visible="@(ShowPenalty && penalty > 0)" @onclick="avatarClicked" Overlap="@true"
           Origin="@Origin.BottomCenter"
+          Class="flex-none"
           Bordered="true" Color="Color.Error" Content="@($"-{Character.Penalty}")">
     <MudAvatar Color="@(IsSelected ? Color.Primary : Color.Default)">
         @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
