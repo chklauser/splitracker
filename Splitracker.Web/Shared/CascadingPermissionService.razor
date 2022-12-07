@@ -1,9 +1,9 @@
 ﻿@using Splitracker.Domain
 @inject IUserRepository userRepository
-@implements ICharacterPermissionService
+@implements IPermissionService
 
 <CascadingValue
-    TValue="ICharacterPermissionService"
+    TValue="IPermissionService"
     Value="@this">
     @ChildContent
 </CascadingValue>

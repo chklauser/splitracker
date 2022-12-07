@@ -15,6 +15,8 @@ using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
+using GroupRole = Splitracker.Persistence.Model.GroupRole;
+using Timeline = Splitracker.Persistence.Model.Timeline;
 
 namespace Splitracker.Persistence.Timelines;
 
@@ -115,14 +117,44 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         var userId = await userRepository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
-        if (await accessTimelineAsync(command.GroupId, userId, session) is not var (timelineId, _)){
-            throw new ArgumentException($"User {userId} does not have access to timeline of group {command.GroupId}");
-        }
 
-        var dbTimeline = await session.LoadAsync<Model.Timeline>(timelineId);
-        if (dbTimeline == null)
+        bool isDefinitelyGm;
+        if (command is TimelineCommand.ResetEntireTimeline)
         {
-            throw new ArgumentException($"Timeline {timelineId} does not exist.");
+            var group = await session.LoadAsync<Model.Group>(command.GroupId);
+            isDefinitelyGm = group != null && group.Members.Any(m => m.UserId == userId && m.Role == GroupRole.GameMaster);
+        }
+        else
+        {
+            isDefinitelyGm = false;
+        }
+        
+        Timeline dbTimeline;
+
+        if (await accessTimelineAsync(command.GroupId, userId, session) is not var (timelineId, _)){
+            if (isDefinitelyGm && command is TimelineCommand.ResetEntireTimeline)
+            {
+                dbTimeline = new() {
+                    GroupId = command.GroupId,
+                    Effects = new(),
+                    Ticks = new(),
+                    ReadyCharacterIds = new(),
+                };
+                await session.StoreAsync(dbTimeline);
+            }
+            else
+            {
+                throw new ArgumentException(
+                    $"User {userId} does not have access to timeline of group {command.GroupId}");
+            }
+        }
+        else
+        {
+            dbTimeline = await session.LoadAsync<Model.Timeline>(timelineId);
+            if (dbTimeline == null)
+            {
+                throw new ArgumentException($"Timeline {timelineId} does not exist.");
+            }
         }
 
         switch (command)
@@ -133,6 +165,13 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
             case TimelineCommand.EffectCommand ec:
                 applyEffectCommand(ec, dbTimeline);
                 break;
+            case TimelineCommand.ResetEntireTimeline reset when isDefinitelyGm:
+                await resetEntireTimelineAsync(reset, session, dbTimeline);
+                break;
+            case TimelineCommand.ResetEntireTimeline:
+                throw new DataAccessControlException($"User is not allowed to reset the timeline.",
+                    dbTimeline.Id!,
+                    userId);
             default:
                 throw new ArgumentException($"Unsupported command type {command.GetType().Name}");
         }
@@ -141,6 +180,19 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         await session.SaveChangesAsync();
     }
 
+    async Task resetEntireTimelineAsync(TimelineCommand.ResetEntireTimeline command, IAsyncDocumentSession session, Model.Timeline dbTimeline)
+    {
+        dbTimeline.Effects = new();
+        dbTimeline.Ticks = new();
+        var group = await session.LoadAsync<Model.Group>(dbTimeline.GroupId);
+        if (group == null)
+        {
+            throw new InvalidOperationException($"Can't find group {command.GroupId} for timeline {dbTimeline.Id} to be reset.");
+        }
+
+        dbTimeline.ReadyCharacterIds = group.CharacterIds.ToList();
+    }
+    
     void applyEffectCommand(TimelineCommand.EffectCommand command, Model.Timeline dbTimeline)
     {
         var effectId = command.EffectId;

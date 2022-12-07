@@ -36,4 +36,6 @@ public abstract record TimelineCommand(string GroupId)
     public record RemoveEffect(string GroupId, string EffectId) : EffectCommand(GroupId, EffectId);
     
     public record RemoveEffectTick(string GroupId, string EffectId, int At) : EffectCommand(GroupId, EffectId);
+    
+    public record ResetEntireTimeline(string GroupId) : TimelineCommand(GroupId);
 }

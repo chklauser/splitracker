@@ -2,7 +2,7 @@
 
 namespace Splitracker.Domain;
 
-public interface ICharacterPermissionService
+public interface IPermissionService
 {
     CharacterPermissions InTheContextOfGroup(Character character, Group group);
 }
