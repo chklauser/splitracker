@@ -12,7 +12,7 @@
             Icon="@Icons.Material.Filled.EmojiPeople">
             Charaktere
         </MudNavLink>
-        @if (experimental)
+        @if (experimental || groups is {Count: > 0 })
         {
             <MudNavGroup
                 Title="Gruppen"
@@ -29,7 +29,16 @@
                         </MudNavLink>
                     }
                 }
+                @if (experimental)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.GroupAdd" Disabled="@true">
+                        Neue Gruppe
+                    </MudNavLink>
+                }
             </MudNavGroup>
+        }
+        @if(groups != null && groups.Any(g => g.HasTimeline)) 
+        {
             <MudNavGroup
                 Title="Tickleisten"
                 Icon="@Icons.Filled.ViewTimeline"
