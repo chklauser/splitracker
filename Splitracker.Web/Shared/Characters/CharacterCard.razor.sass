@@ -1,0 +1,23 @@
+﻿.editor
+  display: grid
+  grid-template-columns: 40px repeat(2, 1fr) 40px
+  grid-auto-rows: fit-content(100%)
+  gap: 4px
+  justify-content: start
+  align-content: baseline
+  align-items: baseline
+  padding: 2px
+
+  //noinspection CssInvalidPseudoSelector
+  ::deep
+    &.default-control
+      grid-column: 1/4
+    &.outcome
+      grid-column: 4/5
+    &.full
+      grid-column: 1/5
+    &.dense-control > div
+      margin-top: -10px
+
+.CharacterCard.edit-mode
+  max-width: 375px

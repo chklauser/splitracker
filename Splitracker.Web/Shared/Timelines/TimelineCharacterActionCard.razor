@@ -103,52 +103,81 @@
                             if (!IsReadyNow)
                             {
                                 <TimelineActionButton
-                                    Action="@Reaction"/>
+                                    Action="@CommonActionTemplates.Reaction"/>
                                 <TimelineActionButton
-                                    Action="@ActiveDefense"/>
+                                    Action="@CommonActionTemplates.ActiveDefense"/>
                                 @if (Tick is Tick.ActionEnds)
                                 {
                                     <TimelineActionButton
-                                        Action="@AbortContinuousAction"/>
+                                        Action="@CommonActionTemplates.AbortContinuousAction"/>
                                 }
                             }
                             <TimelineActionButton
-                                Action="@Ready"/>
+                                Action="@CommonActionTemplates.Ready"/>
                             <TimelineActionButton
-                                Action="@Continuous"/>
+                                Action="@CommonActionTemplates.Continuous"/>
                             <TimelineActionButton
-                                Action="@Immediate"/>
+                                Action="@CommonActionTemplates.Immediate"/>
                             if (IsReadyNow)
                             {
                                 <TimelineActionButton
-                                    Action="@Move"/>
+                                    Action="@CommonActionTemplates.Move"/>
                                 <TimelineActionButton
-                                    Action="@Sprint"/>
-                                <TimelineActionButton
-                                    Action="@LookForGap"/>
-                                <TimelineActionButton
-                                    Action="@PrepareRanged"/>
-                                <TimelineActionButton
-                                    Action="@Aim"/>
-                                <TimelineActionButton
-                                    Action="@Shoot"/>
-                                <TimelineActionButton
-                                    Action="@Focus"/>
-                                <TimelineActionButton
-                                    Action="@CastSpell"/>
+                                    Action="@CommonActionTemplates.Sprint"/>
+                                var meleeShorthands = Tick.Character.ActionShorthands.Values
+                                    .Where(x => x.Type == ActionShorthandType.Melee)
+                                    .OrderBy(x => x.Name)
+                                    .ToList();
+                                if (meleeShorthands.Count > 0)
+                                {
+                                    foreach (var shorthand in meleeShorthands)
+                                    {
+                                        <TimelineActionButton @key="shorthand.Id" Action="@shorthand.ToTemplate()" />
+                                    }
+                                    <TimelineActionButton
+                                        Action="@CommonActionTemplates.LookForGap"/>
+                                }
+                                var rangedShorthands = Tick.Character.ActionShorthands.Values
+                                    .Where(x => x.Type == ActionShorthandType.Ranged)
+                                    .OrderBy(x => x.Name)
+                                    .ToList();
+                                if(rangedShorthands.Count > 0)
+                                {
+                                    foreach (var shorthand in rangedShorthands)
+                                    {
+                                        <TimelineActionButton @key="shorthand.Id" Action="@shorthand.ToTemplate()" />
+                                    }
+                                    <TimelineActionButton
+                                        Action="@CommonActionTemplates.Aim"/>
+                                    <TimelineActionButton
+                                        Action="@CommonActionTemplates.Shoot"/>
+                                }
+                                var spellShorthands = Tick.Character.ActionShorthands.Values
+                                    .Where(x => x.Type == ActionShorthandType.Spell)
+                                    .OrderBy(x => x.Name)
+                                    .ToList();
+                                if (spellShorthands.Count > 0)
+                                {
+                                    foreach (var shorthand in spellShorthands)
+                                    {
+                                        <TimelineActionButton @key="shorthand.Id" Action="@shorthand.ToTemplate()" />
+                                    }
+                                    <TimelineActionButton
+                                        Action="@CommonActionTemplates.CastSpell"/>
+                                }
                             }
                             <TimelineActionButton
-                                Action="@LeaveTimeline"/>
+                                Action="@CommonActionTemplates.LeaveTimeline"/>
                         }
                         else
                         {
                             <TimelineActionButton
                                 StartIcon="@Icons.Material.Filled.ArrowCircleUp"
-                                Action="@BumpBackward"
+                                Action="@CommonActionTemplates.BumpBackward"
                                 OnClick="async b => await applyBump(b, -1)"/>
                             <TimelineActionButton
                                 EndIcon="@Icons.Material.Filled.ArrowCircleDown"
-                                Action="@BumpForward"
+                                Action="@CommonActionTemplates.BumpForward"
                                 OnClick="async b => await applyBump(b, 1)"/>
                         }
                     </CascadingValue>

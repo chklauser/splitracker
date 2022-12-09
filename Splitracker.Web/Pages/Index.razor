@@ -2,6 +2,7 @@
 @using Splitracker.Domain
 @using Splitracker.Domain.Commands
 @using Splitracker.Web.Shared.Characters
+@using System.Collections.Immutable
 @implements IAsyncDisposable
 @implements ICharacterCommandRouter
 
@@ -130,7 +131,12 @@
 
     void addCharacterForm()
     {
-        newCharacter = new("", "Dein Name", 5, 10);
+        newCharacter = new("", "Dein Name", 5, 10, 
+            actionShorthands: new Dictionary<string, ActionShorthand>() {
+                {"melee", new("melee", "Nahkampf Ang.", 7, ActionShorthandType.Melee) },
+                {"ranged", new("ranged", "Fernkampf Vorb.", 4, ActionShorthandType.Ranged) },
+                {"focus", new("focus", "Fokus", 4, ActionShorthandType.Spell) },
+            }.ToImmutableDictionary());
     }
 
     private readonly NewCharacterRouter newCharacterRouter;
@@ -153,7 +159,13 @@
                     inner.StateHasChanged();
                     break;
                 case EditCharacter edit:
-                    await inner.ApplyAsync(new CreateCharacter(edit.Name, edit.LpBaseCapacity, edit.FoBaseCapacity));
+                    await inner.ApplyAsync(new CreateCharacter(
+                        edit.Name,
+                        edit.LpBaseCapacity, 
+                        edit.FoBaseCapacity,
+                        edit.CustomColor,
+                        edit.ActionShorthands,
+                        edit.IsOpponent));
                     inner.newCharacter = null;
                     break;
                 default:

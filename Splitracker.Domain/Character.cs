@@ -1,11 +1,34 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace Splitracker.Domain;
 
-public record Character(string Id, string Name, LpPool Lp, FoPool Fo)
+public record Character(
+    string Id,
+    string Name,
+    string? CustomColor,
+    LpPool Lp,
+    FoPool Fo,
+    IImmutableDictionary<string, ActionShorthand> ActionShorthands,
+    bool IsOpponent
+)
 {
-    public Character(string id, string name, int lpBaseCapacity, int foBaseCapacity) :
-        this(id, name, new(lpBaseCapacity), new FoPool(foBaseCapacity))
+    public Character(
+        string id,
+        string name,
+        int lpBaseCapacity,
+        int foBaseCapacity,
+        string? customColor = null,
+        bool isOpponent = false,
+        IImmutableDictionary<string, ActionShorthand>? actionShorthands = null
+    ) :
+        this(id,
+            name,
+            customColor,
+            new(lpBaseCapacity),
+            new(foBaseCapacity),
+            actionShorthands ?? ImmutableDictionary<string, ActionShorthand>.Empty,
+            isOpponent)
     {
     }
 
@@ -18,7 +41,7 @@ public record Character(string Id, string Name, LpPool Lp, FoPool Fo)
     public int Penalty => PenaltyDueToLowLp(Lp.Points, Lp.BaseCapacity);
 
     public string UserId { get; } = deriveUserId(Id);
-    
+
     static string deriveUserId(string? id)
     {
         if (id == null)
@@ -32,7 +55,7 @@ public record Character(string Id, string Name, LpPool Lp, FoPool Fo)
         {
             return "";
         }
-        
+
         return $"Users/{id.Substring(firstSlash + 1, lastSlash - firstSlash - 1)}";
     }
 }

@@ -1,0 +1,127 @@
+﻿@using Splitracker.Domain
+@using System.Collections.Immutable
+
+@{
+    var row = StartRow;
+}
+
+@* title *@
+<MudText
+    Typo="Typo.body1"
+    Class="full"
+    Style="@($"grid-row: {row++}")">
+    <strong>@typeTitle</strong>
+</MudText>
+
+@* input data *@
+<div
+    style="@($"grid-column: 1/3; grid-row: {row}")"
+    class="dense-control">
+    <MudTextField
+        @bind-Value="selectedName"
+        @ref="nameField"
+        Immediate="@true"
+        Label="Name"
+        Required="@true"
+        RequiredError="@($"{typeObject} braucht einen Namen")"
+        HelperText="so kurz wie möglich!"/>
+</div>
+
+<div
+    style="@($"grid-column: 3; grid-row: {row}")"
+    class="dense-control">
+    <MudNumericField
+        T="int"
+        @bind-Value="selectedTicks"
+        Label="@(Type == ActionShorthandType.Spell ? "Ticks" : "WGS")"
+        Min="1"
+        Max="99"/>
+</div>
+
+<div
+    style="@($"grid-column: 4; grid-row: {row++}")">
+    <MudTooltip
+        Text="@($"{typeObject} ({(Type == ActionShorthandType.Spell ? "Dauer" : "WGS")} {selectedTicks} ticks) hinzufügen")">
+        <MudIconButton
+            Disabled="@(!isValid)"
+            Icon="@Icons.Material.Filled.Add"
+            Color="Color.Success"
+            Variant="Variant.Filled"
+            OnClick="addShorthandButtonClicked"/>
+    </MudTooltip>
+</div>
+
+@* existing actions *@
+<MudChipSet
+    Class="full"
+    Style="@($"grid-row: {row}")"
+    AllClosable="@true"
+    SelectedChip="@null">
+    @foreach (var shorthand in Shorthands.Values.Where(s => s.Type == Type).OrderBy(s => s.Name))
+    {
+        <MudChip
+            OnClose="@(_ => removeShorthand(shorthand))">
+            @shorthand.Name (@shorthand.Ticks)
+        </MudChip>
+    }
+</MudChipSet>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required ActionShorthandType Type { get; set; }
+
+    [Parameter]
+    public required IImmutableDictionary<string, ActionShorthand> Shorthands { get; set; }
+        = ImmutableDictionary<string, ActionShorthand>.Empty;
+
+    [Parameter]
+    public EventCallback<IImmutableDictionary<string, ActionShorthand>> ShorthandsChanged { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public required int StartRow { get; set; }
+
+    int selectedTicks = 7;
+    string? selectedName;
+    bool isValid => !string.IsNullOrWhiteSpace(selectedName) && selectedTicks > 0;
+    
+    MudTextField<string?>? nameField;
+
+    string typeTitle => Type switch{
+        ActionShorthandType.Melee => "Nahkampf",
+        ActionShorthandType.Ranged => "Fernkampf",
+        ActionShorthandType.Spell => "Zauber",
+        _ => throw new ArgumentOutOfRangeException(nameof(Type)),
+        };
+
+    string typeObject => Type switch{
+        ActionShorthandType.Melee => "Nahkampfangriff",
+        ActionShorthandType.Ranged => "Fernkampfangriff",
+        ActionShorthandType.Spell => "Zauber",
+        _ => throw new ArgumentOutOfRangeException(nameof(Type)),
+        };
+
+    async Task addShorthandButtonClicked()
+    {
+        if (!isValid)
+        {
+            return;
+        }
+
+        var id = IdGenerator.RandomId();
+        await ShorthandsChanged.InvokeAsync(Shorthands.Add(id, new(id, selectedName!, selectedTicks, Type)));
+        selectedName = null;
+        if (nameField is {} field)
+        {
+            await field.FocusAsync();
+        }
+    }
+
+    async Task removeShorthand(ActionShorthand shorthand)
+    {
+        await ShorthandsChanged.InvokeAsync(Shorthands.Remove(shorthand.Id));
+    }
+
+}

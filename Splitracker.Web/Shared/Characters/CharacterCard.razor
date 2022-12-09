@@ -1,122 +1,190 @@
 ﻿@using Splitracker.Domain
 @using Splitracker.Domain.Commands
 @using System.Diagnostics.CodeAnalysis
+@using System.Collections.Immutable
+@using MudBlazor.Utilities
 
 @implements IDisposable
 @implements ICharacterCommandRouter
 @inject ICharacterRepository repository
 
-<CascadingValue TValue="ICharacterCommandRouter" IsFixed="true" Value="@this">
-  <MudCard
-    Class="CharacterCard">
-    <MudCardHeader
-        Class="pb-0">
-        <CardHeaderContent>
+<CascadingValue
+    TValue="ICharacterCommandRouter"
+    IsFixed="true"
+    Value="@this">
+    <MudCard
+        Class="@($"CharacterCard {(EditMode ? "edit-mode" : "")}")">
+        <MudCardHeader
+            Class="pb-0">
+            <CardHeaderAvatar>
+                <CharacterAvatar Elevation="2" Character="@character"/>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                @if (EditMode)
+                {
+                    <MudTextField
+                        @bind-Value="newName"
+                        Label="Name"
+                        Required
+                        Immediate="@true"
+                        RequiredError="Jeder braucht einen Namen!"/>
+                }
+                else
+                {
+                    <MudText
+                        Typo="Typo.h4">
+                        @character.Name
+                    </MudText>
+                }
+            </CardHeaderContent>
+            <CardHeaderActions>
+                @if (EditMode)
+                {
+                    <MudIconButton
+                        Icon="@Icons.Material.Filled.Delete"
+                        Color="Color.Secondary"
+                        @onclick="deleteAsync"/>
+                }
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent
+            Class="pt-0">
             @if (EditMode)
             {
-                <MudTextField
-                    @bind-Value="newName"
-                    Label="Name"
-                    Required
-                    RequiredError="Jeder braucht einen Namen!"/>
+                var row = 1;
+                <div
+                    class="editor">
+                    @* LP *@
+                    <div class="default-control" style="@($"grid-row: {row}")">
+                        <MudNumericField
+                            Label="LP"
+                            @bind-Value="newLpBaseCapacity"
+                            Min="1"
+                            Max="20"
+                            Required/>
+                        </div>
+                    <MudText
+                        Class="outcome"
+                        Style="@($"grid-row: {row++}")">
+                        =&nbsp;@(newLpBaseCapacity * 5)
+                    </MudText>
+                    @* FO *@
+
+                    <div class="default-control" style="@($"grid-row: {row++}")">
+                        <MudNumericField
+                            Label="FO"
+                            @bind-Value="newFoBaseCapacity"
+                            Min="1"
+                            Max="@(12 * 5)"
+                            Required/>
+                        </div>
+
+                    @* Color *@
+
+                    <MudCheckBox
+                        Style="@($"grid-row: {row}; grid-column: 1")"
+                        T="bool"
+                        @bind-Checked="newHasCustomColor" />
+                    <div style="@($"grid-row: {row}; grid-column: 2/4")" 
+                            @onclick="() => { if(!newHasCustomColor) newHasCustomColor = true; }">
+                        <MudColorPicker
+                            Disabled="@(!newHasCustomColor)"
+                            Label="Avatar Farbe"
+                            @bind-Value="newColor"
+                            DisableAlpha="@true"
+                            PickerVariant="PickerVariant.Inline" 
+                            ColorPickerMode="ColorPickerMode.RGB"/>
+                        </div>
+                    <div
+                        class="outcome"
+                        style="grid-row: @(row++)">
+                        <CharacterAvatar
+                            Elevation="2"
+                            Selected="@dummyAvatarPreviewSelected"
+                            OnClick="() => dummyAvatarPreviewSelected = !dummyAvatarPreviewSelected"
+                            Character="@(character with { CustomColor = newHasCustomColor ? newColor?.ToString(MudColorOutputFormats.Hex) : null })"/>
+                    </div>
+                    
+                    @* Actions *@
+                    <ActionShorthandListEditor
+                        @bind-Shorthands="newShorthands"
+                        StartRow="@(row)"
+                        Type="ActionShorthandType.Melee"/>
+                    @{ row += 3; }
+                    <ActionShorthandListEditor
+                        @bind-Shorthands="newShorthands"
+                        StartRow="@(row)"
+                        Type="ActionShorthandType.Ranged"/>
+                    @{ row += 3; }
+                    <ActionShorthandListEditor
+                        @bind-Shorthands="newShorthands"
+                        StartRow="@(row)"
+                        Type="ActionShorthandType.Spell"/>
+                    @{ row += 3; }
+                    @* Opponent *@
+                    <div style="@($"grid-row: {row}")" class="default-control">
+                        <MudTooltip
+                            Text="(Für Spielleiter)">
+                            <MudSwitch
+                                T="bool"
+                                UnCheckedColor="Color.Default"
+                                Color="Color.Error"
+                                @bind-Checked="newIsOpponent"
+                                Label="Ist Gegner*in"/>
+                        </MudTooltip>
+                        </div>
+                </div>
             }
             else
             {
-                <MudText
-                    Typo="Typo.h4">
-                    @character.Name
-                </MudText>
+                <MudTabs
+                    KeepPanelsAlive="true"
+                    TabPanelClass="CharacterTab">
+                    <PoolEditor
+                        Title="Leben"
+                        Icon="@Icons.Material.Filled.Shield"
+                        TotalCapacity="@(c => c * 5)"
+                        LineCapacity="@(c => c)"
+                        Pool="@character.Lp"
+                        ShowPenalties
+                        Type="@PoolType.Lp"/>
+                    <PoolEditor
+                        Title="Fokus"
+                        Icon="@Icons.Material.Filled.Nightlight"
+                        TotalCapacity="@(c => c)"
+                        LineCapacity="@(_ => 12)"
+                        Pool="@character.Fo"
+                        Type="@PoolType.Fo"/>
+                </MudTabs>
             }
-        </CardHeaderContent>
-        <CardHeaderActions>
-            @if (EditMode)
-            {
-                <MudIconButton
-                    Icon="@Icons.Material.Filled.Delete"
-                    Color="Color.Secondary"
-                    @onclick="deleteAsync"/>
-            }
-        </CardHeaderActions>
-    </MudCardHeader>
-    <MudCardContent
-        Class="pt-0">
+        </MudCardContent>
         @if (EditMode)
         {
-            <MudGrid
-                Justify="Justify.FlexStart">
-                <MudItem
-                    xs="9">
-                    <MudNumericField
-                        Label="LP"
-                        @bind-Value="newLpBaseCapacity"
-                        Min="1"
-                        Max="20"
-                        Required/>
-                </MudItem>
-                <MudItem
-                    xs="3">
-                    <MudText>=&nbsp;@(newLpBaseCapacity * 5)</MudText>
-                </MudItem>
-                <MudItem
-                    xs="9">
-                    <MudNumericField
-                        Label="FO"
-                        @bind-Value="newFoBaseCapacity"
-                        Min="1"
-                        Max="@(12 * 5)"
-                        Required/>
-                </MudItem>
-            </MudGrid>
-        }
-        else
-        {
-            <MudTabs
-                KeepPanelsAlive="true" TabPanelClass="CharacterTab">
-                <PoolEditor
-                    Title="Leben"
-                    Icon="@Icons.Material.Filled.Shield"
-                    TotalCapacity="@(c => c * 5)"
-                    LineCapacity="@(c => c)"
-                    Pool="@character.Lp"
-                    ShowPenalties
-                    Type="@PoolType.Lp" />
-                <PoolEditor
-                    Title="Fokus"
-                    Icon="@Icons.Material.Filled.Nightlight"
-                    TotalCapacity="@(c => c)"
-                    LineCapacity="@(_ => 12)"
-                    Pool="@character.Fo"
-                    Type="@PoolType.Fo" />
-            </MudTabs>
-        }
-    </MudCardContent>
-    @if (EditMode)
-    {
-        <MudCardActions>
-            <MudStack
-                Row
-                AlignItems="AlignItems.Center"
-                Justify="Justify.SpaceEvenly">
-                @if (character.Id != "")
-                {
+            <MudCardActions>
+                <MudStack
+                    Row
+                    AlignItems="AlignItems.Center"
+                    Justify="Justify.SpaceEvenly">
+                    @if (character.Id != "")
+                    {
+                        <MudButton
+                            EndIcon="@Icons.Material.Filled.ContentCopy"
+                            Color="@Color.Tertiary"
+                            @onclick="cloneAsync">
+                            Klonen
+                        </MudButton>
+                    }
                     <MudButton
-                        EndIcon="@Icons.Material.Filled.ContentCopy"
-                        Color="@Color.Tertiary"
-                        @onclick="cloneAsync">
-                        Klonen
+                        EndIcon="@Icons.Material.Filled.Save"
+                        Disabled="@(!hasChanges)"
+                        Color="@Color.Primary"
+                        @onclick="saveAsync">
+                        Speichern
                     </MudButton>
-                }
-                <MudButton
-                    EndIcon="@Icons.Material.Filled.Save"
-                    Disabled="@(!hasChanges)"
-                    Color="@Color.Primary"
-                    @onclick="saveAsync">
-                    Speichern
-                </MudButton>
-            </MudStack>
-        </MudCardActions>
-    }
-</MudCard>
+                </MudStack>
+            </MudCardActions>
+        }
+    </MudCard>
 </CascadingValue>
 
 @code {
@@ -136,9 +204,16 @@
     [EditorRequired]
     public required bool EditMode { get; set; }
 
-    private string newName = string.Empty;
-    private int newLpBaseCapacity;
-    private int newFoBaseCapacity;
+    string newName = string.Empty;
+    int newLpBaseCapacity;
+    int newFoBaseCapacity;
+    bool newIsOpponent;
+    MudColor? newColor;
+    bool newHasCustomColor;
+
+    bool dummyAvatarPreviewSelected = false;
+
+    IImmutableDictionary<string, ActionShorthand> newShorthands = ImmutableDictionary<string, ActionShorthand>.Empty;
 
     protected override void OnParametersSet()
     {
@@ -148,6 +223,10 @@
         newName = character.Name;
         newLpBaseCapacity = character.Lp.BaseCapacity;
         newFoBaseCapacity = character.Fo.BaseCapacity;
+        newColor = character.CustomColor is not null ? new MudColor(character.CustomColor) : "#000000";
+        newHasCustomColor = character.CustomColor is not null;
+        newIsOpponent = character.IsOpponent;
+        newShorthands = character.ActionShorthands;
         lastHandle = CharacterHandle;
         CharacterHandle.CharacterUpdated += handleCharacterUpdated;
     }
@@ -156,7 +235,11 @@
         character.Id == ""
             || newName != character.Name
             || newLpBaseCapacity != character.Lp.BaseCapacity
-            || newFoBaseCapacity != character.Fo.BaseCapacity;
+            || newFoBaseCapacity != character.Fo.BaseCapacity
+            || newIsOpponent != character.IsOpponent
+            || (newHasCustomColor && newColor?.ToString(MudColorOutputFormats.Hex) != character.CustomColor)
+            || (!newHasCustomColor && character.CustomColor is not null)
+            || !newShorthands.SequenceEqual(character.ActionShorthands);
 
     public void Dispose()
     {
@@ -198,7 +281,15 @@
 
     async Task saveAsync()
     {
-        await ApplyAsync(new EditCharacter(null!, newName, newLpBaseCapacity, newFoBaseCapacity));
+        await ApplyAsync(new EditCharacter(
+            null!,
+            newName,
+            newLpBaseCapacity,
+            newFoBaseCapacity, 
+            newHasCustomColor && newColor != null 
+                ? newColor.ToString(MudColorOutputFormats.Hex) 
+                : null, newShorthands, newIsOpponent
+            ));
     }
 
     async Task cloneAsync()

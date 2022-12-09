@@ -137,7 +137,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     )
     {
         var auth = await AuthenticationState;
-        return await Repository.SearchCharactersAsync(searchTerm, groupId, auth.User, cancellationToken);
+        return await Repository.SearchCharactersAsync(searchTerm, !Flags.StageMode, groupId, auth.User, cancellationToken);
     }
 
     public async Task ApplyCommandAsync(TimelineCommand command)

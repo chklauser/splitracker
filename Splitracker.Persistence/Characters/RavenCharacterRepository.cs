@@ -138,13 +138,27 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
             case CreateCharacter create:
                 var newCharacter = new CharacterModel(CharacterDocIdPrefix(userId), create.Name,
                     new() { BaseCapacity = create.LpBaseCapacity },
-                    new() { BaseCapacity = create.FoBaseCapacity });
+                    new() { BaseCapacity = create.FoBaseCapacity }) {
+                    ActionShorthands = create.ActionShorthands.Values
+                        .OrderBy(v => v.Id)
+                        .Select(x => x.ToDbModel())
+                        .ToList(),
+                    CustomColor = create.CustomColor,
+                    IsOpponent = create.IsOpponent,
+                };
                 await session.StoreAsync(newCharacter);
                 break;
             case EditCharacter edit:
                 model!.Name = edit.Name;
                 model.Lp.BaseCapacity = edit.LpBaseCapacity;
                 model.Fo.BaseCapacity = edit.FoBaseCapacity;
+                model.CustomColor = edit.CustomColor;
+                model.IsOpponent = edit.IsOpponent;
+                model.ActionShorthands = edit.ActionShorthands
+                    .Values
+                    .OrderBy(x => x.Id)
+                    .Select(x => x.ToDbModel())
+                    .ToList();
                 break;
             case StopChanneling { Pool: PoolType.Lp, Points: var points }:
                 stopChanneling(model!.Lp, model.Lp.ToDomainLp(), points);

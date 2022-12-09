@@ -44,7 +44,7 @@
         var memberOfTheSameGroup = characterIsInGroup && group.Members.ContainsKey(userId);
         var gmOfTheSameGroup = memberOfTheSameGroup && group.Members[userId].Role == GroupRole.GameMaster;
 
-        return computePermissions(memberOfTheSameGroup, gmOfTheSameGroup);
+        return computePermissions(character, memberOfTheSameGroup, gmOfTheSameGroup);
     }
     
     public CharacterPermissions InTheContextOf(Character character, Timeline timeline)
@@ -64,10 +64,10 @@
         var memberOfTheSameGroup = characterIsInGroup && timeline.MemberRoles.ContainsKey(userId);
         var gmOfTheSameGroup = memberOfTheSameGroup && timeline.MemberRoles[userId] == GroupRole.GameMaster;
 
-        return computePermissions(memberOfTheSameGroup, gmOfTheSameGroup);
+        return computePermissions(character, memberOfTheSameGroup, gmOfTheSameGroup);
     }
 
-    CharacterPermissions computePermissions(bool memberOfTheSameGroup, bool gmOfTheSameGroup)
+    CharacterPermissions computePermissions(Character character, bool memberOfTheSameGroup, bool gmOfTheSameGroup)
     {
         var permissions = CharacterPermissions.None;
 
@@ -78,8 +78,12 @@
 
         if (gmOfTheSameGroup)
         {
-            permissions |= CharacterPermissions.ViewStats;
-            permissions |= CharacterPermissions.InteractOnTimeline;
+            if (!Flags.StageMode || !character.IsOpponent)
+            {
+                permissions |= CharacterPermissions.ViewStats;
+                permissions |= CharacterPermissions.InteractOnTimeline;
+            }
+
             if (!Flags.StageMode)
             {
                 permissions |= CharacterPermissions.RemoveFromGroup;

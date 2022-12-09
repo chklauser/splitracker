@@ -76,6 +76,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
 
     public async Task<IEnumerable<Character>> SearchCharactersAsync(
         string searchTerm,
+        bool includeOpponents,
         string groupId,
         ClaimsPrincipal principal,
         CancellationToken cancellationToken
@@ -91,9 +92,14 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         }
 
         var timeline = await LoadTimelineAsync(session, timelineId);
-        var dbCharacters = await session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+        var query = session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
             .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
-            .Not.WhereIn(c => c.Id, timeline.Characters.Keys)
+            .Not.WhereIn(c => c.Id, timeline.Characters.Keys);
+        if (!includeOpponents)
+        {
+            query = query.Not.WhereEquals(c => c.IsOpponent, true, true);
+        }
+        var dbCharacters = await query
             .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
             .Take(100)
             .ToListAsync(cancellationToken);

@@ -13,6 +13,7 @@ public interface ITimelineRepository
     Task ApplyAsync(ClaimsPrincipal principal, TimelineCommand command);
     Task<IEnumerable<Character>> SearchCharactersAsync(
         string searchTerm,
+        bool includeOpponents,
         string groupId,
         ClaimsPrincipal authUser,
         CancellationToken cancellationToken
