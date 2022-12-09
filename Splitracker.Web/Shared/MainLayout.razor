@@ -12,14 +12,6 @@
         set => holder.Context = holder.Context with {DarkMode = value};
     }
     MudThemeProvider? mudThemeProvider;
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && holder.Context.DarkMode == null)
-        {
-            isDarkMode = await mudThemeProvider!.GetSystemPreference();
-        }
-    }
 }
 
 <PageTitle>Splitracker.Web</PageTitle>
@@ -45,7 +37,7 @@
             ToggledIcon="@Icons.Material.Filled.DarkMode"
             @bind-Toggled="isDarkMode"/>
     </MudAppBar>
-    <MudDrawer @bind-Open="drawerOpen" ClipMode="@DrawerClipMode.Always" >
+    <MudDrawer @bind-Open="drawerOpen" ClipMode="@DrawerClipMode.Always" Variant="DrawerVariant.Temporary"  >
         <NavMenu/>
     </MudDrawer>
     <MudMainContent Class="pt-0">

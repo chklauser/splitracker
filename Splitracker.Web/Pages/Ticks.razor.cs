@@ -21,6 +21,9 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
     
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
+    
+    [CascadingParameter]
+    public required FlagContext Flags { get; set; }
 
     [Parameter]
     public required string GroupIdRaw { get; set; }

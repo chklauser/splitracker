@@ -1,6 +1,7 @@
 @using Blazored.LocalStorage
-@inject ILocalStorageService localStorage;
-@inject FlagContextHolder flags;
+@inject ILocalStorageService localStorage
+@inject FlagContextHolder flags
+@inject IJSRuntime js
 @implements IDisposable
 
 <CascadingAuthenticationState>
@@ -43,7 +44,18 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        flags.Context = await localStorage.GetItemAsync<FlagContext>("flags") ?? flags.Context;
+        if (!firstRender)
+        {
+            return;
+        }
+        
+        var newFlags = await localStorage.GetItemAsync<FlagContext>("flags") ?? flags.Context;
+        if (newFlags.DarkMode == null)
+        {
+            var prefersDarkMode = await js.InvokeAsync<bool>("splitrackerClientPrefersDarkMode");
+            newFlags = newFlags with { DarkMode = prefersDarkMode};
+        }
+        flags.Context = newFlags;
     }
 
     public void Dispose()

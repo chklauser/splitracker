@@ -4,7 +4,8 @@ namespace Splitracker.Web.Shared;
 
 public record FlagContext(
     bool Experimental = false,
-    bool? DarkMode = null
+    bool? DarkMode = null,
+    bool StageMode = false
     );
 
 public class FlagContextHolder

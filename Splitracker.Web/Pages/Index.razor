@@ -7,7 +7,11 @@
 
 @inject ICharacterRepository repository
 
-<PageTitle>Splitracker</PageTitle>
+<PageTitle>Charaktere | Splitracker</PageTitle>
+
+<MudBreadcrumbs
+    Items="breadcrumbs"/>
+
 <SectionContent
     Name="top">
     <MudPaper
@@ -56,6 +60,13 @@
                 />
         </CascadingValue>
     }
+    @if (newCharacter == null && handle is {Characters.Count: 0 })
+    {
+        <MudText>
+            Hier werden deine Charaktere angezeigt. Wie es scheint, hast du aber im Moment noch keine Charaktere.
+            Klick auf den schwebenden runden Knopf unten rechts, um einen neuen Charakter anzulegen.
+        </MudText>
+    }
 </div>
 
 @if (newCharacter == null)
@@ -75,6 +86,8 @@
     {
         newCharacterRouter = new(this);
     }
+    
+    List<BreadcrumbItem> breadcrumbs => new() { new("Charaktere", "/", icon: Icons.Filled.EmojiPeople!) };
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }

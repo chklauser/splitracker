@@ -83,7 +83,7 @@ else
                         Href="@($"{handle.Group.Url}/Ticks")">
                         Zur Tickleiste
                     </MudButton>
-                    @if (role == GroupRole.GameMaster)
+                    @if (role == GroupRole.GameMaster && !Flags.StageMode)
                     {
                         <MudButton
                             EndIcon="@Icons.Material.Filled.Clear"
@@ -142,11 +142,14 @@ else
                 }
             </MudStack>
         </MudPaper>
-        <MudText>
-            Möchtest du einen weiteren Charakter zur Gruppe hinzufügen?
-        </MudText>
-        <JoinWithCharacter
-            Group="handle.Group"/>
+        @if (!Flags.StageMode)
+        {
+            <MudText>
+                Möchtest du einen weiteren Charakter zur Gruppe hinzufügen?
+            </MudText>
+            <JoinWithCharacter
+                Group="handle.Group"/>
+        }
     </MudStack>
 }
 
@@ -161,6 +164,9 @@ else
 
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
+    
+    [CascadingParameter]
+    public required FlagContext Flags { get; set; }
 
     IGroupHandle? handle;
     bool loaded;

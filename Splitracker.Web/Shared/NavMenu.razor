@@ -1,18 +1,22 @@
 ﻿@using Microsoft.AspNetCore.Hosting
 @using Splitracker.Domain
 @inject FlagContextHolder holder
-@inject IWebHostEnvironment hostEnvironment;
-@inject IGroupRepository groupRepository;
+@inject IWebHostEnvironment hostEnvironment
+@inject IGroupRepository groupRepository
+@inject IDialogService dialog
 
 <MudStack>
     <MudNavMenu>
-        <MudNavLink
-            Href="/"
-            Match="NavLinkMatch.All"
-            Icon="@Icons.Material.Filled.EmojiPeople">
-            Charaktere
-        </MudNavLink>
-        @if (experimental || groups is {Count: > 0 })
+        @if (Flags is { StageMode: false })
+        {
+            <MudNavLink
+                Href="/"
+                Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.EmojiPeople">
+                Charaktere
+            </MudNavLink>
+        }
+        @if (Flags is { StageMode: false } && (experimental || groups is {Count: > 0 }))
         {
             <MudNavGroup
                 Title="Gruppen"
@@ -31,13 +35,15 @@
                 }
                 @if (experimental)
                 {
-                    <MudNavLink Icon="@Icons.Material.Filled.GroupAdd" Disabled="@true">
+                    <MudNavLink
+                        Icon="@Icons.Material.Filled.GroupAdd"
+                        Disabled="@true">
                         Neue Gruppe
                     </MudNavLink>
                 }
             </MudNavGroup>
         }
-        @if(groups != null && groups.Any(g => g.HasTimeline)) 
+        @if (Flags is { StageMode: false } && groups != null && groups.Any(g => g.HasTimeline))
         {
             <MudNavGroup
                 Title="Tickleisten"
@@ -58,6 +64,21 @@
             </MudNavGroup>
         }
     </MudNavMenu>
+    @if (groups != null && groups.Any(g => g.HasTimeline))
+    {
+        <MudTooltip Placement="@Placement.Right" Arrow="@true">
+            <TooltipContent>
+                (Für Spielleiter) Im Präsentationsmodus zeigt/erlaubt dieses Gerät nur, was Spieler*innen auch sehen/machen dürfen.
+            </TooltipContent>
+            <ChildContent>
+            <MudSwitch
+                @bind-Checked:get="stageMode"
+                @bind-Checked:set="setStageMode"
+                class="ml-2">
+                Präsentation
+            </MudSwitch></ChildContent>
+        </MudTooltip>
+    }
     @if (hostEnvironment.EnvironmentName != "Production")
     {
         <MudSwitch
@@ -85,6 +106,36 @@
     {
         get => Flags?.Experimental ?? false;
         set => holder.Context = holder.Context with { Experimental = value };
+    }
+
+    bool stageMode
+    {
+        get => Flags?.StageMode ?? false;
+        set => holder.Context = holder.Context with { StageMode = value };
+    }
+
+    async Task setStageMode(bool newMode)
+    {
+        if (stageMode == newMode)
+        {
+            return;
+        }
+
+        if (stageMode && !newMode)
+        {
+            if (await dialog.ShowMessageBox(title: "Präsentationsmodus verlassen?",
+                message: "Bist du sicher, dass du den Präsentationsmodus verlassen willst? Wenn Spieler noch auf diesen Bildschirm sehen können, könnten sie Charaktere oder Gruppen sehen, die nicht für ihre Augen bestimmt sind.",
+                cancelText: "Abbrechen",
+                yesText: "Ja, Präsentationsmodus verlassen", 
+                options: new() { CloseOnEscapeKey = true }) is true)
+            {
+                stageMode = newMode;
+            }
+        }
+        else
+        {
+            stageMode = newMode;
+        }
     }
 
     protected override async Task OnParametersSetAsync()

@@ -14,6 +14,9 @@
     
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
+    
+    [CascadingParameter]
+    public required FlagContext Flags { get; set; }
 
     string? userId;
 
@@ -31,7 +34,7 @@
             return CharacterPermissions.None;
         }
 
-        if (character.UserId == userId)
+        if (character.UserId == userId && !Flags.StageMode)
         {
             // All permissions
             return OwnerPermissions;
@@ -51,7 +54,7 @@
             return CharacterPermissions.None;
         }
 
-        if (character.UserId == userId)
+        if (character.UserId == userId && !Flags.StageMode)
         {
             // All permissions
             return OwnerPermissions;
@@ -64,7 +67,7 @@
         return computePermissions(memberOfTheSameGroup, gmOfTheSameGroup);
     }
 
-    static CharacterPermissions computePermissions(bool memberOfTheSameGroup, bool gmOfTheSameGroup)
+    CharacterPermissions computePermissions(bool memberOfTheSameGroup, bool gmOfTheSameGroup)
     {
         var permissions = CharacterPermissions.None;
 
@@ -77,7 +80,10 @@
         {
             permissions |= CharacterPermissions.ViewStats;
             permissions |= CharacterPermissions.InteractOnTimeline;
-            permissions |= CharacterPermissions.RemoveFromGroup;
+            if (!Flags.StageMode)
+            {
+                permissions |= CharacterPermissions.RemoveFromGroup;
+            }
         }
 
         return permissions;
