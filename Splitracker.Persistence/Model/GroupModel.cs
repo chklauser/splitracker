@@ -17,14 +17,16 @@ class Group
 
 static class GroupModelMapper
 {
-    public static Domain.Group ToDomain(Group dbGroup, IEnumerable<CharacterModel> dbCharacters, bool hasTimeline)
+    public static Domain.Group ToDomain(Group dbGroup, IEnumerable<CharacterModel?> dbCharacters, bool hasTimeline)
     {
         return new(
             dbGroup.Id!,
             dbGroup.Name,
-            dbCharacters.ToImmutableDictionary(
-                c => c.Id,
-                c => c.ToDomain()
+            dbCharacters
+                .Where(x => x != null)
+                .ToImmutableDictionary(
+                c => c!.Id,
+                c => c!.ToDomain()
             ),
             hasTimeline,
             JoinCode: dbGroup.JoinCode,

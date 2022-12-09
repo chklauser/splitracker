@@ -47,12 +47,14 @@ static class TimelineModelMapper
     public static Domain.Timeline ToDomain(
         this Timeline timeline,
         Group group,
-        IEnumerable<CharacterModel> characters
+        IEnumerable<CharacterModel?> characters
     )
     {
-        var charactersById = characters.ToImmutableDictionary(
-            c => c.Id,
-            c => c.ToDomain());
+        var charactersById = characters
+            .Where(c => c != null)
+            .ToImmutableDictionary(
+            c => c!.Id,
+            c => c!.ToDomain());
         var effectsById = timeline.Effects.ToImmutableDictionary(
             e => e.Id,
             e => e.toDomain(charactersById));
@@ -68,11 +70,13 @@ static class TimelineModelMapper
             timeline.ReadyCharacterIds.Select(cid => charactersById[cid]).ToImmutableArray(),
             timeline.Ticks.Select(t => t switch {
                 { Type: TickType.Recovers, CharacterId: { } cid, At: var at } =>
-                    (Domain.Tick)new Domain.Tick.Recovers(charactersById[cid], at),
+                    charactersById.TryGetValue(cid, out var character) 
+                        ? (Domain.Tick?)new Domain.Tick.Recovers(character, at) : null,
                 {
                     Type: TickType.ActionEnds, CharacterId: { } cid, At: var at, TotalDuration: { } totalDuration,
                     Description: var description
-                } => new Domain.Tick.ActionEnds(charactersById[cid], at, totalDuration, description),
+                } => charactersById.TryGetValue(cid, out var character) 
+                    ? new Domain.Tick.ActionEnds(character, at, totalDuration, description) : null,
                 {
                     Type: TickType.EffectEnds, EffectId: { } eid, At: var at
                 } => new Domain.Tick.EffectEnds(effectsById[eid], at),
@@ -80,7 +84,9 @@ static class TimelineModelMapper
                     Type: TickType.EffectTicks, EffectId: { } eid, At: var at
                 } => new Domain.Tick.EffectTicks(effectsById[eid], at),
                 _ => throw new("Unexpected tick type")
-            }).ToImmutableArray());
+            })
+                .Where(x => x != null)
+                .ToImmutableArray());
     }
 
     static Domain.Effect toDomain(
@@ -93,7 +99,10 @@ static class TimelineModelMapper
             effect.Description,
             effect.StartsAt,
             effect.TotalDuration,
-            effect.AffectedCharacterIds.Select(cid => charactersById[cid]).ToImmutableArray(),
+            effect.AffectedCharacterIds
+                .Select(cid => charactersById.TryGetValue(cid, out var character) ? character : null)
+                .Where(c => c != null)
+                .ToImmutableArray(),
             effect.TickInterval);
     }
 }

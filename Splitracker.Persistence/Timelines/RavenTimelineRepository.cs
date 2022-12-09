@@ -472,6 +472,6 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
                 .Select(k => k.CharacterId)
                 .Where(cid => cid != null)
                 .Concat(dbTimeline.ReadyCharacterIds));
-        return TimelineModelMapper.ToDomain(dbTimeline, group, characters.Values);
+        return dbTimeline.ToDomain(group, characters.Values);
     }
 }
