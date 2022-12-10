@@ -10,58 +10,60 @@
 
 @if (handle is {} currentHandle)
 {
+    var playerCharacters = PlayerCharacters.ToImmutableArray();
     <CascadingValue
         TValue="ITimelineDispatcher"
         Value="@this"
         IsFixed="@true">
         <MudExpansionPanels
             MultiExpansion="@true">
-            @{
-                var playerCharacters = PlayerCharacters.ToImmutableArray();
-            }
             @if (playerCharacters.Length > 0)
             {
-                <CascadingValue
-                    TValue="ICharacterCommandRouter"
-                    IsFixed="true"
-                    Value="@this">
-                    <MudExpansionPanel
-                        @bind-IsExpanded="characterEditPanelOpen">
-                        <TitleContent>
-                            <div
-                                class="d-flex gap-2 align-center align-content-center justify-start">
-                                <MudText
-                                    Class="flex-none"
-                                    Typo="@Typo.h6">
-                                    Deine<br/>Charaktere
-                                </MudText>
-                                <MudAvatarGroup
-                                    Class="flex-grow-1"
-                                    Max="3"
-                                    Spacing="3">
-                                    @foreach (var c in playerCharacters)
+                <MudHidden
+                    Breakpoint="@PersistentCharacterCardBreakpoint"
+                    Invert="@true">
+                    <CascadingValue
+                        TValue="ICharacterCommandRouter"
+                        IsFixed="true"
+                        Value="@this">
+                        <MudExpansionPanel
+                            @bind-IsExpanded="characterEditPanelOpen">
+                            <TitleContent>
+                                <div
+                                    class="d-flex gap-2 align-center align-content-center justify-start">
+                                    <MudText
+                                        Class="flex-none"
+                                        Typo="@Typo.h6">
+                                        Deine<br/>Charaktere
+                                    </MudText>
+                                    <MudAvatarGroup
+                                        Class="flex-grow-1"
+                                        Max="3"
+                                        Spacing="3">
+                                        @foreach (var c in playerCharacters)
+                                        {
+                                            <CharacterAvatar
+                                                @key="c.Id"
+                                                Character="@c"/>
+                                        }
+                                    </MudAvatarGroup>
+                                </div>
+                            </TitleContent>
+                            <ChildContent>
+                                <div
+                                    class="d-flex flex-row flex-wrap gap-4">
+                                    @foreach (var character in playerCharacters)
                                     {
-                                        <CharacterAvatar
-                                            @key="c.Id"
-                                            Character="@c"/>
+                                        <CharacterCard
+                                            @key="character.Id"
+                                            CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                            EditMode="@false"/>
                                     }
-                                </MudAvatarGroup>
-                            </div>
-                        </TitleContent>
-                        <ChildContent>
-                            <div
-                                class="d-flex flex-row flex-wrap gap-4">
-                                @foreach (var character in playerCharacters)
-                                {
-                                    <CharacterCard
-                                        @key="character.Id"
-                                        CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
-                                        EditMode="@false"/>
-                                }
-                            </div>
-                        </ChildContent>
-                    </MudExpansionPanel>
-                </CascadingValue>
+                                </div>
+                            </ChildContent>
+                        </MudExpansionPanel>
+                    </CascadingValue>
+                </MudHidden>
             }
             @if (currentHandle.Timeline.Ready.Count > 0)
             {
@@ -71,10 +73,34 @@
                     SelectedTick="@selectedTick"/>
             }
         </MudExpansionPanels>
-        <TimelinePreview
-            Timeline="@currentHandle.Timeline"
-            Permissions="@characterPermissions"
-            OnTickSelected="@tickSelected"/>
+        <div
+            class="d-flex flex-row flex-nowrap justify-start align-content-start align-start gap-10">
+            <TimelinePreview
+                Class="flex-none"
+                Timeline="@currentHandle.Timeline"
+                Permissions="@characterPermissions"
+                OnTickSelected="@tickSelected"/>
+
+            @if (playerCharacters.Length > 0)
+            {
+                <MudHidden
+                    Breakpoint="PersistentCharacterCardBreakpoint">
+                    <div
+                        class="flex-grow-1 pt-6">
+                        <div
+                            class="d-flex flex-row flex-wrap gap-4">
+                            @foreach (var character in playerCharacters)
+                            {
+                                <CharacterCard
+                                    @key="character.Id"
+                                    CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                    EditMode="@false"/>
+                            }
+                        </div>
+                    </div>
+                </MudHidden>
+            }
+        </div>
         @* add character *@
         <MudBadge
             Icon="@Icons.Material.Filled.Add"

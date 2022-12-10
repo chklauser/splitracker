@@ -16,6 +16,8 @@ namespace Splitracker.Web.Pages;
 
 partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRouter
 {
+    public const Breakpoint PersistentCharacterCardBreakpoint = Breakpoint.MdAndDown;
+
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
     

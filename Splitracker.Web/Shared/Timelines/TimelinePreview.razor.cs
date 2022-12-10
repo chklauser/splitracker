@@ -15,7 +15,10 @@ partial class TimelinePreview
     
     [Parameter]
     public required Timeline Timeline { get; set; }
-
+    
+    [Parameter]
+    public string? Class { get; set; }
+    
     [Parameter]
     [EditorRequired]
     public required IReadOnlyDictionary<string, CharacterPermissions> Permissions { get; set; }
