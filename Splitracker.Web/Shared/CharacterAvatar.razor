@@ -3,9 +3,10 @@
 
 @{
     var penalty = Character.Penalty;
+    var colorStyle = colorVariables();
 }
 <div
-    class="flex-none character-avatar" style="@colorVariables()" 
+    class="flex-none character-avatar @(Selected ? "selected" : "")" style="@colorStyle" 
         @onclick="avatarClicked">
     <MudBadge
         Visible="@(ShowPenalty && penalty > 0)"
@@ -17,7 +18,7 @@
         <MudTooltip
             Text="@Character.Name">
             <MudAvatar
-                Class="@(Character.CustomColor != null ? "custom-avatar-colors" : "")"
+                Class="@mudAvatarClass(colorStyle)"
                 Elevation="@Elevation"
                 Color="@(Disabled ? Color.Default : Selected ? Color.Primary : Color.Dark)">
                 @string.Join("", Character.Name.ToCharArray().Where(ch => char.IsUpper(ch) || char.IsDigit(ch)).Take(2))
@@ -47,6 +48,11 @@
     [Parameter]
     public int Elevation { get; set; }
 
+    string mudAvatarClass(string colorStyle) => CssBuilder.Empty()
+        .AddClass("custom-avatar-colors", !string.IsNullOrEmpty(colorStyle))
+        .AddClass("opponent", Character.IsOpponent)
+        .Build();
+
     // based on https://stackoverflow.com/questions/1855884/determine-font-color-based-on-background-color
     string contrastColor(string colorRaw)
     {
@@ -63,10 +69,12 @@
     }
 
     string colorVariables() => Character switch {
-        { CustomColor: {} customColor } when Selected  => 
-            $"--character-avatar-fg-color: {customColor}; --character-avatar-bg-color: {contrastColor(customColor)};",
         { CustomColor: {} customColor }  => 
-            $"--character-avatar-bg-color: {customColor}; --character-avatar-fg-color: {contrastColor(customColor)};", 
+            $"--character-avatar-select-color: {customColor}; --character-avatar-bg-color: {customColor}; --character-avatar-fg-color: {contrastColor(customColor)};",
+        { IsOpponent: true } when Selected => 
+            "--character-avatar-fg-color: var(--mud-palette-text-primary); --character-avatar-bg-color: var(--mud-palette-error-darken);",
+        { IsOpponent: true } => 
+            "--character-avatar-fg-color: var(--mud-palette-text-primary); --character-avatar-bg-color: var(--mud-palette-error);",
         _ => ""};
 
     async Task avatarClicked()
