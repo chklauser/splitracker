@@ -174,8 +174,18 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 session.Delete(model);
                 break;
             case CloneCharacter:
-                await session.StoreAsync(new Character(CharacterDocIdPrefix(userId), model!.Name, model.Lp.BaseCapacity,
-                    model.Fo.BaseCapacity).ToDbModel());
+                await session.StoreAsync(new Character(
+                    id: CharacterDocIdPrefix(userId),
+                    name: model!.Name,
+                    lpBaseCapacity: model.Lp.BaseCapacity,
+                    foBaseCapacity: model.Fo.BaseCapacity,
+                    customColor: model.CustomColor,
+                    isOpponent: model.IsOpponent,
+                    actionShorthands: model.ActionShorthands.ToImmutableDictionary(
+                        s => s.Id, 
+                        s => s.ToDomain()
+                        )
+                    ).ToDbModel());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(characterCommand));
