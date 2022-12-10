@@ -11,6 +11,8 @@ namespace Splitracker.Web.Shared.Timelines;
 
 partial class TimelinePreview
 {
+    public const Breakpoint PersistentActionPanelBreakpoint = Breakpoint.SmAndDown;
+    
     [Parameter]
     public required Timeline Timeline { get; set; }
 
@@ -122,6 +124,14 @@ partial class TimelinePreview
 
     #endregion
 
+    #region Action Card Display
+
+    bool characterIsReadyNow(int offset) => offset == 0;
+    bool effectIsHappeningNow(int offset) => offset == 0;
+    bool characterCanReact(int offset) => allocatedTimeline != null && offset - allocatedTimeline[0].Tick.At < 30;
+
+    #endregion
+    
     #region Action Card Data
 
     readonly Dictionary<string, CharacterActionData> characterActionData = new();

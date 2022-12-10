@@ -1,12 +1,13 @@
 ﻿@using Splitracker.Domain
 
 @code {
-    
+
 }
 
 @if (allocatedTimeline == null)
 {
-    <MudProgressCircular Color="Color.Primary"/>
+    <MudProgressCircular
+        Color="Color.Primary"/>
 }
 else
 {
@@ -18,13 +19,17 @@ else
         @bind-SelectedIndex:get="selectedIndex"
         @bind-SelectedIndex:set="changeSelectedIndex"
         @onclick="timelineClicked">
+        @{
+            var numTracks = 1;
+        }
         @foreach (var lengths in allocatedTimeline.GroupBy(y => y.Track, y => y.Offset + 1))
         {
             var track = lengths.Key;
+            numTracks = Math.Max(numTracks, track + 1);
             <MultiTimelineTrack
                 @key="@track"
                 Index="@track"
-                Lengths="@(track == 0 ? new[]{allocatedTimeline.Count} : lengths)"/>
+                Lengths="@(track == 0 ? new[] { allocatedTimeline.Count } : lengths)"/>
         }
         @foreach (var (tick, track, offset) in allocatedTimeline)
         {
@@ -39,7 +44,11 @@ else
                     <ItemDot>
                         @if (tick is Tick.CharacterTick { Character: var c})
                         {
-                            <CharacterAvatar Elevation="4" Character="@c" Selected="@(offset == selectedIndex)" ShowPenalty="@true" />
+                            <CharacterAvatar
+                                Elevation="4"
+                                Character="@c"
+                                Selected="@(offset == selectedIndex)"
+                                ShowPenalty="@true"/>
                         }
                         else if (tick is Tick.EffectTick)
                         {
@@ -49,28 +58,43 @@ else
                         }
                     </ItemDot>
                     <ItemContent>
-                        <MudPopover AnchorOrigin="@Origin.TopCenter" TransformOrigin="@Origin.BottomCenter"
-                                    OverflowBehavior="OverflowBehavior.FlipOnOpen" Open="@(actionCardOpen && selectedIndex == offset)">
-                            @if (tick is Tick.CharacterTick ct)
-                            {
-                                <TimelineCharacterActionCard 
-                                    Tick="ct"
-                                    Permissions="@Permissions[ct.Character.Id]"
-                                    IsReadyNow="@(offset == 0)"
-                                    CanReact="@(offset - allocatedTimeline[0].Tick.At < 30)"
-                                    @bind-ActionData:get="getCharacterActionData(ct.Character)"
-                                    @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
-                                    OnApplyActionClicked="d => characterActionApplyClicked(d, ct.Character)"
-                                    OnCloseButtonClicked="() => actionCardOpen = false"
-                                    />
-                            }
-                            else if (tick is Tick.EffectTick et)
-                            {
-                                <CascadingValue TValue="ITimelineDispatcher" Value="@Dispatcher" IsFixed="@true">
-                                    <TimelineEffectActionCard Tick="et" IsHappeningNow="@(offset == 0)" OnCloseButtonClicked="() => actionCardOpen = false" />
-                                </CascadingValue>
-                            }
-                        </MudPopover>
+                        <MudHidden
+                            Breakpoint="@PersistentActionPanelBreakpoint"
+                            Invert="@true">
+                            <MudPopover
+                                AnchorOrigin="@Origin.TopCenter"
+                                TransformOrigin="@Origin.BottomCenter"
+                                OverflowBehavior="OverflowBehavior.FlipOnOpen"
+                                Open="@(actionCardOpen && selectedIndex == offset)">
+                                @* NOTE: the action cards are _almost_ duplicated below for the wide screen layout.
+                                 If you make changes here, also adjust the wide screen version.*@
+                                @if (tick is Tick.CharacterTick ct)
+                                {
+                                    <TimelineCharacterActionCard
+                                        Tick="ct"
+                                        Permissions="@Permissions[ct.Character.Id]"
+                                        IsReadyNow="@characterIsReadyNow(offset)"
+                                        CanReact="@characterCanReact(offset)"
+                                        @bind-ActionData:get="getCharacterActionData(ct.Character)"
+                                        @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
+                                        OnApplyActionClicked="d => characterActionApplyClicked(d, ct.Character)"
+                                        OnCloseButtonClicked="() => actionCardOpen = false"/>
+                                }
+                                else if (tick is Tick.EffectTick et)
+                                {
+                                    @* Tepeat CascadingValue _inside_ the popover for complicated Blazor reasons *@
+                                    <CascadingValue
+                                        TValue="ITimelineDispatcher"
+                                        Value="@Dispatcher"
+                                        IsFixed="@true">
+                                        <TimelineEffectActionCard
+                                            Tick="et"
+                                            IsHappeningNow="@effectIsHappeningNow(offset)"
+                                            OnCloseButtonClicked="() => actionCardOpen = false"/>
+                                    </CascadingValue>
+                                }
+                            </MudPopover>
+                        </MudHidden>
                         <TickSummary
                             Tick="@tick"/>
                     </ItemContent>
@@ -87,5 +111,44 @@ else
                     Color="@(offset == selectedIndex ? Color.Primary : Color.Default)"/>
             }
         }
+        <CascadingValue
+            TValue="ITimelineDispatcher"
+            Value="@Dispatcher"
+            IsFixed="@true">
+            <MudHidden
+                Breakpoint="@PersistentActionPanelBreakpoint">
+                @if (selectedIndex >= 0 && selectedIndex < allocatedTimeline.Count
+                    && allocatedTimeline[selectedIndex] is (var tick and not Empty, var track, var offset))
+                {
+                    <div 
+                        @key="offset" 
+                        style="position: relative; @(MultiTimelineItem.ComputeGridPosition(numTracks - 1 + MultiTimelineItem.SpanColumns, offset, 10, 1))">
+                <MudPaper
+                    Elevation="2"
+                    Style="position: absolute; top: 0; left: 0; right: 0">
+                    @* NOTE: the action cards are _almost_ duplicated above for the mobile screen layout.
+                    If you make changes here, also adjust the mobile screen version.*@
+                    @if (tick is Tick.CharacterTick ct)
+                    {
+                        <TimelineCharacterActionCard
+                            Tick="ct"
+                            Permissions="@Permissions[ct.Character.Id]"
+                            IsReadyNow="@characterIsReadyNow(offset)"
+                            CanReact="@characterCanReact(offset)"
+                            @bind-ActionData:get="getCharacterActionData(ct.Character)"
+                            @bind-ActionData:set="data => storeCharacterActionData(ct.Character, data)"
+                            OnApplyActionClicked="d => characterActionApplyClicked(d, ct.Character)"/>
+                    }
+                    else if (tick is Tick.EffectTick et)
+                    {
+                        <TimelineEffectActionCard
+                            Tick="et"
+                            IsHappeningNow="@effectIsHappeningNow(offset)"/>
+                    }
+                </MudPaper>
+                </div>
+                }
+            </MudHidden>
+        </CascadingValue>
     </MultiTimeline>
 }

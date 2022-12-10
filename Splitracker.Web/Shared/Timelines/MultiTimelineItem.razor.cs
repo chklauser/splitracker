@@ -14,7 +14,7 @@ namespace Splitracker.Web.Shared.Timelines;
 public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
 {
     const int SkipColumns = 1;
-    const int SpanColumns = 7;
+    public const int SpanColumns = 7;
     
     string classnames =>
         new CssBuilder("multi-timeline-item")
@@ -33,6 +33,11 @@ public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
             .AddClass($"multi-timeline-dot-fill", Variant == Variant.Filled)
             .AddClass($"multi-timeline-dot-{Color.ToDescriptionString()}")
             .Build();
+
+    public static string ComputeGridPosition(int track, int offset, int span, int height) =>
+        $"grid-column: {track + SkipColumns + 1} / {track + SkipColumns + 1 + span}; " + 
+        $"grid-row: {offset + 1} / {offset + 1 + height}; z-index: {50 - track}";
+    public string GridPosition => ComputeGridPosition(Track, Offset, SpanColumns, 1);
 
     [CascadingParameter] public MudBaseItemsControl<MultiTimelineItem>? Parent { get; set; }
 

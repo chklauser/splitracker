@@ -3,7 +3,7 @@
 <div
     @attributes="UserAttributes"
     class="@classnames"
-    style="grid-column: @(Track + SkipColumns + 1) / @(Track + SkipColumns + 1 + SpanColumns); grid-row: @(Offset + 1) / @(Offset + 2); z-index: @(50 - Track); @Style"
+    style="@GridPosition; @Style"
     @onclick="selectItem">
 
     <div
