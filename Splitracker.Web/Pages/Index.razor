@@ -30,17 +30,18 @@
 
 <div
     class="d-flex flex-row flex-wrap gap-4">
-    @if (handle != null)
+    @if (handle is {} repositoryHandle)
     {
         <CascadingValue
             TValue="ICharacterCommandRouter"
             IsFixed="true"
             Value="@this">
-            @foreach (var characterHandle in handle.Characters)
+            @foreach (var characterHandle in repositoryHandle.Characters)
             {
                 <CharacterCard
                     @key="characterHandle.Character.Id"
                     CharacterHandle="@characterHandle"
+                    Permissions="@characterPermissions[characterHandle.Character.Id]"
                     EditMode="@editMode"/>
             }
         </CascadingValue>
@@ -58,6 +59,7 @@
             <CharacterCard
                 EditMode="@true"
                 CharacterHandle="@newCharacterRouter"
+                Permissions="@Permissions.OwnerPermissions"
                 />
         </CascadingValue>
     }
@@ -92,8 +94,12 @@
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
+    
+    [CascadingParameter]
+    public required IPermissionService Permissions { get; set; }
 
     ICharacterRepositoryHandle? handle;
+    IImmutableDictionary<string, CharacterPermissions> characterPermissions = ImmutableDictionary<string, CharacterPermissions>.Empty;
 
     Character? newCharacter;
 
@@ -111,10 +117,24 @@
         await base.OnInitializedAsync();
         var auth = await AuthenticationState;
         handle = await repository.OpenAsync(auth.User);
-        handle.CharacterAdded += (_, _) => InvokeAsync(StateHasChanged);
-        handle.CharacterDeleted += (_, _) => InvokeAsync(StateHasChanged);
+        handle.CharacterAdded += (_, _) => InvokeAsync(onCharacterListUpdated);
+        handle.CharacterDeleted += (_, _) => InvokeAsync(onCharacterListUpdated);
+        refreshCharacterPermissions();
     }
 
+    void refreshCharacterPermissions()
+    {
+        characterPermissions = handle?.Characters.ToImmutableDictionary(
+            c => c.Character.Id,
+            c => Permissions.OnTheCharacterScreen(c.Character)
+            ) ?? ImmutableDictionary<string, CharacterPermissions>.Empty;
+    }
+
+    void onCharacterListUpdated()
+    {
+        StateHasChanged();
+    }
+    
     public async ValueTask DisposeAsync()
     {
         if (handle != null)
@@ -148,7 +168,6 @@
         {
             this.inner = inner;
         }
-
 
         public async Task ApplyAsync(ICharacterCommand command)
         {

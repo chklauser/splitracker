@@ -19,24 +19,26 @@
                 LineCapacity="@LineCapacity(baseCapacity)"
                 TotalCapacity="@TotalCapacity(baseCapacity)"/>
         </div>
-        <PointsEditor
-            CurrentPoints="@points"
-            LineCapacity="@LineCapacity(baseCapacity)"
-            TotalCapacity="@TotalCapacity(baseCapacity)"
-            Type="@Type"/>
-        @foreach (var (channeling, idx) in channelings.Enumerated())
+        @if (Permissions.HasFlag(CharacterPermissions.EditResources))
         {
-            <StopChanneling
-                @key="idx"
-                Index="@idx"
-                Channeled="@channeling"
-                Type="@Type"
-                />
-        }
-        @if (points.Exhausted > 0)
-        {
-            <ShortRest
-                ExhaustedPoints="@points.Exhausted"/>
+            <PointsEditor
+                CurrentPoints="@points"
+                LineCapacity="@LineCapacity(baseCapacity)"
+                TotalCapacity="@TotalCapacity(baseCapacity)"
+                Type="@Type"/>
+            @foreach (var (channeling, idx) in channelings.Enumerated())
+            {
+                <StopChanneling
+                    @key="idx"
+                    Index="@idx"
+                    Channeled="@channeling"
+                    Type="@Type"/>
+            }
+            @if (points.Exhausted > 0)
+            {
+                <ShortRest
+                    ExhaustedPoints="@points.Exhausted"/>
+            }
         }
     </MudStack>
 </MudTabPanel>
@@ -72,6 +74,10 @@
 
     [Parameter]
     public bool ShowPenalties { get; set; }
+    
+    [Parameter]
+    [EditorRequired]
+    public required CharacterPermissions Permissions { get; set; }
 
     IImmutableList<int> channelings => Pool.Channelings;
 

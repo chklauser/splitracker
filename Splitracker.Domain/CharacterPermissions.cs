@@ -6,9 +6,19 @@ namespace Splitracker.Domain;
 public enum CharacterPermissions : int
 {
     None = 0,
+    /// <summary>
+    /// Name, Avatar
+    /// </summary>
     ViewInfo = 1,
     ViewStats = 2,
-    EditStats = 4,
-    RemoveFromGroup = 8,
-    InteractOnTimeline = 16,
+    /// <summary>
+    /// Add/remove points
+    /// </summary>
+    EditResources = 4,
+    /// <summary>
+    /// Changes character values (name, pool size, actions, etc.)
+    /// </summary>
+    EditStats = 8,
+    RemoveFromGroup = 16,
+    InteractOnTimeline = 32,
 }

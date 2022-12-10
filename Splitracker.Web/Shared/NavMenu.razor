@@ -7,15 +7,12 @@
 
 <MudStack>
     <MudNavMenu>
-        @if (Flags is { StageMode: false })
-        {
-            <MudNavLink
-                Href="/"
-                Match="NavLinkMatch.All"
-                Icon="@Icons.Material.Filled.EmojiPeople">
-                Charaktere
-            </MudNavLink>
-        }
+        <MudNavLink
+            Href="/"
+            Match="NavLinkMatch.All"
+            Icon="@Icons.Material.Filled.EmojiPeople">
+            Charaktere
+        </MudNavLink>
         @if (Flags is { StageMode: false } && (experimental || groups is {Count: > 0 }))
         {
             <MudNavGroup
@@ -47,7 +44,7 @@
         {
             <MudNavGroup
                 Title="Tickleisten"
-                Icon="@Icons.Filled.ViewTimeline"
+                Icon="@Icons.Filled.LinearScale"
                 @bind-Expanded="timelinesExpanded"
                 Disabled="@(groups == null || groups.All(g => !g.HasTimeline))">
                 @if (groups != null)

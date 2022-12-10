@@ -60,7 +60,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
             else
             {
                 bs.Add(new(handle.Timeline.GroupName, GroupInfo.UrlFor(GroupIdRaw), icon: groupIcon));
-                bs.Add(new("Tickleiste", Nav.Uri, icon: Icons.Filled.ViewTimeline));
+                bs.Add(new("Tickleiste", Nav.Uri, icon: Icons.Filled.LinearScale));
             }
             return bs;
         }
@@ -184,16 +184,35 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
 
     bool characterEditPanelOpen;
 
-    public IEnumerable<Character> PlayerCharacters =>
-        handle?.Timeline.Characters.Values
-            .Where(c => characterPermissions[c.Id].HasFlag(CharacterPermissions.EditStats)) 
-        ?? Enumerable.Empty<Character>();
+    public IEnumerable<Character> PlayerCharacters
+    {
+        get
+        {
+            static IEnumerable<Character> orderedAlphabetically(IEnumerable<Character> characters) =>
+                characters.OrderBy(c => c.Name);
+            IEnumerable<Character> orderedChronologically(IEnumerable<Character> characters) =>
+                characters.OrderBy(chronologicalPosition);
+            var characters = handle?.Timeline.Characters.Values
+                    .Where(c => characterPermissions[c.Id].HasFlag(CharacterPermissions.EditResources))
+                ?? Enumerable.Empty<Character>();
+            return sortChronologically ? orderedChronologically(characters) : orderedAlphabetically(characters);
+        }
+    }
+
+    int chronologicalPosition(Character c) =>
+        handle?.Timeline.Ticks.Enumerated()
+            .Select(t => ((Tick, int)?)(t.Item, t.Index - 10000))
+            .FirstOrDefault(t =>
+                t?.Item1 is Tick.CharacterTick { Character.Id: var candidateId } && candidateId == c.Id)
+            ?.Item2 ?? handle?.Timeline.Ready.IndexOf(c) ?? int.MaxValue;
 
     public async Task ApplyAsync(ICharacterCommand command)
     {
         var auth = await AuthenticationState;
         await CharacterRepository.ApplyAsync(auth.User, command);
     }
-    
+
+    bool sortChronologically;
+
     #endregion
 }

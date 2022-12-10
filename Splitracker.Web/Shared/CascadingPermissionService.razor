@@ -9,12 +9,13 @@
 </CascadingValue>
 
 @code {
+
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-    
+
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
-    
+
     [CascadingParameter]
     public required FlagContext Flags { get; set; }
 
@@ -26,7 +27,7 @@
         var auth = await AuthenticationState;
         userId = await userRepository.GetUserIdAsync(auth.User);
     }
-    
+
     public CharacterPermissions InTheContextOf(Character character, Group group)
     {
         if (userId == null)
@@ -36,17 +37,17 @@
 
         if (character.UserId == userId && !Flags.StageMode)
         {
-            // All permissions
+    // All permissions
             return OwnerPermissions;
         }
-        
+
         var characterIsInGroup = group.Characters.ContainsKey(character.Id);
         var memberOfTheSameGroup = characterIsInGroup && group.Members.ContainsKey(userId);
         var gmOfTheSameGroup = memberOfTheSameGroup && group.Members[userId].Role == GroupRole.GameMaster;
 
         return computePermissions(character, memberOfTheSameGroup, gmOfTheSameGroup);
     }
-    
+
     public CharacterPermissions InTheContextOf(Character character, Timeline timeline)
     {
         if (userId == null)
@@ -56,15 +57,38 @@
 
         if (character.UserId == userId && !Flags.StageMode)
         {
-            // All permissions
+    // All permissions
             return OwnerPermissions;
         }
-        
+
         var characterIsInGroup = timeline.Characters.ContainsKey(character.Id);
         var memberOfTheSameGroup = characterIsInGroup && timeline.MemberRoles.ContainsKey(userId);
         var gmOfTheSameGroup = memberOfTheSameGroup && timeline.MemberRoles[userId] == GroupRole.GameMaster;
 
         return computePermissions(character, memberOfTheSameGroup, gmOfTheSameGroup);
+    }
+
+    public CharacterPermissions OnTheCharacterScreen(Character character)
+    {
+        if (userId == null || character.UserId != userId)
+        {
+            return CharacterPermissions.None;
+        }
+
+        var permissions = CharacterPermissions.ViewInfo;
+
+        if (!Flags.StageMode || !character.IsOpponent)
+        {
+            permissions |= CharacterPermissions.ViewStats;
+            permissions |= CharacterPermissions.EditResources;
+        }
+
+        if (!Flags.StageMode)
+        {
+            permissions |= CharacterPermissions.EditStats;
+        }
+
+        return permissions;
     }
 
     CharacterPermissions computePermissions(Character character, bool memberOfTheSameGroup, bool gmOfTheSameGroup)
@@ -78,10 +102,17 @@
 
         if (gmOfTheSameGroup)
         {
+            // Allow timeline interactions for all friendly characters
             if (!Flags.StageMode || !character.IsOpponent)
             {
                 permissions |= CharacterPermissions.ViewStats;
                 permissions |= CharacterPermissions.InteractOnTimeline;
+            }
+            
+            // Allow resource editing (LP/FO) for all friendly NPCs (GM-owned)
+            if(!Flags.StageMode || (!character.IsOpponent && userId == character.UserId))
+            {
+                permissions |= CharacterPermissions.EditResources;
             }
 
             if (!Flags.StageMode)
@@ -93,10 +124,12 @@
         return permissions;
     }
 
-        const CharacterPermissions OwnerPermissions = CharacterPermissions.ViewInfo 
-            | CharacterPermissions.ViewStats 
-            | CharacterPermissions.EditStats
-            | CharacterPermissions.InteractOnTimeline 
-            | CharacterPermissions.RemoveFromGroup;
+    public CharacterPermissions OwnerPermissions => OwnerPermissionsValue;
 
+    const CharacterPermissions OwnerPermissionsValue = CharacterPermissions.ViewInfo
+        | CharacterPermissions.ViewStats
+        | CharacterPermissions.EditStats
+        | CharacterPermissions.EditResources
+        | CharacterPermissions.InteractOnTimeline
+        | CharacterPermissions.RemoveFromGroup;
 }
