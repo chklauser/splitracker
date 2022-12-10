@@ -72,9 +72,9 @@
         { CustomColor: {} customColor }  => 
             $"--character-avatar-select-color: {customColor}; --character-avatar-bg-color: {customColor}; --character-avatar-fg-color: {contrastColor(customColor)};",
         { IsOpponent: true } when Selected => 
-            "--character-avatar-fg-color: var(--mud-palette-text-primary); --character-avatar-bg-color: var(--mud-palette-error-darken);",
+            "--character-avatar-fg-color: var(--mud-palette-white); --character-avatar-bg-color: var(--mud-palette-error-darken);",
         { IsOpponent: true } => 
-            "--character-avatar-fg-color: var(--mud-palette-text-primary); --character-avatar-bg-color: var(--mud-palette-error);",
+            "--character-avatar-fg-color: var(--mud-palette-white); --character-avatar-bg-color: var(--mud-palette-error);",
         _ => ""};
 
     async Task avatarClicked()
