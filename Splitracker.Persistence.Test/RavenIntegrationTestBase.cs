@@ -10,6 +10,11 @@ namespace Splitracker.Persistence.Test;
 [FixtureLifeCycle(LifeCycle.SingleInstance)]
 public abstract class RavenIntegrationTestBase : RavenTestDriver
 {
+    static RavenIntegrationTestBase()
+    {
+        ConfigureServer(new(){AcceptEula = true});
+    }
+
     protected override void PreInitialize(IDocumentStore documentStore)
     {
         base.PreInitialize(documentStore);

@@ -16,6 +16,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+      - name: Set up .NET 6 SDK (for Raven tests)
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
       - name: Set up .NET 7 SDK
         uses: actions/setup-dotnet@v1
         with:
@@ -27,11 +31,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget
       - name: Install dependencies
-        run: dotnet restore --runtime linux-x64 --lock-file-path=./packages.lock.json --verbosity=normal
+        run: dotnet restore --runtime linux-x64 --locked-mode --verbosity=normal
       - name: Build
         run: dotnet build --configuration=Release --no-restore --verbosity=normal
       - name: Test
-        run: dotnet test --configuration=Release --no-build --verbosity=normal
+        run: dotnet test --configuration=Release --no-restore --no-build --verbosity=normal
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
