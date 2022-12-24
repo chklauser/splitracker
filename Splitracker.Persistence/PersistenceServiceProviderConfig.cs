@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
@@ -19,19 +18,6 @@ namespace Splitracker.Persistence;
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public static class PersistenceServiceProviderConfig
 {
-    public static IServiceCollection AlsoAddAsHostedService<T>(this IServiceCollection services) where T : class, IHostedService
-    {
-        services.AddHostedService(p => p.GetRequiredService<T>());
-        return services;
-    }
-    public static IServiceCollection AlsoAddAsSingleton<TInterface, TRegistration>(this IServiceCollection services) 
-        where TRegistration : class, TInterface
-        where TInterface : class
-    {
-        services.AddSingleton<TInterface>(p => p.GetRequiredService<TRegistration>());
-        return services;
-    }
-    
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<RavenOptions>()
@@ -47,32 +33,38 @@ public static class PersistenceServiceProviderConfig
                 Database = opts.Database,
                 Certificate = new(tolerateNestedWorkingDir(opts.CertificatePath), readCertificatePassword(opts)),
             };
-            store.Conventions.FindCollectionName = type =>
-            {
-                var defaultName = DocumentConventions.DefaultGetCollectionName(type);
-                return defaultName.EndsWith("Models") ? $"{defaultName[..^6]}s" : defaultName;
-            };
+            CustomizeStore(store);
             store.Initialize();
             logger.Log(LogLevel.Information, "Document store initialized");
             return store;
         });
 
-        services.AddSingleton<RavenUserRepository>()
-            .AlsoAddAsSingleton<IUserRepository, RavenUserRepository>()
-            .AlsoAddAsHostedService<RavenUserRepository>();
+        services.AddSingletonImplementation<RavenUserRepository>()
+            .As<IUserRepository>().AsWellAnd()
+            .AsHostedService();
 
-        services.AddSingleton<RavenCharacterRepository>()
-            .AlsoAddAsSingleton<ICharacterRepository, RavenCharacterRepository>()
-            .AlsoAddAsHostedService<RavenCharacterRepository>();
+        services.AddSingletonImplementation<RavenCharacterRepository>()
+            .As<ICharacterRepository>().AsWellAnd()
+            .AsHostedService();
 
-        services.AddSingleton<RavenGroupRepository>()
-            .AlsoAddAsSingleton<IGroupRepository, RavenGroupRepository>()
-            .AlsoAddAsHostedService<RavenGroupRepository>();
+        services.AddSingletonImplementation<RavenGroupRepository>()
+            .As<IGroupRepository>().AsWellAnd()
+            .AsHostedService();
 
-        services.AddSingleton<RavenTimelineRepository>()
-            .AlsoAddAsHostedService<RavenTimelineRepository>()
-            .AlsoAddAsSingleton<ITimelineRepository, RavenTimelineRepository>();
+        services.AddSingletonImplementation<RavenTimelineRepository>()
+            .As<ITimelineRepository>().AsWellAnd()
+            .AsHostedService();
+
         return services;
+    }
+
+    internal static void CustomizeStore(IDocumentStore store)
+    {
+        store.Conventions.FindCollectionName = type =>
+        {
+            var defaultName = DocumentConventions.DefaultGetCollectionName(type);
+            return defaultName.EndsWith("Models") ? $"{defaultName[..^6]}s" : defaultName;
+        };
     }
 
     static string readCertificatePassword(RavenOptions opts)

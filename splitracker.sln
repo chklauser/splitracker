@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splitracker.Deploy", "Split
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Klauser.Do.CertManager", "Klauser.Do.CertManager\Klauser.Do.CertManager.csproj", "{184EEDDB-1C29-4557-BE07-C5408C27EEDE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splitracker.Persistence.Test", "Splitracker.Persistence.Test\Splitracker.Persistence.Test.csproj", "{D3EBCC29-19F5-496B-8CE7-A23E0D0AD163}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{184EEDDB-1C29-4557-BE07-C5408C27EEDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{184EEDDB-1C29-4557-BE07-C5408C27EEDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{184EEDDB-1C29-4557-BE07-C5408C27EEDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3EBCC29-19F5-496B-8CE7-A23E0D0AD163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3EBCC29-19F5-496B-8CE7-A23E0D0AD163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3EBCC29-19F5-496B-8CE7-A23E0D0AD163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3EBCC29-19F5-496B-8CE7-A23E0D0AD163}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

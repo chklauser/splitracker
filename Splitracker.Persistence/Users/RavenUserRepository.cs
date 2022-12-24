@@ -15,7 +15,7 @@ namespace Splitracker.Persistence.Users;
 public class RavenUserRepository : IHostedService, IUserRepository
 {
     const string CollectionName = "Users";
-    const string OidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
+    internal const string OidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
 
     readonly IDocumentStore store;
     readonly ILogger<RavenUserRepository> log;
@@ -39,13 +39,14 @@ public class RavenUserRepository : IHostedService, IUserRepository
         if (userId == null)
         {
             log.LogInformation("Creating new user for {Oid}", oid);
+            var newUserId = $"{CollectionName}/{oid}";
             await session.StoreAsync(new User {
-                Id = $"{CollectionName}/{oid}",
+                Id = newUserId,
                 DisplayName = principal.Claims.FirstOrDefault(c => c.Type == "name")?.Value ?? principal.Identity?.Name ?? "Anonymous",
                 Oids = new() { oid },
             });
             await session.SaveChangesAsync();
-            return oid;
+            return newUserId;
         }
         else
         {
@@ -53,8 +54,6 @@ public class RavenUserRepository : IHostedService, IUserRepository
             return userId;
         }
     }
-    
-    
 
     static string oidOf(ClaimsPrincipal principal)
     {
