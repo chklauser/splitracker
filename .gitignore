@@ -36,6 +36,7 @@ bld/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+TestResults/
 
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
