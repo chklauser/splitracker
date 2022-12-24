@@ -27,11 +27,11 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget
       - name: Install dependencies
-        run: dotnet restore --runtime linux-x64 --locked-mode --verbosity=normal
+        run: dotnet restore --runtime linux-x64 --verbosity=normal
       - name: Build
         run: dotnet build --configuration=Release --no-restore --verbosity=normal
       - name: Test
