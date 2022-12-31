@@ -19,7 +19,8 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
     protected readonly ReaderWriterLockSlim Lock = new();
     protected ILogger Log;
     protected readonly IDocumentStore Store;
-    int referenceCount = 1;
+    int referenceCount;
+    bool lifetimeBoundToHandles;
     IImmutableDictionary<string, IDisposable> ravenSubscriptions;
 
     public SubscriptionBase(ILogger log, TValue initialValue, IDocumentStore store, IEnumerable<string> documentIdsToSubscribeTo)
@@ -42,9 +43,16 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         Lock.EnterWriteLock();
         try
         {
-            if (referenceCount <= 0)
+            if (lifetimeBoundToHandles)
             {
-                return null;
+                if (referenceCount <= 0)
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                lifetimeBoundToHandles = true;
             }
 
             referenceCount += 1;

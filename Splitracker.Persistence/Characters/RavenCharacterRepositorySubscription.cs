@@ -25,7 +25,9 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
     readonly string oid;
     readonly ILogger<RavenCharacterRepository> log;
     readonly IDisposable characterSubscription;
-    int referenceCount = 1;
+    int referenceCount;
+    bool lifetimeBoundToHandles;
+    
 
     public static async ValueTask<RavenCharacterRepositorySubscription> OpenAsync(
         IDocumentStore store,
@@ -74,9 +76,16 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         @lock.EnterWriteLock();
         try
         {
-            if (referenceCount == 0)
+            if (lifetimeBoundToHandles)
             {
-                return null;
+                if (referenceCount == 0)
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                lifetimeBoundToHandles = true;
             }
 
             referenceCount += 1;

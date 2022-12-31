@@ -122,9 +122,11 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
             {
                 log.Log(LogLevel.Warning, "Character {Id} doesn't have an Lp channeling valued {Points}", id, points);
             }
-
-            model.Channelings.RemoveAt(idx);
-            applyPointsTo(model, domain, new(-points, points, 0));
+            else
+            {
+                model.Channelings.RemoveAt(idx);
+                applyPointsTo(model, domain, new(-points, points, 0));
+            }
         }
 
         switch (characterCommand)
