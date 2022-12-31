@@ -40,8 +40,19 @@
                 }
                 @foreach (var (cell, cellIdx) in row.Enumerated())
                 {
-                    <td @key="cellIdx">
-                        <PointDisplay HighlightDelta="@HighlightDelta" Type="@cell.Point" Value="@cell.Value"/>
+                    <td
+                        @key="cellIdx">
+                        @if (cell != AnnotatedPoint.Hidden)
+                        {
+                            <PointDisplay
+                                HighlightDelta="@HighlightDelta"
+                                Type="@cell.Point"
+                                Value="@cell.Value"/>
+                        }
+                        else
+                        {
+                            <text>&nbsp;</text>
+                        }
                     </td>
                 }
             </tr>
@@ -75,7 +86,10 @@
     [Parameter]
     public bool HighlightDelta { get; set; }
 
-    readonly record struct AnnotatedPoint(PointType? Point, int Value);
+    readonly record struct AnnotatedPoint(PointType? Point, int Value)
+    {
+        internal static readonly AnnotatedPoint Hidden = new(null, int.MinValue);
+    }
 
     AnnotatedPoint[,] computeTable()
     {
@@ -94,7 +108,8 @@
                 : i - effSkip < norm.Consumed ? new(PointType.V, Points.Consumed > 0 ? 1 : -1)
                     : i - effSkip - norm.Consumed < norm.Exhausted ? new(PointType.E, Points.Exhausted > 0 ? 1 : -1)
                         : i - effSkip - norm.Consumed - norm.Exhausted < norm.Channeled ? new(PointType.K, Points.Channeled > 0 ? 1 : -1)
-                            : new AnnotatedPoint();
+                            : i < TotalCapacity ?  new() 
+                                : AnnotatedPoint.Hidden;
             tab[line, offset] = cell;
         }
 
