@@ -10,6 +10,7 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Changes;
 using Splitracker.Domain;
 using Splitracker.Persistence.Model;
+using Character = Splitracker.Persistence.Model.Character;
 
 namespace Splitracker.Persistence.Characters;
 
@@ -38,7 +39,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         using var session = store.OpenAsyncSession();
         var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
         var characters = new List<RavenCharacterHandle>();
-        await using var characterEnumerator = await session.Advanced.StreamAsync<CharacterModel>(docIdPrefix);
+        await using var characterEnumerator = await session.Advanced.StreamAsync<Character>(docIdPrefix);
         while (await characterEnumerator.MoveNextAsync())
         {
             var character = characterEnumerator.Current.Document.ToDomain();
@@ -238,7 +239,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
                 break;
             case DocumentChangeTypes.Put:
                 log.Log(LogLevel.Debug, "Character {Id} was created or updated from {Oid}", value.Id, oid);
-                var newChar = (await session.LoadAsync<CharacterModel>(value.Id))?.ToDomain();
+                var newChar = (await session.LoadAsync<Character>(value.Id))?.ToDomain();
                 if (newChar != null)
                 {
                     if (handle == null)

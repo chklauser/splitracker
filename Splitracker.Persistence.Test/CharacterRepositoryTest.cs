@@ -4,9 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Characters;
-using Splitracker.Persistence.Model;
-using ActionShorthand = Splitracker.Domain.ActionShorthand;
-using ActionShorthandType = Splitracker.Domain.ActionShorthandType;
 
 namespace Splitracker.Persistence.Test;
 
@@ -31,7 +28,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
     {
         repository = new(CurrentStore, NullLogger<RavenCharacterRepository>.Instance, UserRepository);
         principal = FakeUserPrincipal("u1", "CharUser");
-        await WipeCollectionAsync<CharacterModel>();
+        await WipeCollectionAsync<Model.Character>();
         WaitForIndexing();
     }
 
@@ -292,7 +289,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         await testApplyPointsAsync(poolType,
             new PointsVec[] { new(5, 0, 0) },
             new(5, 0, 0),
-            new[]{5});
+            new[] { 5 });
     }
 
     [Test]
@@ -304,7 +301,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 new(3, 0, 0),
             },
             new(8, 0, 0),
-            new[]{5, 3});
+            new[] { 5, 3 });
     }
 
     [Test]
@@ -315,31 +312,37 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 new(5, 0, 0),
                 new(32, 0, 0),
             },
-            new(30, 0, 0), 
-            new[]{5, 25});
+            new(30, 0, 0),
+            new[] { 5, 25 });
     }
 
     [Test]
     public async Task StopChanneling_Exists([Values] PoolType poolType)
     {
         // Arrange
+        var (getPool, getOtherPool) = poolAccessorsFor(poolType);
         var original = await withCharacterCreated();
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(5, 0, 0)));
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(2, 1, 3)));
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(1, 0, 0)));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(5, 0, 0), null));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(2, 1, 3), null));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(1, 0, 0), null));
+        WaitForIndexing();
+        var characterWithChannelings = await fetchCharacterAsync(original.Id);
+        var ch5 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 5);
+        var ch2 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 2);
+        var ch1 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 1);
 
         // Act
-        await repository.ApplyAsync(principal, new StopChanneling(original.Id, poolType, 2));
+        await repository.ApplyAsync(principal, new StopChanneling(original.Id, poolType, ch2.Id));
         WaitForIndexing();
 
         // Assert
         var updated = await fetchCharacterAsync(original.Id);
-        var (getPool, getOtherPool) = poolAccessorsFor(poolType);
         getPool(updated).Should().BeEquivalentTo(new LpPool(
-            getPool(original).BaseCapacity,
-            new(6,3, 3), 
-            ImmutableArray.Create(5,1)
-        ), opts => opts.Excluding(b => b.TotalCapacity));
+                getPool(original).BaseCapacity,
+                new(6, 3, 3),
+                ImmutableArray.Create(ch5, ch1)
+            ),
+            opts => opts.Excluding(b => b.TotalCapacity));
         getOtherPool(updated).Should().BeEquivalentTo(getOtherPool(original));
     }
 
@@ -347,23 +350,34 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
     public async Task StopChanneling_DoesntExist([Values] PoolType poolType)
     {
         // Arrange
+        var (getPool, getOtherPool) = poolAccessorsFor(poolType);
         var original = await withCharacterCreated();
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(5, 0, 0)));
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(6, 1, 3)));
-        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(1, 0, 0)));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(5, 0, 0), null));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(6, 1, 3), null));
+        await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, new(1, 0, 0), null));
+        WaitForIndexing();
+        var characterWithChannelings = await fetchCharacterAsync(original.Id);
+        var ch5 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 5);
+        var ch6 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 6);
+        var ch1 = getPool(characterWithChannelings).Channelings.Single(ch => ch.Value == 1);
 
         // Act
-        await repository.ApplyAsync(principal, new StopChanneling(original.Id, poolType, 2));
+        await repository.ApplyAsync(principal, new StopChanneling(original.Id, poolType, "id that doesn't exist"));
         WaitForIndexing();
 
         // Assert
         var updated = await fetchCharacterAsync(original.Id);
-        var (getPool, getOtherPool) = poolAccessorsFor(poolType);
         getPool(updated).Should().BeEquivalentTo(new LpPool(
-            getPool(original).BaseCapacity,
-            new(12,1, 3), 
-            ImmutableArray.Create(5,6,1)
-        ), opts => opts.Excluding(b => b.TotalCapacity));
+                getPool(original).BaseCapacity,
+                new(12, 1, 3),
+                ImmutableArray.Create(
+                    ch5,
+                    ch6,
+                    ch1
+                )
+            ),
+            opts => opts
+                .Excluding(b => b.TotalCapacity));
         getOtherPool(updated).Should().BeEquivalentTo(getOtherPool(original));
     }
 
@@ -383,7 +397,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         // Act
         foreach (var vec in inputPoints)
         {
-            await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, vec));
+            await repository.ApplyAsync(principal, new ApplyPoints(original.Id, poolType, vec, null));
         }
 
         WaitForIndexing();
@@ -396,13 +410,19 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         getPool(updated).Should().BeEquivalentTo(new LpPool(
                 getPool(original).BaseCapacity,
                 expectedPoints,
-                expectedChannelings?.ToImmutableArray() ?? ImmutableArray<int>.Empty),
-            opts => opts.Excluding(b => b.TotalCapacity));
+                expectedChannelings?.Select(v => new Channeling("ignored", v)).ToImmutableArray()
+                ?? ImmutableArray<Channeling>.Empty),
+            opts => opts
+                .Excluding(b => b.TotalCapacity)
+                .For(b => b.Channelings).Exclude(b => b.Id)
+        );
 
         getOtherPool(updated).Should().BeEquivalentTo(getOtherPool(original));
     }
 
-    static (Func<Character, Pool> getPool, Func<Character, Pool> getOtherPool) poolAccessorsFor(PoolType poolType)
+    static (Func<Character, Pool> getPool, Func<Character, Pool> getOtherPool) poolAccessorsFor(
+        PoolType poolType
+    )
     {
         static Pool fo(Character c) => c.Fo;
         static Pool lp(Character c) => c.Lp;

@@ -4,12 +4,12 @@ using JetBrains.Annotations;
 namespace Splitracker.Persistence.Model;
 
 [UsedImplicitly]
-record CharacterModel(string Id, string Name, PoolModel Lp, PoolModel Fo)
+record Character(string Id, string Name, Pool Lp, Pool Fo)
 {
     public string Id { get; set; } = Id;
     public string Name { get; set; } = Name;
-    public PoolModel Lp { get; set; } = Lp;
-    public PoolModel Fo { get; set; } = Fo;
+    public Pool Lp { get; set; } = Lp;
+    public Pool Fo { get; set; } = Fo;
     public List<ActionShorthand> ActionShorthands { get; set; } = new();
     public string? CustomColor;
     public bool IsOpponent;

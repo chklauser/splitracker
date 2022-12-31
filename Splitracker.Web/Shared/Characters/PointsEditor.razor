@@ -193,7 +193,7 @@
 
     async Task applyPointsAsync()
     {
-        await Router.ApplyAsync(new ApplyPoints(null!, Type, Value.Collapse()));
+        await Router.ApplyAsync(new ApplyPoints(null!, Type, Value.Collapse(), null));
         Value = default;
     }
 

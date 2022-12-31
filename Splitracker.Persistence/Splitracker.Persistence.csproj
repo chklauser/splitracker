@@ -26,6 +26,7 @@
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
       <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
       <PackageReference Include="RavenDB.Client" />
+      <PackageReference Include="RavenMigrations" />
       <PackageReference Include="Riok.Mapperly" />
       <PackageReference Include="System.Linq.Async" />
     </ItemGroup>

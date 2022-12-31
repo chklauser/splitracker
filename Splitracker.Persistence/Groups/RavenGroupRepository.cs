@@ -14,6 +14,7 @@ using Raven.Client.Documents.Session;
 using Splitracker.Domain;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
+using Character = Splitracker.Persistence.Model.Character;
 
 namespace Splitracker.Persistence.Groups;
 
@@ -68,7 +69,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
         return result.Members.FirstOrDefault(m => m.UserId == userId)?.Role;
     }
 
-    public async Task<IEnumerable<Character>> SearchCharactersAsync(
+    public async Task<IEnumerable<Domain.Character>> SearchCharactersAsync(
         string searchTerm,
         string groupId,
         ClaimsPrincipal principal,
@@ -81,11 +82,11 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
         if (await accessGroupAsync(groupId, userId, session) is not { } role)
         {
-            return Enumerable.Empty<Character>();
+            return Enumerable.Empty<Domain.Character>();
         }
 
         var group = await LoadGroupAsync(session, groupId);
-        var dbCharacters = await session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+        var dbCharacters = await session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
             .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
             .Not.WhereIn(c => c.Id, group.Characters.Keys)
             .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
@@ -94,7 +95,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
         if (dbCharacters == null)
         {
             log.Log(LogLevel.Warning, "Unexpectedly got `null` from search query for characters.");
-            return Enumerable.Empty<Character>();
+            return Enumerable.Empty<Domain.Character>();
         }
 
         log.Log(LogLevel.Debug,
@@ -123,7 +124,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
             return new JoinResult.GroupNotFound();
         }
 
-        var characters = await session.LoadAsync<Model.CharacterModel>(groupToJoin.CharacterIds);
+        var characters = await session.LoadAsync<Model.Character>(groupToJoin.CharacterIds);
         var domainGroup = GroupModelMapper.ToDomain(groupToJoin, characters.Values, false);
 
         if (groupToJoin.Members.Any(m => m.UserId == userId))
@@ -158,7 +159,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     #region Writing
 
-    public async Task JoinWithExistingCharacterAsync(ClaimsPrincipal principal, Domain.Group group, Character character)
+    public async Task JoinWithExistingCharacterAsync(ClaimsPrincipal principal, Domain.Group group, Domain.Character character)
     {
         var userId = await userRepository.GetUserIdAsync(principal);
 
@@ -240,7 +241,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
             characterId);
     }
 
-    public async Task LeaveGroupAsync(ClaimsPrincipal principal, Domain.Group group, Character character)
+    public async Task LeaveGroupAsync(ClaimsPrincipal principal, Domain.Group group, Domain.Character character)
     {
         var userId = await userRepository.GetUserIdAsync(principal);
         var characterDocIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
@@ -307,7 +308,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
     {
         var dbGroup = await session
             .LoadAsync<Model.Group>(groupId);
-        var characters = await session.LoadAsync<CharacterModel>(dbGroup.CharacterIds);
+        var characters = await session.LoadAsync<Character>(dbGroup.CharacterIds);
         var timelineId = await session.Query<Timeline_ByGroup.IndexEntry, Timeline_ByGroup>()
             .Where(s => s.GroupId == groupId)
             .Select(s => s.Id)

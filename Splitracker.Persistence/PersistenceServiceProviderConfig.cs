@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Conventions;
+using Raven.Migrations;
 using Splitracker.Domain;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Groups;
@@ -39,6 +40,8 @@ public static class PersistenceServiceProviderConfig
             return store;
         });
 
+        services.AddHostedService<RunMigrationsOnStartup>();
+
         services.AddSingletonImplementation<RavenUserRepository>()
             .As<IUserRepository>().AsWellAnd()
             .AsHostedService();
@@ -54,6 +57,12 @@ public static class PersistenceServiceProviderConfig
         services.AddSingletonImplementation<RavenTimelineRepository>()
             .As<ITimelineRepository>().AsWellAnd()
             .AsHostedService();
+
+        services.AddRavenDbMigrations(config =>
+        {
+            config.SimultaneousMigrationTimeout = TimeSpan.FromMinutes(5);
+            config.PreventSimultaneousMigrations = true;
+        });
 
         return services;
     }
