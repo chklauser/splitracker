@@ -2,6 +2,12 @@
 @using Splitracker.Domain
 
 <MudCard>
+    @if (Channeled.Description is {} description)
+    {
+        <MudCardHeader Class="pb-0">
+            <MudText Typo="Typo.h6">@Channeled.Description</MudText>      
+        </MudCardHeader>
+    }
     <MudCardContent>
         @if (Channeled.Value == 1)
         {
@@ -12,8 +18,11 @@
             <text>@Channeled.Value kanalisierte Punkte in @Channeled.Value erschöpfte Punkte umwandeln</text>
         }
     </MudCardContent>
-    <MudCardActions>
-        <MudButton StartIcon="@Icons.Material.Filled.SyncDisabled" Variant="Variant.Text" @onclick="callbackAsync">Ja, gerne!</MudButton>
+    <MudCardActions Class="pt-0">
+        <MudButton
+            StartIcon="@Icons.Material.Filled.SyncDisabled"
+            Variant="Variant.Text"
+            @onclick="callbackAsync">Ja, gerne!</MudButton>
     </MudCardActions>
 </MudCard>
 
