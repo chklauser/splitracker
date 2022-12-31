@@ -47,7 +47,7 @@ static class TimelineModelMapper
     public static Domain.Timeline ToDomain(
         this Timeline timeline,
         Group group,
-        IEnumerable<CharacterModel?> characters
+        IEnumerable<Character?> characters
     )
     {
         var charactersById = characters
@@ -91,7 +91,7 @@ static class TimelineModelMapper
 
     static Domain.Effect toDomain(
         this Effect effect,
-        IReadOnlyDictionary<string, Character> charactersById
+        IReadOnlyDictionary<string, Domain.Character> charactersById
     )
     {
         return new(

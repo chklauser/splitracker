@@ -1,14 +1,15 @@
 ﻿@using Splitracker.Domain.Commands
+@using Splitracker.Domain
 
 <MudCard>
     <MudCardContent>
-        @if (Channeled == 1)
+        @if (Channeled.Value == 1)
         {
             <text>Einen kanalisierten Punkt in einen erschöpften Punkt umwandeln</text>
         }
         else
         {
-            <text>@Channeled kanalisierte Punkte in @Channeled erschöpfte Punkte umwandeln</text>
+            <text>@Channeled.Value kanalisierte Punkte in @Channeled.Value erschöpfte Punkte umwandeln</text>
         }
     </MudCardContent>
     <MudCardActions>
@@ -28,14 +29,14 @@
     
     [Parameter]
     [EditorRequired]
-    public required int Channeled { get; set; }
+    public required Channeling Channeled { get; set; }
     
     [CascadingParameter]
     public required ICharacterCommandRouter Router { get; set; }
 
     async Task callbackAsync()
     {
-        await Router.ApplyAsync(new Domain.Commands.StopChanneling(null!, Type, Channeled));
+        await Router.ApplyAsync(new Domain.Commands.StopChanneling(null!, Type, Channeled.Id));
     }
 
 }

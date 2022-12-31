@@ -17,7 +17,7 @@ class Group
 
 static class GroupModelMapper
 {
-    public static Domain.Group ToDomain(Group dbGroup, IEnumerable<CharacterModel?> dbCharacters, bool hasTimeline)
+    public static Domain.Group ToDomain(Group dbGroup, IEnumerable<Character?> dbCharacters, bool hasTimeline)
     {
         return new(
             dbGroup.Id!,

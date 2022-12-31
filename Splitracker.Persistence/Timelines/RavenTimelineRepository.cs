@@ -15,6 +15,7 @@ using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Model;
+using Character = Splitracker.Persistence.Model.Character;
 using GroupRole = Splitracker.Persistence.Model.GroupRole;
 using Timeline = Splitracker.Persistence.Model.Timeline;
 
@@ -74,7 +75,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         return result == null ? null : (result.Id, result.MemberRole);
     }
 
-    public async Task<IEnumerable<Character>> SearchCharactersAsync(
+    public async Task<IEnumerable<Domain.Character>> SearchCharactersAsync(
         string searchTerm,
         bool includeOpponents,
         string groupId,
@@ -88,11 +89,11 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         
         if (await accessTimelineAsync(groupId, userId, session) is not var (timelineId, _))
         {
-            return Enumerable.Empty<Character>();
+            return Enumerable.Empty<Domain.Character>();
         }
 
         var timeline = await LoadTimelineAsync(session, timelineId);
-        var query = session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+        var query = session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
             .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
             .Not.WhereIn(c => c.Id, timeline.Characters.Keys);
         if (!includeOpponents)
@@ -106,7 +107,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         if (dbCharacters == null)
         {
             log.Log(LogLevel.Warning, "Unexpectedly got `null` from search query for characters.");
-            return Enumerable.Empty<Character>();
+            return Enumerable.Empty<Domain.Character>();
         }
 
         log.Log(LogLevel.Debug, "Searching for characters for timeline {TimelineId} returned {Count} results. UserId={UserId}",
@@ -467,7 +468,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         var dbTimeline = await session
             .LoadAsync<Model.Timeline>(timelineId);
         var group = await session.LoadAsync<Model.Group>(dbTimeline.GroupId);
-        var characters = await session.LoadAsync<CharacterModel>(
+        var characters = await session.LoadAsync<Character>(
             dbTimeline.Ticks
                 .Select(k => k.CharacterId)
                 .Where(cid => cid != null)

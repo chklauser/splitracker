@@ -7,11 +7,11 @@ public interface ICharacterCommand
     string? CharacterId { get; }
 }
 
-public record ApplyPoints(string CharacterId, PoolType Pool, PointsVec Points) : ICharacterCommand;
+public record ApplyPoints(string CharacterId, PoolType Pool, PointsVec Points, string? Description) : ICharacterCommand;
 
 public record ShortRest(string CharacterId) : ICharacterCommand;
 
-public record StopChanneling(string CharacterId, PoolType Pool, int Points) : ICharacterCommand;
+public record StopChanneling(string CharacterId, PoolType Pool, string Id) : ICharacterCommand;
 
 public abstract record UpsertCharacter(
     string Name,

@@ -79,7 +79,7 @@
     [EditorRequired]
     public required CharacterPermissions Permissions { get; set; }
 
-    IImmutableList<int> channelings => Pool.Channelings;
+    IImmutableList<Channeling> channelings => Pool.Channelings;
 
     int penalty => Character.PenaltyDueToLowLp(points, baseCapacity);
 

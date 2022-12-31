@@ -9,7 +9,7 @@ namespace Splitracker.Persistence.Model;
 
 static class CharacterModelMapper
 {
-    public static Character ToDomain(this CharacterModel model)
+    public static Domain.Character ToDomain(this Character model)
     {
         return new(model.Id,
             model.Name,
@@ -20,14 +20,24 @@ static class CharacterModelMapper
             model.IsOpponent);
     }
 
-    public static LpPool ToDomainLp(this PoolModel model)
+    public static LpPool ToDomainLp(this Pool model)
     {
-        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.ToImmutableArray());
+        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.Select(toDomain).ToImmutableArray());
     }
 
-    public static FoPool ToDomainFo(this PoolModel model)
+    public static FoPool ToDomainFo(this Pool model)
     {
-        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.ToImmutableArray());
+        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.Select(toDomain).ToImmutableArray());
+    }
+    
+    static Domain.Channeling toDomain(this Channeling model)
+    {
+        return new(model.Id, model.Value, model.Description);
+    }
+
+    static Channeling toDbModel(this Domain.Channeling channeling)
+    {
+        return new() { Id = channeling.Id, Description = channeling.Description, Value = channeling.Value };
     }
 
     public static Domain.ActionShorthand ToDomain(this ActionShorthand model)
@@ -43,7 +53,7 @@ static class CharacterModelMapper
             });
     }
 
-    static PointsVec toDomain(this PointsModel points)
+    static PointsVec toDomain(this Points points)
     {
         return new() {
             Channeled = points.Channeled,
@@ -52,7 +62,7 @@ static class CharacterModelMapper
         };
     }
 
-    public static CharacterModel ToDbModel(this Character character)
+    public static Character ToDbModel(this Domain.Character character)
     {
         return new(character.Id, character.Name, character.Lp.toDbModel(), character.Fo.toDbModel()) {
             ActionShorthands = character.ActionShorthands.Values
@@ -64,16 +74,16 @@ static class CharacterModelMapper
         };
     }
     
-    static PoolModel toDbModel(this Domain.Pool pool)
+    static Pool toDbModel(this Domain.Pool pool)
     {
         return new() {
             BaseCapacity = pool.BaseCapacity,
-            Channelings = pool.Channelings.ToList(),
+            Channelings = pool.Channelings.Select(toDbModel).ToList(),
             Points = pool.Points.toDbModel(),
         };
     }
     
-    static PointsModel toDbModel(this PointsVec points)
+    static Points toDbModel(this PointsVec points)
     {
         return new(points.Channeled, points.Exhausted, points.Consumed);
     }

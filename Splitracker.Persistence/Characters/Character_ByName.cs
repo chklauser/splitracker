@@ -4,7 +4,7 @@ using Splitracker.Persistence.Model;
 
 namespace Splitracker.Persistence.Characters;
 
-class Character_ByName : AbstractIndexCreationTask<CharacterModel>
+class Character_ByName : AbstractIndexCreationTask<Character>
 {
     class IndexEntry
     {

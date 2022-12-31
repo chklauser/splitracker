@@ -14,6 +14,8 @@ using Raven.Client.Documents.Queries;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Model;
+using Character = Splitracker.Persistence.Model.Character;
+using Pool = Splitracker.Persistence.Model.Pool;
 
 namespace Splitracker.Persistence.Characters;
 
@@ -48,7 +50,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
 
         log.LogInformation("Applying character {Command} to {Oid}", characterCommand, userId);
         using var session = store.OpenAsyncSession();
-        CharacterModel? model;
+        Character? model;
         var id = characterCommand.CharacterId;
         if (id != null)
         {
@@ -57,7 +59,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 throw new ArgumentException($"Character {id} does not belong to user {userId}.");
             }
 
-            model = await session.LoadAsync<CharacterModel>(id);
+            model = await session.LoadAsync<Character>(id);
             if (model == null)
             {
                 log.Log(LogLevel.Warning, "Character {Id} not found.", id);
@@ -69,7 +71,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
             model = null;
         }
 
-        static void applyPointsTo(PoolModel model, Pool domain, PointsVec points)
+        static void applyPointsTo(Pool model, Domain.Pool domain, PointsVec points, string? description)
         {
             var channeledBefore = model.Points.Channeled;
             // First apply point removal ("healing")
@@ -111,34 +113,40 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
             var effectivelyChanneled = model.Points.Channeled - channeledBefore;
             if (effectivelyChanneled > 0)
             {
-                model.Channelings.Add(effectivelyChanneled);
+                model.Channelings.Add(new()
+                {
+                    Id = IdGenerator.RandomId(),
+                    Value = effectivelyChanneled, 
+                    Description = description,
+                });
             }
         }
 
-        void stopChanneling(PoolModel model, Pool domain, int points)
+        void stopChanneling(Pool model, Domain.Pool domain, string channelingId)
         {
-            var idx = model.Channelings.LastIndexOf(points);
-            if (idx < 0)
+            var channeling = model.Channelings.FirstOrDefault(ch => ch.Id == channelingId);
+            if (channeling == null)
             {
-                log.Log(LogLevel.Warning, "Character {Id} doesn't have an Lp channeling valued {Points}", id, points);
+                log.Log(LogLevel.Warning, "Character {Id} doesn't have an Lp channeling with ID {ChannelingId}", id, channelingId);
             }
             else
             {
-                model.Channelings.RemoveAt(idx);
-                applyPointsTo(model, domain, new(-points, points, 0));
+                model.Channelings.Remove(channeling);
+                var points = channeling.Value;
+                applyPointsTo(model, domain, new(-points, points, 0), null);
             }
         }
 
         switch (characterCommand)
         {
-            case ApplyPoints { Pool: PoolType.Lp, Points: var points }:
-                applyPointsTo(model!.Lp, model.Lp.ToDomainLp(), points);
+            case ApplyPoints { Pool: PoolType.Lp, Points: var points, Description: var description }:
+                applyPointsTo(model!.Lp, model.Lp.ToDomainLp(), points, description);
                 break;
-            case ApplyPoints { Pool: PoolType.Fo, Points: var points }:
-                applyPointsTo(model!.Fo, model.Fo.ToDomainFo(), points);
+            case ApplyPoints { Pool: PoolType.Fo, Points: var points, Description: var description }:
+                applyPointsTo(model!.Fo, model.Fo.ToDomainFo(), points, description);
                 break;
             case CreateCharacter create:
-                var newCharacter = new CharacterModel(CharacterDocIdPrefix(userId), create.Name,
+                var newCharacter = new Character(CharacterDocIdPrefix(userId), create.Name,
                     new() { BaseCapacity = create.LpBaseCapacity },
                     new() { BaseCapacity = create.FoBaseCapacity }) {
                     ActionShorthands = create.ActionShorthands.Values
@@ -162,11 +170,11 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                     .Select(x => x.ToDbModel())
                     .ToList();
                 break;
-            case StopChanneling { Pool: PoolType.Lp, Points: var points }:
-                stopChanneling(model!.Lp, model.Lp.ToDomainLp(), points);
+            case StopChanneling { Pool: PoolType.Lp, Id: var channelingId }:
+                stopChanneling(model!.Lp, model.Lp.ToDomainLp(), channelingId);
                 break;
-            case StopChanneling { Pool: PoolType.Fo, Points: var points }:
-                stopChanneling(model!.Fo, model.Fo.ToDomainFo(), points);
+            case StopChanneling { Pool: PoolType.Fo, Id: var channelingId }:
+                stopChanneling(model!.Fo, model.Fo.ToDomainFo(), channelingId);
                 break;
             case ShortRest:
                 model!.Lp.Points.Exhausted = 0;
@@ -176,7 +184,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 session.Delete(model);
                 break;
             case CloneCharacter:
-                await session.StoreAsync(new Character(
+                await session.StoreAsync(new Domain.Character(
                     id: CharacterDocIdPrefix(userId),
                     name: model!.Name,
                     lpBaseCapacity: model.Lp.BaseCapacity,
@@ -196,12 +204,12 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
         await session.SaveChangesAsync();
     }
 
-    public async Task<IReadOnlyList<Character>> SearchCharactersAsync(ClaimsPrincipal principal, string searchTerm, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Domain.Character>> SearchCharactersAsync(ClaimsPrincipal principal, string searchTerm, CancellationToken cancellationToken)
     {
         var userId = await userRepository.GetUserIdAsync(principal);
         
         using var session = store.OpenAsyncSession();
-        var dbCharacters = await session.Advanced.AsyncDocumentQuery<CharacterModel, Character_ByName>()
+        var dbCharacters = await session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
             .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
             .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
             .Take(100)
@@ -209,7 +217,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
         if (dbCharacters == null)
         {
             log.Log(LogLevel.Warning, "Unexpectedly got `null` from search query for characters.");
-            return ImmutableArray<Character>.Empty;
+            return ImmutableArray<Domain.Character>.Empty;
         }
 
         log.Log(LogLevel.Debug, "Searching for characters returned {Count} results. UserId={UserId}",

@@ -1,6 +1,6 @@
 ﻿namespace Splitracker.Persistence.Model;
 
-record PointsModel(int Channeled, int Exhausted, int Consumed)
+record Points(int Channeled, int Exhausted, int Consumed)
 {
     public int Channeled { get; set; } = Channeled;
     public int Exhausted { get; set; } = Exhausted;
