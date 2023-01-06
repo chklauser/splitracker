@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using JetBrains.Annotations;
 using Splitracker.Domain;
 
 namespace Splitracker.Persistence.Model;
@@ -44,13 +42,15 @@ static class CharacterModelMapper
     {
         return new(model.Id,
             model.Name,
+            model.Description,
             model.Ticks,
             model.Type switch {
                 ActionShorthandType.Melee => Domain.ActionShorthandType.Melee,
                 ActionShorthandType.Ranged => Domain.ActionShorthandType.Ranged,
                 ActionShorthandType.Spell => Domain.ActionShorthandType.Spell,
                 _ => throw new ArgumentOutOfRangeException(),
-            });
+            },
+            model.CostExpression);
     }
 
     static PointsVec toDomain(this Points points)
@@ -88,17 +88,12 @@ static class CharacterModelMapper
         return new(points.Channeled, points.Exhausted, points.Consumed);
     }
 
-    [UsedImplicitly]
-    static IImmutableList<int> toImmutableList(List<int> array)
-    {
-        return array.ToImmutableList();
-    }
-
     public static ActionShorthand ToDbModel(this Domain.ActionShorthand shorthand)
     {
         return new() {
             Id = shorthand.Id,
             Name = shorthand.Name,
+            Description = shorthand.Description,
             Ticks = shorthand.Ticks,
             Type = shorthand.Type switch {
                 Domain.ActionShorthandType.Melee => ActionShorthandType.Melee,
@@ -106,6 +101,7 @@ static class CharacterModelMapper
                 Domain.ActionShorthandType.Spell => ActionShorthandType.Spell,
                 _ => throw new ArgumentOutOfRangeException(nameof(shorthand)),
             },
+            CostExpression = shorthand.CostExpression,
         };
     }
 }

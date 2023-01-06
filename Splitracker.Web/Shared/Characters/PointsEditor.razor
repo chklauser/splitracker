@@ -23,13 +23,13 @@
             Variant="Variant.Outlined"
             HelperText="z.B. +K3V1-E2"
             autocomplete="off"
-            enterkeyhind="send"
+            enterkeyhint="send"
             @onkeyup="textFieldKeyUp"
-            Pattern="([KEVkev0-9+-]|\s)*"
+            Pattern="@(PointsVec.IncrementalExpressionPattern)"
             FullWidth
             Clearable
             Immediate
-            @ref="textField"/>
+            @ref="expressionField"/>
         <MudButton
             StartIcon="@Icons.Material.Filled.ArrowUpward"
             @onclick="applyPointsAsync"
@@ -37,6 +37,23 @@
             Variant="Variant.Filled">
             Go
         </MudButton>
+    </MudStack>
+    <MudStack
+        Spacing="1"
+        Row="true"
+        Justify="Justify.SpaceBetween"
+        AlignItems="AlignItems.Center">
+        <MudTextField T="string"
+                      @bind-Text="description"
+                      Label="Beschreibung"
+                      
+                      Disabled="@(Value.Channeled <= 0)"
+                      HelperText="Für kanalisierte Punkte. Z.B. Name des Zauberspruchs"
+            @onkeyup="textFieldKeyUp"
+                      FullWidth
+                      Clearable
+                      Variant="Variant.Outlined"
+                      @ref="descriptionField" />
     </MudStack>
     <MudStack
         Spacing="6"
@@ -73,7 +90,8 @@
 
 @code {
 
-    MudTextField<string>? textField;
+    MudTextField<string>? expressionField;
+    MudTextField<string>? descriptionField;
 
     public PointsVec Value
     {
@@ -116,6 +134,8 @@
 
     private PointType type = PointType.V;
     private PointsVec value;
+
+    private string description = "";
 
     private int totalCurrentPoints => CurrentPoints.Channeled + CurrentPoints.Exhausted + CurrentPoints.Consumed;
 
@@ -179,22 +199,32 @@
     {
         if (obj.Key == "Enter")
         {
-            if (textField != null)
+            if (expressionField != null)
             {
-                await textField.BlurAsync();
+                await expressionField.BlurAsync();
+            }
+            if (descriptionField != null)
+            {
+                await descriptionField.BlurAsync();
             }
             await applyPointsAsync();
-            if (textField != null)
+            if (expressionField != null)
             {
-                await textField.FocusAsync();
+                await expressionField.FocusAsync();
             }
         }
     }
 
     async Task applyPointsAsync()
     {
-        await Router.ApplyAsync(new ApplyPoints(null!, Type, Value.Collapse(), null));
+        await Router.ApplyAsync(new ApplyPoints(
+            null!, 
+            Type, 
+            Value.Collapse(), 
+            !string.IsNullOrWhiteSpace(description) ? description : null
+        ));
         Value = default;
+        description = "";
     }
 
 }

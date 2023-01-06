@@ -154,9 +154,9 @@
     {
         newCharacter = new("", "Dein Name", 5, 10, 
             actionShorthands: new Dictionary<string, ActionShorthand>() {
-                {"melee", new("melee", "Nahkampf Ang.", 7, ActionShorthandType.Melee) },
-                {"ranged", new("ranged", "Fernkampf Vorb.", 4, ActionShorthandType.Ranged) },
-                {"focus", new("focus", "Fokus", 4, ActionShorthandType.Spell) },
+                {"melee", new("melee", "Nahkampf Ang.", null, 7, ActionShorthandType.Melee, null) },
+                {"ranged", new("ranged", "Fernkampf Vorb.", null, 4, ActionShorthandType.Ranged, null) },
+                {"focus", new("focus", "Fokus", null, 4, ActionShorthandType.Spell, null) },
             }.ToImmutableDictionary());
     }
 

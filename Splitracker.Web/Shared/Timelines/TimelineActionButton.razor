@@ -30,7 +30,7 @@
 
     Color buttonColor => Action switch {
         { Type: ActionTemplateType.Bump } => Color.Success,
-        var a when Parent.SelectedActionTemplate == a => Color.Primary,
+        var a when Parent.SelectedActionTemplate?.Id == a.Id => Color.Primary,
         _ => Color.Default,
     };
 

@@ -5,6 +5,8 @@ namespace Splitracker.Domain;
 
 public readonly record struct PointsVec(int Channeled, int Exhausted, int Consumed)
 {
+    public const string IncrementalExpressionPattern = @"([KEVkev0-9+-]|\s)*";
+    
     public int this[PointType type] => type switch
     {
         PointType.K => Channeled,
