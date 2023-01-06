@@ -125,12 +125,12 @@
                             @bind-Shorthands="newShorthands"
                             StartRow="@(row)"
                             Type="ActionShorthandType.Ranged"/>
-                        @{ row += 3; }
+                        @{ row += 4; }
                         <ActionShorthandListEditor
                             @bind-Shorthands="newShorthands"
                             StartRow="@(row)"
                             Type="ActionShorthandType.Spell"/>
-                        @{ row += 3; }
+                        @{ row += 4; }
                         @* Opponent *@
                         <div
                             style="@($"grid-row: {row}")"

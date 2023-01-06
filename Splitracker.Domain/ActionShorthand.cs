@@ -3,8 +3,10 @@
 public record ActionShorthand(
     string Id,
     string Name,
+    string? Description,
     int Ticks,
-    ActionShorthandType Type
+    ActionShorthandType Type,
+    string? CostExpression
 )
 {
     public ActionTemplate ToTemplate()
@@ -15,8 +17,8 @@ public record ActionShorthand(
             Type == ActionShorthandType.Melee ? ActionTemplateType.Immediate : ActionTemplateType.Continuous,
             Default: Ticks,
             Description: Type switch {
-                ActionShorthandType.Ranged => "Fernkampfangriff vorbereiten",
-                ActionShorthandType.Spell => "Magie fokussieren",
+                ActionShorthandType.Ranged => $"Fernkampfangriff \"{Description ?? Name}\" vorbereiten",
+                ActionShorthandType.Spell => $"Magie für \"{Description ?? Name}\" fokussieren{(CostExpression is {} expr ? $" ({expr})" : "")}",
                 _ => null,
             },
             FollowUp: Type switch {

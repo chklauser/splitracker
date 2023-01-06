@@ -472,9 +472,9 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         6,
         "#112233",
         ImmutableDictionary<string, ActionShorthand>.Empty
-            .Add("a1", new("a1", "Action 1", 2, ActionShorthandType.Melee))
-            .Add("a2", new("a2", "Action 2", 3, ActionShorthandType.Ranged))
-            .Add("a3", new("a3", "Action 3", 4, ActionShorthandType.Spell)),
+            .Add("a1", new("a1", "Action 1", null, 2, ActionShorthandType.Melee, null))
+            .Add("a2", new("a2", "Action 2", "Bogen", 3, ActionShorthandType.Ranged, null))
+            .Add("a3", new("a3", "Action 3", "Feuerball", 4, ActionShorthandType.Spell, "K3v1")),
         default);
 
     static EditCharacter editCharacterExample(
@@ -487,8 +487,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         4,
         "#886633",
         CreateCharacterExample.ActionShorthands
-            .SetItem("a2", new("a2", "Edited Action 2", 6, ActionShorthandType.Melee))
-            .Add("a4", new("a4", "Action 4", 5, ActionShorthandType.Ranged)),
+            .SetItem("a2", new("a2", "Edited Action 2", null, 6, ActionShorthandType.Melee, null))
+            .Add("a4", new("a4", "Action 4", "Armbrust", 5, ActionShorthandType.Ranged, null)),
         !CreateCharacterExample.IsOpponent
     );
 

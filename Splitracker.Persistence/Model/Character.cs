@@ -19,13 +19,15 @@ class ActionShorthand
 {
     public required string Id { get; set; }
     public required string Name { get; set; }
+    public string? Description { get; set; }
     public required int Ticks { get; set; } = 1;
-    public ActionShorthandType Type { get; set; }
+    public required ActionShorthandType Type { get; set; }
+    public string? CostExpression { get; set; }
 }
 
 enum ActionShorthandType
 {
     Melee,
     Ranged,
-    Spell
+    Spell,
 }

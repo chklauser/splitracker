@@ -38,6 +38,35 @@
         Max="99"/>
 </div>
 
+@if (Type is ActionShorthandType.Ranged or ActionShorthandType.Spell)
+{
+    row += 1;
+    <div
+        style="@($"grid-column: 1/{(Type == ActionShorthandType.Spell ? 3 : 4)}; grid-row: {row}")"
+        class="dense-control">
+        <MudTextField
+            @bind-Value="selectedDescription"
+            Immediate="@true"
+            Label="Beschreibung"/>
+    </div>
+}
+
+@if (Type == ActionShorthandType.Spell)
+{
+    <div
+        style="@($"grid-column: 3; grid-row: {row}")"
+        class="dense-control">
+        <MudTextField
+            T="string"
+            @bind-Text="selectedCost"
+            Label="FO Kosten"
+            HelperText="z.B. K3V1"
+            autocomplete="off"
+            Mask="@costExpressionMask"
+            ErrorText="Kombination von K, E, V und Zahlen"/>
+    </div>
+}
+
 <div
     style="@($"grid-column: 4; grid-row: {row++}")">
     <MudTooltip
@@ -59,10 +88,28 @@
     SelectedChip="@null">
     @foreach (var shorthand in Shorthands.Values.Where(s => s.Type == Type).OrderBy(s => s.Name))
     {
-        <MudChip
-            OnClose="@(_ => removeShorthand(shorthand))">
-            @shorthand.Name (@shorthand.Ticks)
-        </MudChip>
+        <MudTooltip
+            Text="@shorthand.Description"
+            ShowOnClick="@(shorthand.Description != null)"
+            ShowOnFocus="@(shorthand.Description != null)"
+            ShowOnHover="@(shorthand.Description != null)">
+            <MudChip
+                OnClose="@(_ => removeShorthand(shorthand))">
+                @shorthand.Name
+                @if (shorthand.CostExpression == null)
+                {
+                    <text> (@shorthand.Ticks)</text>
+                }
+                else if (shorthand.Ticks == 1)
+                {
+                    <text> (1 Tick, @shorthand.CostExpression)</text>
+                }
+                else
+                {
+                    <text> (@shorthand.Ticks Ticks, @shorthand.CostExpression)</text>
+                }
+            </MudChip>
+        </MudTooltip>
     }
 </MudChipSet>
 
@@ -82,9 +129,13 @@
     [Parameter]
     [EditorRequired]
     public required int StartRow { get; set; }
+    
+    public IMask costExpressionMask = new RegexMask("^" + PointsVec.IncrementalExpressionPattern + "$");
 
     int selectedTicks = 7;
     string? selectedName;
+    string? selectedDescription;
+    string? selectedCost;
     bool isValid => !string.IsNullOrWhiteSpace(selectedName) && selectedTicks > 0;
     
     MudTextField<string?>? nameField;
@@ -111,8 +162,16 @@
         }
 
         var id = IdGenerator.RandomId();
-        await ShorthandsChanged.InvokeAsync(Shorthands.Add(id, new(id, selectedName!, selectedTicks, Type)));
-        selectedName = null;
+        await ShorthandsChanged.InvokeAsync(Shorthands.Add(id, new(
+            id, 
+            selectedName!, 
+            !string.IsNullOrWhiteSpace(selectedDescription) ? selectedDescription : null, 
+            selectedTicks, 
+            Type,
+            !string.IsNullOrWhiteSpace(selectedCost) ? PointsVec.From(selectedCost, PointType.K).ToString() : null)));
+        selectedName = "";
+        selectedCost = "";
+        selectedDescription = "";
         if (nameField is {} field)
         {
             await field.FocusAsync();
