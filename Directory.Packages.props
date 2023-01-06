@@ -19,7 +19,7 @@
     <PackageVersion Include="Microsoft.Identity.Web" Version="1.25.10" />
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="1.25.10" />
     <PackageVersion Include="Microsoft.NET.Build.Containers" Version="0.2.7" />
-    <PackageVersion Include="MudBlazor" Version="6.1.4" />
+    <PackageVersion Include="MudBlazor" Version="6.1.6" />
     <PackageVersion Include="Pulumi" Version="3.48.0" />
     <PackageVersion Include="Pulumi.DigitalOcean" Version="4.16.0" />
     <PackageVersion Include="Pulumi.Kubernetes" Version="3.22.2" />
