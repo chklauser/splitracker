@@ -395,7 +395,7 @@ public class RavenDbArgs : ResourceArgs
     public Input<string>? Namespace { get; set; }
     public Input<string> Image { get; set; } = "ravendb/ravendb";
     // https://hub.docker.com/r/ravendb/ravendb/tags?page=1&name=5.4.5-ubuntu
-    public Input<string> Version { get; set; } = "5.4.5-ubuntu.20.04-x64";
+    public Input<string> Version { get; set; } = "5.4.101-ubuntu.20.04-x64";
     
     public required Input<string> License { get; set; }
     public required Input<string> Issuer { get; set; }
