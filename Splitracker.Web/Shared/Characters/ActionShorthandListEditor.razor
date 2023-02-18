@@ -21,7 +21,7 @@
         @bind-Value="selectedName"
         @ref="nameField"
         Immediate="@true"
-        Label="Name"
+        Label="@($"Name des {typeObject}s")"
         Required="@true"
         RequiredError="@($"{typeObject} braucht einen Namen")"
         HelperText="so kurz wie möglich!"/>
