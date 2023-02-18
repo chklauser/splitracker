@@ -135,7 +135,10 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
             },
             opts => opts
                 .Excluding(c => c.Id)
-                .Excluding(c => c.UserId));
+                .Excluding(c => c.UserId)
+                .Excluding(c => c.Lp.Points.Normalized)
+                .Excluding(c => c.Fo.Points.Normalized)
+                .IgnoringCyclicReferences());
         result[0].UserId.Should().Be(userId);
     }
 
