@@ -41,10 +41,10 @@ return await Deployment.RunAsync(() =>
 
     var cluster = new KubernetesCluster("klauser", new() {
         Region = region,
-        Version = "1.24.4-do.0",
+        Version = "1.24.8-do.0",
         AutoUpgrade = true,
         Ha = false,
-        SurgeUpgrade = false,
+        SurgeUpgrade = true,
         MaintenancePolicy = new KubernetesClusterMaintenancePolicyArgs {
             Day = "tuesday",
             StartTime = "16:00",
@@ -127,9 +127,7 @@ return await Deployment.RunAsync(() =>
     }, new() {Provider = clusterProvider});
 
     var firewall = new Firewall("allow-ingress", new() {
-        DropletIds = cluster.NodePool
-            .Apply(p => p.Nodes.Select(n => 
-                int.Parse(n.DropletId!)).ToList()),
+        Tags = new() {Output.Format($"k8s:{cluster.Id}")},
         InboundRules = new() {
             new FirewallInboundRuleArgs() {
                 Protocol = "tcp",
