@@ -52,7 +52,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
         get
         {
             var bs = new List<BreadcrumbItem>();
-            var groupIcon = Icons.Filled.People!;
+            var groupIcon = Icons.Material.Filled.People!;
             if (handle == null)
             {
                 bs.Add(new("Gruppe", GroupInfo.UrlFor(GroupIdRaw), icon: groupIcon));
@@ -60,7 +60,7 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
             else
             {
                 bs.Add(new(handle.Timeline.GroupName, GroupInfo.UrlFor(GroupIdRaw), icon: groupIcon));
-                bs.Add(new("Tickleiste", Nav.Uri, icon: Icons.Filled.LinearScale));
+                bs.Add(new("Tickleiste", Nav.Uri, icon: Icons.Material.Filled.LinearScale));
             }
             return bs;
         }

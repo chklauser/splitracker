@@ -90,7 +90,7 @@
         newCharacterRouter = new(this);
     }
     
-    List<BreadcrumbItem> breadcrumbs => new() { new("Charaktere", "/", icon: Icons.Filled.EmojiPeople!) };
+    List<BreadcrumbItem> breadcrumbs => new() { new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!) };
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }

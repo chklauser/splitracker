@@ -17,7 +17,7 @@
         {
             <MudNavGroup
                 Title="Gruppen"
-                Icon="@Icons.Filled.People"
+                Icon="@Icons.Material.Filled.People"
                 @bind-Expanded="groupsExpanded">
                 @if (groups != null)
                 {
@@ -44,7 +44,7 @@
         {
             <MudNavGroup
                 Title="Tickleisten"
-                Icon="@Icons.Filled.LinearScale"
+                Icon="@Icons.Material.Filled.LinearScale"
                 @bind-Expanded="timelinesExpanded"
                 Disabled="@(groups == null || groups.All(g => !g.HasTimeline))">
                 @if (groups != null)
