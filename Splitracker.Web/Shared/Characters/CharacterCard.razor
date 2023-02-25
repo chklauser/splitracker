@@ -88,6 +88,18 @@
                                 Required/>
                         </div>
 
+                        @* Splinter Points *@
+                        
+                        <div class="default-control"
+                            style="@($"grid-row: {row++}")">
+                            <MudNumericField
+                                Label="Splitterpunkte"
+                                @bind-Value="newSplinterPointMaximum"
+                                Min="0"
+                                Max="9"
+                                Required/>
+                        </div>
+
                         @* Color *@
 
                         <MudCheckBox
@@ -149,6 +161,28 @@
                 }
                 else
                 {
+                    @if (character.SplinterPoints.Max > 0)
+                    {
+                    
+                        for(var i = 0; i < character.SplinterPoints.Max; i++)
+                        {
+                            var available = i < character.SplinterPoints.Remaining;
+                            <MudTooltip Text="@(available ? "Splitterpunkt einsetzen" : "Splitterpunkt bereits eingesetzt")">
+                                <MudIconButton
+                                    Icon="@Icons.Material.TwoTone.Brightness3"
+                                    Color="@(available ? Color.Default : Color.Dark)"
+                                    Disabled="@(!available)" 
+                                    OnClick="useSplinterPointAsync"/>
+                            </MudTooltip>
+                        }
+                        <MudTooltip Text="@(character.SplinterPoints.Used == 0 ? "Splitterpunktemaximum erreicht" : "Splitterpunkte zurücksetzen")">
+                            <MudIconButton
+                                Icon="@Icons.Material.Filled.Loop"
+                                Disabled="@(character.SplinterPoints.Used == 0)"
+                                OnClick="resetSplinterPointsAsync"
+                            />
+                        </MudTooltip>
+                    }
                     <MudTabs
                         KeepPanelsAlive="true"
                         TabPanelClass="CharacterTab">
@@ -226,6 +260,7 @@
     string newName = string.Empty;
     int newLpBaseCapacity;
     int newFoBaseCapacity;
+    int newSplinterPointMaximum;
     bool newIsOpponent;
     MudColor? newColor;
     bool newHasCustomColor;
@@ -242,6 +277,7 @@
         newName = character.Name;
         newLpBaseCapacity = character.Lp.BaseCapacity;
         newFoBaseCapacity = character.Fo.BaseCapacity;
+        newSplinterPointMaximum = character.SplinterPoints.Max;
         newColor = character.CustomColor is not null ? new MudColor(character.CustomColor) : "#000000";
         newHasCustomColor = character.CustomColor is not null;
         newIsOpponent = character.IsOpponent;
@@ -255,6 +291,7 @@
             || newName != character.Name
             || newLpBaseCapacity != character.Lp.BaseCapacity
             || newFoBaseCapacity != character.Fo.BaseCapacity
+            || newSplinterPointMaximum != character.SplinterPoints.Max
             || newIsOpponent != character.IsOpponent
             || (newHasCustomColor && newColor?.ToString(MudColorOutputFormats.Hex) != character.CustomColor)
             || (!newHasCustomColor && character.CustomColor is not null)
@@ -293,6 +330,8 @@
             Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id},
             DeleteCharacter deleteCharacter => deleteCharacter with { CharacterId = character.Id},
             CloneCharacter cloneCharacter => cloneCharacter with { CharacterId = character.Id},
+            UseSplinterPoints useSplinterPoints => useSplinterPoints with {CharacterId = character.Id },
+            ResetSplinterPoints resetSplinterPoints => resetSplinterPoints with {CharacterId = character.Id },
             _ => throw new ArgumentOutOfRangeException(nameof(command))
             };
         await OuterCommandRouter.ApplyAsync(command);
@@ -305,6 +344,7 @@
             newName,
             newLpBaseCapacity,
             newFoBaseCapacity, 
+            newSplinterPointMaximum,
             newHasCustomColor && newColor != null 
                 ? newColor.ToString(MudColorOutputFormats.Hex) 
                 : null, newShorthands, newIsOpponent
@@ -319,6 +359,16 @@
     async Task deleteAsync()
     {
         await ApplyAsync(new DeleteCharacter(null!));
+    }
+    
+    async Task useSplinterPointAsync()
+    {
+        await ApplyAsync(new UseSplinterPoints(null!, 1));
+    }
+    
+    async Task resetSplinterPointsAsync() 
+    {
+        await ApplyAsync(new ResetSplinterPoints(null!));
     }
 
 }

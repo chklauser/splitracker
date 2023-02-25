@@ -9,6 +9,7 @@ public record Character(
     string? CustomColor,
     LpPool Lp,
     FoPool Fo,
+    SplinterPoints SplinterPoints,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
     bool IsOpponent
 )
@@ -18,6 +19,7 @@ public record Character(
         string name,
         int lpBaseCapacity,
         int foBaseCapacity,
+        int splinterPointsMax = 3,
         string? customColor = null,
         bool isOpponent = false,
         IImmutableDictionary<string, ActionShorthand>? actionShorthands = null
@@ -27,6 +29,7 @@ public record Character(
             customColor,
             new(lpBaseCapacity),
             new(foBaseCapacity),
+            new(splinterPointsMax, 0),
             actionShorthands ?? ImmutableDictionary<string, ActionShorthand>.Empty,
             isOpponent)
     {

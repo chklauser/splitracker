@@ -10,9 +10,19 @@ record Character(string Id, string Name, Pool Lp, Pool Fo)
     public string Name { get; set; } = Name;
     public Pool Lp { get; set; } = Lp;
     public Pool Fo { get; set; } = Fo;
+
+    public SplinterPoints SplinterPoints { get; set; } = new() {
+        Max = 3,
+    };
     public List<ActionShorthand> ActionShorthands { get; set; } = new();
     public string? CustomColor;
     public bool IsOpponent;
+}
+
+class SplinterPoints
+{
+    public required int Max { get; set; }
+    public int Used { get; set; }
 }
 
 class ActionShorthand

@@ -13,10 +13,15 @@ public record ShortRest(string CharacterId) : ICharacterCommand;
 
 public record StopChanneling(string CharacterId, PoolType Pool, string Id) : ICharacterCommand;
 
+public record ResetSplinterPoints(string CharacterId) : ICharacterCommand;
+
+public record UseSplinterPoints(string CharacterId, int Amount) : ICharacterCommand;
+
 public abstract record UpsertCharacter(
     string Name,
     int LpBaseCapacity,
     int FoBaseCapacity,
+    int SplinterPointsMax,
     string? CustomColor,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
     bool IsOpponent
@@ -30,6 +35,7 @@ public record CreateCharacter(
         string Name,
         int LpBaseCapacity,
         int FoBaseCapacity,
+        int SplinterPointsMax,
         string? CustomColor,
         IImmutableDictionary<string, ActionShorthand> ActionShorthands,
         bool IsOpponent
@@ -37,6 +43,7 @@ public record CreateCharacter(
     : UpsertCharacter(Name,
         LpBaseCapacity,
         FoBaseCapacity,
+        SplinterPointsMax,
         CustomColor,
         ActionShorthands,
         IsOpponent)
@@ -49,6 +56,7 @@ public record EditCharacter(
         string Name,
         int LpBaseCapacity,
         int FoBaseCapacity,
+        int SplinterPointsMax,
         string? CustomColor,
         IImmutableDictionary<string, ActionShorthand> ActionShorthands,
         bool IsOpponent
@@ -56,6 +64,7 @@ public record EditCharacter(
     : UpsertCharacter(Name,
         LpBaseCapacity,
         FoBaseCapacity,
+        SplinterPointsMax,
         CustomColor,
         ActionShorthands,
         IsOpponent)

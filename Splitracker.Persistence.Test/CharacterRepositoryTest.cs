@@ -73,6 +73,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     create.Name,
                     create.LpBaseCapacity,
                     create.FoBaseCapacity,
+                    create.SplinterPointsMax,
                     create.CustomColor,
                     create.IsOpponent,
                     create.ActionShorthands),
@@ -102,6 +103,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     ownCreate.Name,
                     ownCreate.LpBaseCapacity,
                     ownCreate.FoBaseCapacity,
+                    ownCreate.SplinterPointsMax,
                     ownCreate.CustomColor,
                     ownCreate.IsOpponent,
                     ownCreate.ActionShorthands),
@@ -129,6 +131,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     create.Name,
                     create.LpBaseCapacity,
                     create.FoBaseCapacity,
+                    create.SplinterPointsMax,
                     create.CustomColor,
                     create.IsOpponent,
                     create.ActionShorthands),
@@ -168,6 +171,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 edit.Name,
                 edit.LpBaseCapacity,
                 edit.FoBaseCapacity,
+                edit.SplinterPointsMax,
                 edit.CustomColor,
                 edit.IsOpponent,
                 edit.ActionShorthands),
@@ -175,6 +179,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 otherCharacter.Name,
                 otherCharacter.Lp.BaseCapacity,
                 otherCharacter.Fo.BaseCapacity,
+                otherCharacter.SplinterPoints.Max,
                 otherCharacter.CustomColor,
                 otherCharacter.IsOpponent,
                 otherCharacter.ActionShorthands),
@@ -384,6 +389,77 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         getOtherPool(updated).Should().BeEquivalentTo(getOtherPool(original));
     }
 
+    [TestCase(1, 1)]
+    [TestCase(2, 2)]
+    [TestCase(3, 3)]
+    [TestCase(4, 3)]
+    [TestCase(-1, 0)]
+    [TestCase(0, 0)]
+    public async Task ApplyUseSplinterPoints_ReducesPoints(int amount, int expectedUsed)
+    {
+        // Arrange
+        var original = await withCharacterCreated();
+
+        // Act
+        await repository.ApplyAsync(principal, new UseSplinterPoints(original.Id, amount));
+        
+        // Assert
+        var updated = await fetchCharacterAsync(original.Id);
+        updated.Should().BeEquivalentTo(original with {
+            SplinterPoints = original.SplinterPoints with { Used = expectedUsed },
+        });
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    [TestCase(3)]
+    [TestCase(4)]
+    [TestCase(-1)]
+    [TestCase(0)]
+    public async Task ApplyUseSplinterPoints_ReducesPoints(int amount)
+    {
+        // Arrange
+        var original = await withCharacterCreated();
+        await repository.ApplyAsync(principal, new UseSplinterPoints(original.Id, amount));
+
+        // Act
+        await repository.ApplyAsync(principal, new ResetSplinterPoints(original.Id));
+        
+        // Assert
+        var updated = await fetchCharacterAsync(original.Id);
+        updated.Should().BeEquivalentTo(original);
+    }
+
+    [TestCase(1, 1)]
+    [TestCase(2, 2)]
+    [TestCase(3, 3)]
+    [TestCase(4, 3)]
+    [TestCase(-1, 0)]
+    [TestCase(0, 0)]
+    public async Task ApplyUseSplinterPoints_RetainedThroughSplinterPointEdit(int amount, int expectedUsed)
+    {
+        // Arrange
+        var original = await withCharacterCreated();
+        var expectedSplinterPointMaximum = original.SplinterPoints.Max + 1;
+
+        // Act
+        await repository.ApplyAsync(principal, new UseSplinterPoints(original.Id, amount));
+        await repository.ApplyAsync(principal,
+            new EditCharacter(original.Id,
+                original.Name,
+                original.Lp.BaseCapacity,
+                original.Fo.BaseCapacity,
+                expectedSplinterPointMaximum, // <-- the edit
+                original.CustomColor,
+                original.ActionShorthands,
+                original.IsOpponent));
+        
+        // Assert
+        var updated = await fetchCharacterAsync(original.Id);
+        updated.Should().BeEquivalentTo(original with {
+            SplinterPoints = original.SplinterPoints with { Used = expectedUsed, Max = expectedSplinterPointMaximum },
+        });
+    }
 
     #region Test Support
 
@@ -473,6 +549,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
     static readonly CreateCharacter CreateCharacterExample = new("My Name is Test McTestington",
         5,
         6,
+        3,
         "#112233",
         ImmutableDictionary<string, ActionShorthand>.Empty
             .Add("a1", new("a1", "Action 1", null, 2, ActionShorthandType.Melee, null))
@@ -487,6 +564,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         docId,
         "test",
         3,
+        4,
         4,
         "#886633",
         CreateCharacterExample.ActionShorthands
