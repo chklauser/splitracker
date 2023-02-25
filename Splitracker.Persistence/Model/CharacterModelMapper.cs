@@ -14,6 +14,7 @@ static class CharacterModelMapper
             model.CustomColor,
             model.Lp.ToDomainLp(),
             model.Fo.ToDomainFo(),
+            model.SplinterPoints.toDomain(),
             model.ActionShorthands.Select(s => s.ToDomain()).ToImmutableDictionary(s => s.Id),
             model.IsOpponent);
     }
@@ -31,6 +32,11 @@ static class CharacterModelMapper
     static Domain.Channeling toDomain(this Channeling model)
     {
         return new(model.Id, model.Value, model.Description);
+    }
+
+    static Domain.SplinterPoints toDomain(this SplinterPoints model)
+    {
+        return new(model.Max, model.Used);
     }
 
     static Channeling toDbModel(this Domain.Channeling channeling)

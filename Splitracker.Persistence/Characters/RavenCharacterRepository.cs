@@ -149,6 +149,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 var newCharacter = new Character(CharacterDocIdPrefix(userId), create.Name,
                     new() { BaseCapacity = create.LpBaseCapacity },
                     new() { BaseCapacity = create.FoBaseCapacity }) {
+                    SplinterPoints = new() { Max = create.SplinterPointsMax, Used = 0 },
                     ActionShorthands = create.ActionShorthands.Values
                         .OrderBy(v => v.Id)
                         .Select(x => x.ToDbModel())
@@ -162,6 +163,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 model!.Name = edit.Name;
                 model.Lp.BaseCapacity = edit.LpBaseCapacity;
                 model.Fo.BaseCapacity = edit.FoBaseCapacity;
+                model.SplinterPoints.Max = edit.SplinterPointsMax;
                 model.CustomColor = edit.CustomColor;
                 model.IsOpponent = edit.IsOpponent;
                 model.ActionShorthands = edit.ActionShorthands
@@ -175,6 +177,12 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                 break;
             case StopChanneling { Pool: PoolType.Fo, Id: var channelingId }:
                 stopChanneling(model!.Fo, model.Fo.ToDomainFo(), channelingId);
+                break;
+            case UseSplinterPoints { Amount: var amount }:
+                model!.SplinterPoints.Used = Math.Max(0, Math.Min(model.SplinterPoints.Max, model.SplinterPoints.Used + amount));
+                break;
+            case ResetSplinterPoints:
+                model!.SplinterPoints.Used = 0;
                 break;
             case ShortRest:
                 model!.Lp.Points.Exhausted = 0;
