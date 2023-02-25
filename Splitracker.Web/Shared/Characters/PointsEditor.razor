@@ -147,7 +147,7 @@
         set
         {
             _expression = value;
-            var vec = PointsVec.From(value, type);
+            var vec = PointsVec.From(value, Type.DefaultPointType());
             if (vec != Value)
             {
                 Value = vec;
@@ -192,6 +192,11 @@
 
     private void onSlide(int newValue)
     {
+        if (primaryPointValue == newValue)
+        {
+            return;
+        }
+        
         Value = PointsVec.From(newValue, type);
     }
 
