@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -23,7 +23,7 @@
     <PackageVersion Include="Pulumi" Version="3.54.0" />
     <PackageVersion Include="Pulumi.DigitalOcean" Version="4.18.0" />
     <PackageVersion Include="Pulumi.Kubernetes" Version="3.24.1" />
-    <PackageVersion Include="Pulumi.Random" Version="4.11.2" />
+    <PackageVersion Include="Pulumi.Random" Version="4.13.0" />
     <PackageVersion Include="RavenDB.Client" Version="5.4.101" />
     <PackageVersion Include="RavenDB.Embedded" Version="5.4.101" />
     <PackageVersion Include="RavenDB.TestDriver" Version="5.4.101" />
