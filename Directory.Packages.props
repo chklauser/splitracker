@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Identity.Web" Version="1.26.0" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="2.10.0" />
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="1.26.0" />
     <PackageVersion Include="Microsoft.NET.Build.Containers" Version="0.3.2" />
     <PackageVersion Include="MudBlazor" Version="6.1.9" />
