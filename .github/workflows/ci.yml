@@ -100,9 +100,9 @@ jobs:
           mkdir ~/.kube
           echo -n '${{ secrets.KUBECONFIG }}' | base64 -d > ~/.kube/config
           sed \
-            -i 's/^version:.*$/version: "${{ needs.build.outputs.version }}"/' \
-            -i 's/^appVersion:.*$/appVersion: "${{ needs.build.outputs.version }}"/'\
-            deploy/splitracker/Chart.yaml
+            -e 's/^version:.*$/version: "${{ needs.build.outputs.version }}"/' \
+            -e 's/^appVersion:.*$/appVersion: "${{ needs.build.outputs.version }}"/'\
+            -i deploy/splitracker/Chart.yaml
           echo "Deploying to DEV"
           cat deploy/splitracker/Chart.yaml
           helm upgrade --install --create-namespace \
@@ -136,9 +136,9 @@ jobs:
           mkdir ~/.kube
           echo -n '${{ secrets.KUBECONFIG }}' | base64 -d > ~/.kube/config
           sed \
-            -i 's/^version:.*$/version: "${{ needs.build.outputs.version }}"/' \
-            -i 's/^appVersion:.*$/appVersion: "${{ needs.build.outputs.version }}"/'\
-            deploy/splitracker/Chart.yaml
+            -e 's/^version:.*$/version: "${{ needs.build.outputs.version }}"/' \
+            -e 's/^appVersion:.*$/appVersion: "${{ needs.build.outputs.version }}"/'\
+            -i deploy/splitracker/Chart.yaml
           echo "Deploying to PROD"
           cat deploy/splitracker/Chart.yaml
           helm upgrade --install --create-namespace \
