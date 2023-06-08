@@ -36,7 +36,7 @@ jobs:
       - name: Choose Version
         id: choose_version
         run: |
-          version='1.0.${{ github.run_number }}'
+          version='1.1.${{ github.run_number }}'
           echo "version=$version" >> $GITHUB_OUTPUT
       - name: Install dependencies
         run: dotnet restore --runtime linux-x64 --verbosity=normal /p:Version=${{ steps.choose_version.outputs.version }}
@@ -60,7 +60,7 @@ jobs:
           set -x
           docker login --username github --password '${{ secrets.hz_registry_password }}' registry.hz.klauser.link
           version='${{ steps.choose_version.outputs.version }}'
-          tag="registry.digitalocean.com/klauser/splitracker:$version"
+          tag="registry.hz.klauser.link/splitracker:$version"
           docker tag splitracker-web:$version "$tag"
           docker push "$tag"
           docker logout registry.hz.klauser.link
