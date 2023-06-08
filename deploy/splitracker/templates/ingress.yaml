@@ -8,7 +8,7 @@ spec:
   secretName: {{ include "tlsCertSecretName" .}}
   issuerRef:
     kind: ClusterIssuer
-    name: le-staging
+    name: le-prod
   commonName: {{ include "host" . }}
   dnsNames:
     - {{ include "host" . }}
