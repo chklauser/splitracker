@@ -1,0 +1,7 @@
+
+raven:
+  certificatePassword: "raven-pass"
+  certificateBase64: "definitely-base64"
+
+sso:
+  oidcClientSecret: "oidc-pass"

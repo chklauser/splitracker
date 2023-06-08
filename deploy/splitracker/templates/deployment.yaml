@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "..fullname" . }}
+  labels:
+    {{- include "..labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "..selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ include "..fullname" . }}
+        {{- include "..selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "..serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: {{ include "dotnetEnv" . }}
+            - name: Raven__CertificatePath
+              value: /etc/raven-client-cert/keystore.p12
+            - name: Raven__CertificatePasswordFile
+              value: /etc/raven-client-cert/password
+            - name: AzureAdB2C__ClientSecret
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "oidcSecretName" . }}
+                  key: client-secret
+          volumeMounts:
+            - mountPath: /etc/raven-client-cert
+              readOnly: true
+              name: raven-client-cert
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: raven-client-cert
+          secret:
+            secretName: {{ include "ravenCertSecretName" . }}

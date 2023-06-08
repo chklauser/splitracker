@@ -1,0 +1,64 @@
+# Default values for ..
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.hz.klauser.link/splitracker-web
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+raven:
+  certificatePassword: ""
+  certificateBase64: ""
+
+sso:
+  oidcClientSecret: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false # doesn't work with .NET out of the box
+  runAsNonRoot: true
+  runAsUser: 1000
+  
+env: prod
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 128m
+    memory: 384Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
