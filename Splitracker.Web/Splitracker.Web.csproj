@@ -9,6 +9,8 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <PublishProfile>DefaultContainer</PublishProfile>
+    <ContainerImageName>splitracker-web</ContainerImageName>
+    <ContainerImageTags>$(Version);latest</ContainerImageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Splitracker.Domain\Splitracker.Domain.csproj" />
     <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="Shared\CharacterAvatar.razor" />
   </ItemGroup>
 
 </Project>

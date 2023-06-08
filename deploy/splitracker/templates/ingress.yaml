@@ -1,0 +1,43 @@
+kind: Certificate
+apiVersion: cert-manager.io/v1
+metadata:
+  name: {{ include "tlsCertSecretName" .}}
+  labels:
+    {{ include "..labels" . }}
+spec:
+  secretName: {{ include "tlsCertSecretName" .}}
+  issuerRef:
+    kind: ClusterIssuer
+    name: le-staging
+  commonName: {{ include "host" . }}
+  dnsNames:
+    - {{ include "host" . }}
+    {{- if eq .Values.env "prod" }}
+    - {{ include "defaultHost" . }}
+    {{ end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "..fullname" . }}
+  labels:
+    {{- include "..labels" . | nindent 4 }}
+  annotations:
+    "nginx.ingress.kubernetes.io/proxy-buffers-number": "8"
+    "nginx.ingress.kubernetes.io/proxy-buffer-size": "16k"
+spec:
+  ingressClassName: nginx  
+  tls:
+    - hosts:
+        - {{ include "host" . }}
+        {{- if eq .Values.env "prod" }}
+        - {{ include "defaultHost" . }}
+        {{- end}}
+      secretName: {{ include "tlsCertSecretName" . }}
+  rules:
+    - host: {{ include "host" . }}
+      {{ include "ingressRule" . | nindent 6 }}
+    {{- if eq .Values.env "prod" }}
+    - host: {{ include "defaultHost" . }}
+      {{ include "ingressRule" . | nindent 6 }}
+    {{- end -}}

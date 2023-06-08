@@ -6,6 +6,8 @@ node_modules
 *.razor.css.map
 Splitracker.Web/wwwroot/css/*.css
 Splitracker.Web/wwwroot/css/*.css.map
+*.local.*
+*.secret.*
 
 # Build results
 [Dd]ebug/
