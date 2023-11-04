@@ -113,7 +113,7 @@ partial class TimelineCharacterActionCard
         };
     }
 
-    async Task descriptionChanged(string newDescription)
+    async Task descriptionChanged(string? newDescription)
     {
         await ActionDataChanged.InvokeAsync(ActionData with {
             Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription

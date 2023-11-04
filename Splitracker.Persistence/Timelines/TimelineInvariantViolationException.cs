@@ -13,11 +13,6 @@ public class TimelineInvariantViolationException : Exception
         TimelineId = timelineId;
     }
 
-    protected TimelineInvariantViolationException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-        TimelineId = info.GetString("TimelineId") ?? null;
-    }
-
     public TimelineInvariantViolationException(string? message, string? timelineId) : base(message)
     {
         TimelineId = timelineId;

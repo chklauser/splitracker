@@ -18,15 +18,14 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up .NET 6 SDK (for Raven tests)
-        uses: actions/setup-dotnet@v1
+      - uses: actions/checkout@v2 
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
-      - name: Set up .NET 7 SDK
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 7.0.x
+          # NET 6 for Raven tests
+          dotnet-version: |
+            6.0.x
+            8.0.x
       - uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
