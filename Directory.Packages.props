@@ -7,7 +7,6 @@
     <PackageVersion Include="Blazored.LocalStorage" Version="4.4.0" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="JetBrains.Annotations" Version="2023.2.0" />
-    <PackageVersion Include="KubernetesClient" Version="10.0.31" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.13" NoWarn="NU1605" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.13" NoWarn="NU1605" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
@@ -20,10 +19,6 @@
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="2.11.0" />
     <PackageVersion Include="Microsoft.NET.Build.Containers" Version="0.3.2" />
     <PackageVersion Include="MudBlazor" Version="6.11.0" />
-    <PackageVersion Include="Pulumi" Version="3.55.0" />
-    <PackageVersion Include="Pulumi.DigitalOcean" Version="4.18.0" />
-    <PackageVersion Include="Pulumi.Kubernetes" Version="3.24.1" />
-    <PackageVersion Include="Pulumi.Random" Version="4.13.1" />
     <PackageVersion Include="RavenDB.Client" Version="6.0.0" />
     <PackageVersion Include="RavenDB.Embedded" Version="6.0.0" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.0.0" />
