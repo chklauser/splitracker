@@ -105,7 +105,7 @@ jobs:
             -i deploy/splitracker/Chart.yaml
           echo "Deploying to DEV"
           cat deploy/splitracker/Chart.yaml
-          helm upgrade --install --create-namespace \
+          helm upgrade --install --create-namespace --wait \
             --namespace splitracker-dev \
             --set env=dev \
             --set raven.certificatePassword='${{ secrets.RAVEN_DEV_CERTIFICATE_PASSWORD }}' \
@@ -141,7 +141,7 @@ jobs:
             -i deploy/splitracker/Chart.yaml
           echo "Deploying to PROD"
           cat deploy/splitracker/Chart.yaml
-          helm upgrade --install --create-namespace \
+          helm upgrade --install --create-namespace --wait \
             --namespace splitracker-prod \
             --set env=prod \
             --set raven.certificatePassword='${{ secrets.RAVEN_PROD_CERTIFICATE_PASSWORD }}' \
