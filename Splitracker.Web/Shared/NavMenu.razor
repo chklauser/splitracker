@@ -60,6 +60,15 @@
                 }
             </MudNavGroup>
         }
+        @if (experimental)
+        {
+            <MudNavLink
+                Href="/Roll"
+                Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.Casino">
+                Würfeln
+            </MudNavLink>
+        }
     </MudNavMenu>
     @if (groups != null && groups.Any(g => g.HasTimeline))
     {

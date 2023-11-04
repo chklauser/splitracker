@@ -1,0 +1,13 @@
+﻿<MudText Typo="Typo.h4" Color="@dieColor(Roll)">@Roll</MudText>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public required int Roll { get; set; } = 1;
+    
+    static Color dieColor(int die) => die switch {
+        <=2 => Color.Error,
+        >=9 => Color.Success,
+        _ => Color.Default,
+        };
+}
