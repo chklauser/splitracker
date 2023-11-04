@@ -7,7 +7,7 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <PublishProfile>DefaultContainer</PublishProfile>
-    <ContainerImageName>splitracker-web</ContainerImageName>
+    <ContainerRepository>splitracker-web</ContainerRepository>
     <ContainerImageTags>$(Version);latest</ContainerImageTags>
   </PropertyGroup>
 

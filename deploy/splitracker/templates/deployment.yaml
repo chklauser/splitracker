@@ -35,6 +35,8 @@ spec:
           env:
             - name: DOTNET_ENVIRONMENT
               value: {{ include "dotnetEnv" . }}
+            - name: ASPNETCORE_URLS
+              value: 'http://+:{{ .Values.service.port }}'
             - name: Raven__CertificatePath
               value: /etc/raven-client-cert/keystore.p12
             - name: Raven__CertificatePasswordFile
