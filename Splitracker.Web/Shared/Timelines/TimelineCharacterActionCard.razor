@@ -80,6 +80,7 @@
                             HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
                     </MudStack>
                     <MudTextField
+                        T="string"
                         tabindex="1"
                         Variant="@Variant.Outlined"
                         @bind-Value:get="ActionData.Description"

@@ -17,13 +17,6 @@ public class DataAccessControlException : Exception
         UserId = userId;
     }
 
-    protected DataAccessControlException(SerializationInfo info, StreamingContext context
-    ) : base(info, context)
-    {
-        DocumentId = info.GetString(nameof(DocumentId)) ?? string.Empty;
-        UserId = info.GetString(nameof(UserId)) ?? string.Empty;
-    }
-
     public DataAccessControlException(string? message, string documentId, string userId) : base(message)
     {
         DocumentId = documentId;

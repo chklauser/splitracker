@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <UserSecretsId>aspnet-Splitracker.Web-77e41de4-1c51-4786-aa4a-1995294c2d38</UserSecretsId>
   </PropertyGroup>
 
@@ -21,7 +19,6 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Identity.Web" />
     <PackageReference Include="Microsoft.Identity.Web.UI" />
-    <PackageReference Include="Microsoft.NET.Build.Containers" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="AspNetCore.SassCompiler" />
   </ItemGroup>
