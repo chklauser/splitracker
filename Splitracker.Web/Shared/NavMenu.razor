@@ -13,7 +13,7 @@
             Icon="@Icons.Material.Filled.EmojiPeople">
             Charaktere
         </MudNavLink>
-        @if (Flags is { StageMode: false } && (experimental || groups is {Count: > 0 }))
+        @if (!stageMode && (experimental || groups is {Count: > 0 }))
         {
             <MudNavGroup
                 Title="Gruppen"
@@ -40,7 +40,7 @@
                 }
             </MudNavGroup>
         }
-        @if (Flags is { StageMode: false } && groups != null && groups.Any(g => g.HasTimeline))
+        @if (!stageMode && groups != null && groups.Any(g => g.HasTimeline))
         {
             <MudNavGroup
                 Title="Tickleisten"
@@ -85,14 +85,11 @@
             </MudSwitch></ChildContent>
         </MudTooltip>
     }
-    @if (hostEnvironment.EnvironmentName != "Production")
-    {
-        <MudSwitch
-            @bind-Checked="experimental"
-            class="ml-2">
-            Experimente
-        </MudSwitch>
-    }
+    <MudSwitch
+        @bind-Checked="experimental"
+        class="ml-2">
+        Experimente
+    </MudSwitch>
 </MudStack>
 
 @code {
