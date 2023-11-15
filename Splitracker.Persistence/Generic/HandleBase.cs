@@ -38,7 +38,15 @@ interface ISubscription<out T>
     event EventHandler? Updated;
 }
 
-interface IHandle<TSelf, TSubscription, TValue> where TSelf : IHandle<TSelf, TSubscription, TValue>
+interface IHandle<TSelf, TSubscription> where TSelf : IHandle<TSelf, TSubscription>
 {
     static abstract TSelf Create(TSubscription subscription);
+}
+
+interface IPrefixHandle<TSelf, TValue> where TSelf : IPrefixHandle<TSelf, TValue>
+{
+    static abstract TSelf Create(TValue value);
+    string Id { get; }
+    TValue Value { get; set; }
+    void TriggerUpdated();
 }

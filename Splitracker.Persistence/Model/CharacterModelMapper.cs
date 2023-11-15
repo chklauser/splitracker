@@ -16,7 +16,8 @@ static class CharacterModelMapper
             model.Fo.ToDomainFo(),
             model.SplinterPoints.toDomain(),
             model.ActionShorthands.Select(s => s.ToDomain()).ToImmutableDictionary(s => s.Id),
-            model.IsOpponent);
+            model.IsOpponent,
+            []);
     }
 
     public static LpPool ToDomainLp(this Pool model)

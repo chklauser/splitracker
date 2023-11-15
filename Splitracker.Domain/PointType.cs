@@ -4,5 +4,5 @@ public enum PointType
 {
     K,
     E,
-    V
+    V,
 }

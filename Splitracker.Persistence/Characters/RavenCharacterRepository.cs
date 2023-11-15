@@ -19,26 +19,16 @@ using Pool = Splitracker.Persistence.Model.Pool;
 
 namespace Splitracker.Persistence.Characters;
 
-class RavenCharacterRepository : ICharacterRepository, IHostedService
+class RavenCharacterRepository(
+    IDocumentStore store,
+    ILogger<RavenCharacterRepository> log,
+    IUserRepository repository
+)
+    : ICharacterRepository, IHostedService
 {
     internal const string CollectionName = "Characters";
 
-    readonly IDocumentStore store;
-    readonly ILogger<RavenCharacterRepository> log;
-    readonly IUserRepository userRepository;
-
     readonly ConcurrentDictionary<string, Task<RavenCharacterRepositorySubscription>> handles = new();
-
-    public RavenCharacterRepository(
-        IDocumentStore store,
-        ILogger<RavenCharacterRepository> log,
-        IUserRepository userRepository
-    )
-    {
-        this.store = store;
-        this.log = log;
-        this.userRepository = userRepository;
-    }
 
     bool isOwner(string characterId, string userId) =>
         characterId.StartsWith(CharacterDocIdPrefix(userId), StringComparison.Ordinal);
@@ -46,7 +36,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
     [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
     public async Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         log.LogInformation("Applying character {Command} to {Oid}", characterCommand, userId);
         using var session = store.OpenAsyncSession();
@@ -156,6 +146,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                         .ToList(),
                     CustomColor = create.CustomColor,
                     IsOpponent = create.IsOpponent,
+                    TagIds = create.TagIds.ToList(),
                 };
                 await session.StoreAsync(newCharacter);
                 break;
@@ -171,6 +162,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
                     .OrderBy(x => x.Id)
                     .Select(x => x.ToDbModel())
                     .ToList();
+                model.TagIds = edit.TagIds.Order().ToList();
                 break;
             case StopChanneling { Pool: PoolType.Lp, Id: var channelingId }:
                 stopChanneling(model!.Lp, model.Lp.ToDomainLp(), channelingId);
@@ -214,7 +206,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
 
     public async Task<IReadOnlyList<Domain.Character>> SearchCharactersAsync(ClaimsPrincipal principal, string searchTerm, CancellationToken cancellationToken)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
         
         using var session = store.OpenAsyncSession();
         var dbCharacters = await session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
@@ -235,7 +227,7 @@ class RavenCharacterRepository : ICharacterRepository, IHostedService
 
     public async Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         return await handles.TryCreateSubscription(
             userId,

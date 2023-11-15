@@ -24,7 +24,8 @@ public abstract record UpsertCharacter(
     int SplinterPointsMax,
     string? CustomColor,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-    bool IsOpponent
+    bool IsOpponent,
+    IImmutableSet<string> TagIds
 ) : ICharacterCommand
 {
     protected abstract string? OptionalCharacterId { get; }
@@ -38,36 +39,40 @@ public record CreateCharacter(
         int SplinterPointsMax,
         string? CustomColor,
         IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-        bool IsOpponent
-    )
+        bool IsOpponent,
+        IImmutableSet<string> TagIds
+)
     : UpsertCharacter(Name,
         LpBaseCapacity,
         FoBaseCapacity,
         SplinterPointsMax,
         CustomColor,
         ActionShorthands,
-        IsOpponent)
+        IsOpponent,
+        TagIds)
 {
     protected override string? OptionalCharacterId => null;
 }
 
 public record EditCharacter(
-        string CharacterId,
-        string Name,
-        int LpBaseCapacity,
-        int FoBaseCapacity,
-        int SplinterPointsMax,
-        string? CustomColor,
-        IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-        bool IsOpponent
-    )
+    string CharacterId,
+    string Name,
+    int LpBaseCapacity,
+    int FoBaseCapacity,
+    int SplinterPointsMax,
+    string? CustomColor,
+    IImmutableDictionary<string, ActionShorthand> ActionShorthands,
+    bool IsOpponent,
+    IImmutableSet<string> TagIds
+)
     : UpsertCharacter(Name,
         LpBaseCapacity,
         FoBaseCapacity,
         SplinterPointsMax,
         CustomColor,
         ActionShorthands,
-        IsOpponent)
+        IsOpponent,
+        TagIds)
 {
     protected override string OptionalCharacterId => CharacterId;
 }

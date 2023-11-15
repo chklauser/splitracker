@@ -11,6 +11,7 @@ using Raven.Migrations;
 using Splitracker.Domain;
 using Splitracker.Persistence.Characters;
 using Splitracker.Persistence.Groups;
+using Splitracker.Persistence.Tags;
 using Splitracker.Persistence.Timelines;
 using Splitracker.Persistence.Users;
 
@@ -57,6 +58,8 @@ public static class PersistenceServiceProviderConfig
         services.AddSingletonImplementation<RavenTimelineRepository>()
             .As<ITimelineRepository>().AsWellAnd()
             .AsHostedService();
+
+        services.AddSingleton<ITagRepository, RavenTagRepository>();
 
         services.AddRavenDbMigrations(config =>
         {

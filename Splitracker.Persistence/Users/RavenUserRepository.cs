@@ -12,19 +12,11 @@ using Splitracker.Persistence.Model;
 
 namespace Splitracker.Persistence.Users;
 
-public class RavenUserRepository : IHostedService, IUserRepository
+public class RavenUserRepository(IDocumentStore store, ILogger<RavenUserRepository> log)
+    : IHostedService, IUserRepository
 {
     const string CollectionName = "Users";
     internal const string OidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
-
-    readonly IDocumentStore store;
-    readonly ILogger<RavenUserRepository> log;
-
-    public RavenUserRepository(IDocumentStore store, ILogger<RavenUserRepository> log)
-    {
-        this.store = store;
-        this.log = log;
-    }
 
     public async Task<string> GetUserIdAsync(ClaimsPrincipal principal)
     {
@@ -43,7 +35,7 @@ public class RavenUserRepository : IHostedService, IUserRepository
             await session.StoreAsync(new User {
                 Id = newUserId,
                 DisplayName = principal.Claims.FirstOrDefault(c => c.Type == "name")?.Value ?? principal.Identity?.Name ?? "Anonymous",
-                Oids = new() { oid },
+                Oids = [oid],
             });
             await session.SaveChangesAsync();
             return newUserId;

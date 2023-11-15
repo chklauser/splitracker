@@ -14,9 +14,11 @@ record Character(string Id, string Name, Pool Lp, Pool Fo)
     public SplinterPoints SplinterPoints { get; set; } = new() {
         Max = 3,
     };
-    public List<ActionShorthand> ActionShorthands { get; set; } = new();
+    public List<ActionShorthand> ActionShorthands { get; set; } = [];
     public string? CustomColor;
     public bool IsOpponent;
+    
+    public List<string> TagIds { get; set; } = [];
 }
 
 class SplinterPoints

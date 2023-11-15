@@ -13,7 +13,7 @@ namespace Splitracker.Persistence.Generic;
 
 [SuppressMessage("ReSharper", "ContextualLoggerProblem")]
 abstract class SubscriptionBase<TSelf, TValue, THandle> : IDisposable, ISubscription<TValue>, IObserver<DocumentChange>
-where THandle : class, IHandle<THandle, TSelf, TValue>
+where THandle : class, IHandle<THandle, TSelf>
 where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 {
     protected readonly ReaderWriterLockSlim Lock = new();

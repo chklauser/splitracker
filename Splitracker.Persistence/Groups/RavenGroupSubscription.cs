@@ -9,10 +9,17 @@ using Splitracker.Persistence.Generic;
 namespace Splitracker.Persistence.Groups;
 
 [SuppressMessage("ReSharper", "ContextualLoggerProblem")]
-sealed class RavenGroupSubscription :  SubscriptionBase<RavenGroupSubscription, Group, RavenGroupHandle>
+sealed class RavenGroupSubscription(
+    IDocumentStore store,
+    string groupId,
+    Group group,
+    ILogger<RavenGroupRepository> log
+) : SubscriptionBase<RavenGroupSubscription, Group, RavenGroupHandle>(
+    log,
+    group,
+    store,
+    documentIdsToSubscribeToFor(group))
 {
-    readonly string groupId;
-    
     public static async ValueTask<RavenGroupSubscription> OpenAsync(
         IDocumentStore store,
         string groupId,
@@ -21,17 +28,6 @@ sealed class RavenGroupSubscription :  SubscriptionBase<RavenGroupSubscription, 
     {
         using var session = store.OpenAsyncSession();
         return new(store, groupId, await RavenGroupRepository.LoadGroupAsync(session, groupId), log);
-    }
-
-    RavenGroupSubscription(
-        IDocumentStore store,
-        string groupId,
-        Group group,
-        ILogger<RavenGroupRepository> log
-    ) : base(log, group, store, documentIdsToSubscribeToFor(group))
-    {
-        this.Log = log;
-        this.groupId = groupId;
     }
 
     protected override async Task<Group> RefreshValueAsync()

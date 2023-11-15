@@ -1,0 +1,227 @@
+﻿@page "/Tags"
+@using Splitracker.Domain
+@using Splitracker.Domain.Commands
+@implements IAsyncDisposable
+
+@inject ITagRepository repository
+<PageTitle>Tags | Splitracker</PageTitle>
+
+<MudBreadcrumbs
+    Items="breadcrumbs"/>
+
+<MudTable
+    T="ITagHandle"
+    Items="@(handle?.Tags ?? [])"
+    @bind-SelectedItem="selectedTag"
+    SortLabel="Sortieren"
+    CommitEditTooltip="Speichern"
+    OnCommitEditClick="tagEditCommit"
+    Comparer="@TagEqualById.Instance"
+    Hover="@true"
+    Loading="@(handle == null)"
+    EditTrigger="TableEditTrigger.EditButton"
+    ApplyButtonPosition="TableApplyButtonPosition.End"
+    RowEditPreview="rowEditPreview"
+    CustomHeader="true">
+    <HeaderContent>
+        <MudTHeadRow
+            IgnoreCheckbox="true"
+            IgnoreEditable="true">
+            <MudTh>
+                <MudTableSortLabel
+                    T="ITagHandle"
+                    SortBy="@(x => x.Tag.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+        </MudTHeadRow>
+        <MudTHeadRow
+            IgnoreCheckbox="true"
+            IgnoreEditable="true">
+            <MudTh>
+                <MudTextField
+                    T="string"
+                    @bind-Value="newTagName"
+                    Immediate
+                    Required
+                    Label="Tag Name"/>
+            </MudTh>
+            <MudTh>
+                <MudIconButton
+                    Color="Color.Primary"
+                    Size="Size.Small"
+                    Icon="@Icons.Material.Filled.Add"
+                    OnClick="tagCreate"
+                    Disabled="@(string.IsNullOrWhiteSpace(newTagName))"/>
+                
+            </MudTh>
+        </MudTHeadRow>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd
+            DataLabel="Name">
+            @context.Tag.Name
+        </MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd
+            DataLabel="Name">
+            <MudTextField
+                T="string"
+                @bind-Value="selectedTagName"
+                Required/>
+        </MudTd>
+    </RowEditingTemplate>
+    <EditButtonContent
+        Context="button">
+        <MudIconButton
+            Size="Size.Small"
+            Icon="@Icons.Material.Outlined.Edit"
+            Class="pa-0"
+            OnClick="@button.ButtonAction"
+            Disabled="@button.ButtonDisabled"/>
+    </EditButtonContent>
+</MudTable>
+
+@code {
+
+    static List<BreadcrumbItem> breadcrumbs => [
+        new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!),
+        new("Tags", "/Tags", icon: Icons.Material.Filled.Tag!),
+    ];
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    ITagRepositoryHandle? handle;
+    ITagHandle? selectedTag;
+    string? selectedTagName;
+    string newTagName = "";
+    Dictionary<string, ITagHandle> subscribedTags = [];
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+        }
+
+        handle = null;
+        StateHasChanged();
+        await base.OnParametersSetAsync();
+
+        var auth = await AuthenticationState;
+        handle = await repository.OpenAsync(auth.User);
+        handle.Added += (_, _) => InvokeAsync(refreshTagSubscriptions);
+        handle.Deleted += (_, _) => InvokeAsync(refreshTagSubscriptions);
+        refreshTagSubscriptions();
+    }
+
+    private void refreshTagSubscriptions()
+    {
+        StateHasChanged();
+        if (handle == null)
+        {
+            return;
+        }
+
+        var previouslySubscribedTags = subscribedTags;
+        subscribedTags = new(handle.Tags.Count);
+        foreach (var handleTag in handle.Tags)
+        {
+            var tagId = handleTag.Tag.Id;
+            if (previouslySubscribedTags.TryGetValue(tagId, out var subscribedTag))
+            {
+                // tag is in both the new and the old list
+            }
+            else
+            {
+                // tag is new and needs to be tracked
+                handleTag.Updated += onTagUpdated;
+            }
+
+            // in any event: we ensure we mark it as being tracked
+            subscribedTags[tagId] = handleTag;
+            previouslySubscribedTags.Remove(tagId);
+        }
+
+        // anything that is still left in the previously tracked list needs to be unsubscribed
+        foreach (var handleTag in previouslySubscribedTags.Values)
+        {
+            handleTag.Updated -= onTagUpdated;
+        }
+    }
+
+    void onTagUpdated(object? o, EventArgs eventArgs)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        var previouslySubscribedTags = subscribedTags;
+        subscribedTags = new();
+        foreach (var handleTag in previouslySubscribedTags.Values)
+        {
+            handleTag.Updated -= onTagUpdated;
+        }
+
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+            handle = null;
+        }
+    }
+
+    async Task tagEditCommit()
+    {
+        var auth = await AuthenticationState;
+        if (selectedTag != null && !string.IsNullOrWhiteSpace(selectedTagName))
+        {
+            await repository.ApplyAsync(auth.User, new EditTag(selectedTag.Tag.Id, selectedTagName.Trim()));
+        }
+
+        selectedTag = null;
+        selectedTagName = null;
+    }
+
+    async Task tagCreate()
+    {
+        var auth = await AuthenticationState;
+        if (!string.IsNullOrWhiteSpace(newTagName))
+        {
+            await repository.ApplyAsync(auth.User, new CreateTag(newTagName.Trim()));
+        }
+
+        newTagName = "";
+    }
+
+    class TagEqualById : IEqualityComparer<ITagHandle>
+    {
+        public static readonly TagEqualById Instance = new();
+
+        public bool Equals(ITagHandle? x, ITagHandle? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+            return x.Tag.Id == y.Tag.Id;
+        }
+
+        public int GetHashCode(ITagHandle obj)
+        {
+            return obj.Tag.Id.GetHashCode();
+        }
+    }
+
+    void rowEditPreview(object obj)
+    {
+        if (obj is ITagHandle { Tag: var tag })
+        {
+            selectedTagName = tag.Name;
+        }
+    }
+
+}

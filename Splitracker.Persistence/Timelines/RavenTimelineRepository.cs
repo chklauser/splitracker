@@ -21,23 +21,14 @@ using Timeline = Splitracker.Persistence.Model.Timeline;
 
 namespace Splitracker.Persistence.Timelines;
 
-class RavenTimelineRepository : ITimelineRepository, IHostedService
+class RavenTimelineRepository(
+    IDocumentStore store,
+    ILogger<RavenTimelineRepository> log,
+    IUserRepository repository
+)
+    : ITimelineRepository, IHostedService
 {
     internal const string CollectionName = "Timelines";
-    readonly IDocumentStore store;
-    readonly ILogger<RavenTimelineRepository> log;
-    readonly IUserRepository userRepository;
-
-    public RavenTimelineRepository(
-        IDocumentStore store,
-        ILogger<RavenTimelineRepository> log,
-        IUserRepository userRepository
-    )
-    {
-        this.store = store;
-        this.log = log;
-        this.userRepository = userRepository;
-    }
 
     #region Reading
 
@@ -45,7 +36,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
 
     public async Task<ITimelineHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
         if (await accessTimelineAsync(groupId, userId, session) is not var (timelineId, _))
@@ -83,7 +74,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
         CancellationToken cancellationToken
     )
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
         
@@ -121,7 +112,7 @@ class RavenTimelineRepository : ITimelineRepository, IHostedService
 
     public async Task ApplyAsync(ClaimsPrincipal principal, TimelineCommand command)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
 

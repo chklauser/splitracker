@@ -18,23 +18,14 @@ using Character = Splitracker.Persistence.Model.Character;
 
 namespace Splitracker.Persistence.Groups;
 
-class RavenGroupRepository : IGroupRepository, IHostedService
+class RavenGroupRepository(
+    IDocumentStore store,
+    ILogger<RavenGroupRepository> log,
+    IUserRepository repository
+)
+    : IGroupRepository, IHostedService
 {
     internal const string CollectionName = "Groups";
-    readonly IDocumentStore store;
-    readonly ILogger<RavenGroupRepository> log;
-    readonly IUserRepository userRepository;
-
-    public RavenGroupRepository(
-        IDocumentStore store,
-        ILogger<RavenGroupRepository> log,
-        IUserRepository userRepository
-    )
-    {
-        this.store = store;
-        this.log = log;
-        this.userRepository = userRepository;
-    }
 
     #region Reading
 
@@ -42,7 +33,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     public async Task<IGroupHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
         if (await accessGroupAsync(groupId, userId, session) is not { } role)
@@ -76,7 +67,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
         CancellationToken cancellationToken
     )
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
 
@@ -113,7 +104,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
             return new JoinResult.GroupNotFound();
         }
 
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         using var session = store.OpenAsyncSession();
         var groupToJoin = await session.Query<Model.Group, Group_ByJoinCode>()
@@ -139,7 +130,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     public async Task<IReadOnlyList<GroupInfo>> ListGroupsAsync(ClaimsPrincipal principal)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
         
         using var session = store.OpenAsyncSession();
         var groups = await session.Query<Group_ByUserId.IndexEntry, Group_ByUserId>()
@@ -161,7 +152,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     public async Task JoinWithExistingCharacterAsync(ClaimsPrincipal principal, Domain.Group group, Domain.Character character)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
 
         if (!character.Id.StartsWith(RavenCharacterRepository.CharacterDocIdPrefix(userId)))
         {
@@ -175,7 +166,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     public async Task JoinWithNewCharacterAsync(ClaimsPrincipal principal, Domain.Group group, string characterName)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
         var characterDocIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
 
         using var session = store.OpenAsyncSession();
@@ -243,7 +234,7 @@ class RavenGroupRepository : IGroupRepository, IHostedService
 
     public async Task LeaveGroupAsync(ClaimsPrincipal principal, Domain.Group group, Domain.Character character)
     {
-        var userId = await userRepository.GetUserIdAsync(principal);
+        var userId = await repository.GetUserIdAsync(principal);
         var characterDocIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
         using var session = store.OpenAsyncSession();
         var role = await accessGroupAsync(group.Id, userId, session);

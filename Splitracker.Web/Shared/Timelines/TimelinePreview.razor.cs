@@ -30,7 +30,7 @@ partial class TimelinePreview
     public required ITimelineDispatcher Dispatcher { get; set; }
     
     [Inject]
-    public required TimelineLogic Logic { get; set; }
+    public required TimelineLogic Logic { get; init; }
 
     IReadOnlyList<(Tick Tick, int Track, int Offset)>? allocatedTimeline;
 

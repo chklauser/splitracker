@@ -452,7 +452,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 expectedSplinterPointMaximum, // <-- the edit
                 original.CustomColor,
                 original.ActionShorthands,
-                original.IsOpponent));
+                original.IsOpponent,
+                []));
         
         // Assert
         var updated = await fetchCharacterAsync(original.Id);
@@ -537,13 +538,9 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         };
         await repository.ApplyAsync(principal, create);
         WaitForIndexing();
-        Character original;
-        await using (var handle = await repository.OpenAsync(principal))
-        {
-            original = handle.Characters[0].Character;
-        }
+        await using var handle = await repository.OpenAsync(principal);
 
-        return original;
+        return handle.Characters[0].Character;
     }
 
     static readonly CreateCharacter CreateCharacterExample = new("My Name is Test McTestington",
@@ -555,7 +552,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
             .Add("a1", new("a1", "Action 1", null, 2, ActionShorthandType.Melee, null))
             .Add("a2", new("a2", "Action 2", "Bogen", 3, ActionShorthandType.Ranged, null))
             .Add("a3", new("a3", "Action 3", "Feuerball", 4, ActionShorthandType.Spell, "K3v1")),
-        default);
+        default,
+        []);
 
     static EditCharacter editCharacterExample(
         string docId,
@@ -570,8 +568,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         CreateCharacterExample.ActionShorthands
             .SetItem("a2", new("a2", "Edited Action 2", null, 6, ActionShorthandType.Melee, null))
             .Add("a4", new("a4", "Action 4", "Armbrust", 5, ActionShorthandType.Ranged, null)),
-        !CreateCharacterExample.IsOpponent
-    );
+        !CreateCharacterExample.IsOpponent,
+        []);
 
     #endregion
 }

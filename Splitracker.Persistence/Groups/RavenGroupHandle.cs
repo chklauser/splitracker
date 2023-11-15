@@ -4,7 +4,7 @@ using Splitracker.Persistence.Generic;
 namespace Splitracker.Persistence.Groups;
 
 class RavenGroupHandle : HandleBase<RavenGroupSubscription, Group>, IGroupHandle,
-    IHandle<RavenGroupHandle, RavenGroupSubscription, Group>
+    IHandle<RavenGroupHandle, RavenGroupSubscription>
 {
     RavenGroupHandle(RavenGroupSubscription subscription)
         : base(subscription)

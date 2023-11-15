@@ -4,7 +4,7 @@ using Splitracker.Persistence.Generic;
 namespace Splitracker.Persistence.Timelines;
 
 class RavenTimelineHandle : HandleBase<RavenTimelineSubscription, Timeline>, ITimelineHandle,
-    IHandle<RavenTimelineHandle, RavenTimelineSubscription, Timeline>
+    IHandle<RavenTimelineHandle, RavenTimelineSubscription>
 {
     RavenTimelineHandle(RavenTimelineSubscription subscription) : base(subscription)
     {

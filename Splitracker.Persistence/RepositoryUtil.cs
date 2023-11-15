@@ -65,7 +65,7 @@ static class RepositoryUtil
         Action onExistingSubscription,
         Action onRetry
     ) where TKey : notnull
-        where THandle : class, IHandle<THandle, TSubscription, TValue>
+        where THandle : class, IHandle<THandle, TSubscription>
     where TSubscription : SubscriptionBase<TSubscription, TValue, THandle>
     {
         var remainingTries = 5;

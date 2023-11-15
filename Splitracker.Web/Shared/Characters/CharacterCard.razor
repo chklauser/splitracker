@@ -346,9 +346,9 @@
             newFoBaseCapacity, 
             newSplinterPointMaximum,
             newHasCustomColor && newColor != null 
-                ? newColor.ToString(MudColorOutputFormats.Hex) 
-                : null, newShorthands, newIsOpponent
-            ));
+        ? newColor.ToString(MudColorOutputFormats.Hex) 
+        : null, newShorthands, newIsOpponent,
+            []));
     }
 
     async Task cloneAsync()

@@ -11,7 +11,8 @@ public record Character(
     FoPool Fo,
     SplinterPoints SplinterPoints,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-    bool IsOpponent
+    bool IsOpponent,
+    IImmutableSet<string> TagIds
 )
 {
     public Character(
@@ -22,7 +23,8 @@ public record Character(
         int splinterPointsMax = 3,
         string? customColor = null,
         bool isOpponent = false,
-        IImmutableDictionary<string, ActionShorthand>? actionShorthands = null
+        IImmutableDictionary<string, ActionShorthand>? actionShorthands = null,
+        IImmutableSet<string>? tagIds = null
     ) :
         this(id,
             name,
@@ -31,7 +33,8 @@ public record Character(
             new(foBaseCapacity),
             new(splinterPointsMax, 0),
             actionShorthands ?? ImmutableDictionary<string, ActionShorthand>.Empty,
-            isOpponent)
+            isOpponent,
+            tagIds ?? [])
     {
     }
 

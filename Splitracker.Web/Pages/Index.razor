@@ -7,6 +7,7 @@
 @implements ICharacterCommandRouter
 
 @inject ICharacterRepository repository
+@inject ITagRepository tagRepository
 
 <PageTitle>Charaktere | Splitracker</PageTitle>
 
@@ -90,7 +91,7 @@
         newCharacterRouter = new(this);
     }
     
-    List<BreadcrumbItem> breadcrumbs => new() { new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!) };
+    List<BreadcrumbItem> breadcrumbs => [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!)];
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
@@ -99,6 +100,7 @@
     public required IPermissionService Permissions { get; set; }
 
     ICharacterRepositoryHandle? handle;
+    ITagRepositoryHandle? tagHandle;
     IImmutableDictionary<string, CharacterPermissions> characterPermissions = ImmutableDictionary<string, CharacterPermissions>.Empty;
 
     Character? newCharacter;
@@ -112,14 +114,23 @@
             await handle.DisposeAsync();
         }
         handle = null;
+        if (tagHandle != null)
+        {
+            await tagHandle.DisposeAsync();
+        }
+        tagHandle = null;
         StateHasChanged();
 
-        await base.OnInitializedAsync();
+        await base.OnParametersSetAsync();
         var auth = await AuthenticationState;
         handle = await repository.OpenAsync(auth.User);
         handle.CharacterAdded += (_, _) => InvokeAsync(onCharacterListUpdated);
         handle.CharacterDeleted += (_, _) => InvokeAsync(onCharacterListUpdated);
         refreshCharacterPermissions();
+        
+        tagHandle = await tagRepository.OpenAsync(auth.User);
+        tagHandle.Added += (_, _) => InvokeAsync(StateHasChanged);
+        tagHandle.Deleted += (_, _) => InvokeAsync(StateHasChanged);
     }
 
     void refreshCharacterPermissions()
@@ -142,6 +153,11 @@
         {
             await handle.DisposeAsync();
         }
+
+        if (tagHandle != null)
+        {
+            await tagHandle.DisposeAsync();
+        }
     }
 
     public async Task ApplyAsync(ICharacterCommand command)
@@ -161,15 +177,8 @@
     }
 
     private readonly NewCharacterRouter newCharacterRouter;
-    class NewCharacterRouter : ICharacterCommandRouter, ICharacterHandle
+    class NewCharacterRouter(Index inner) : ICharacterCommandRouter, ICharacterHandle
     {
-        readonly Index inner;
-
-        public NewCharacterRouter(Index inner)
-        {
-            this.inner = inner;
-        }
-
         public async Task ApplyAsync(ICharacterCommand command)
         {
             switch (command)
@@ -186,7 +195,8 @@
                         edit.SplinterPointsMax,
                         edit.CustomColor,
                         edit.ActionShorthands,
-                        edit.IsOpponent));
+                        edit.IsOpponent,
+                        []));
                     inner.newCharacter = null;
                     break;
                 default:

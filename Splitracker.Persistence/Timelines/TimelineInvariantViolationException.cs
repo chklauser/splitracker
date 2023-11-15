@@ -3,7 +3,6 @@ using System.Runtime.Serialization;
 
 namespace Splitracker.Persistence.Timelines;
 
-[Serializable]
 public class TimelineInvariantViolationException : Exception
 {
     public string? TimelineId { get; }

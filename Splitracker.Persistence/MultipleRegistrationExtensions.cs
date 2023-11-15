@@ -21,7 +21,7 @@ static class MultipleRegistrationExtensions
     where TImplementation: class
     {
         serviceCollection.AddTransient<TImplementation>();
-        return new MultipleRegistrations<TImplementation>(serviceCollection, Scope.Transient);
+        return new(serviceCollection, Scope.Transient);
     }
     
     public static MultipleRegistrations<TImplementation> AddScopedImplementation<TImplementation>(
@@ -30,16 +30,16 @@ static class MultipleRegistrationExtensions
     where TImplementation: class
     {
         serviceCollection.AddScoped<TImplementation>();
-        return new MultipleRegistrations<TImplementation>(serviceCollection, Scope.Scoped);
+        return new(serviceCollection, Scope.Scoped);
     }
     
-    public static MultipleRegistrations<TImplementation> AddSingletonImplementation<TImplementation>(
+    public static MultipleRegistrations<TImplementation> AddSingletonImplementation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>(
         this IServiceCollection serviceCollection
     )
     where TImplementation: class
     {
         serviceCollection.AddSingleton<TImplementation>();
-        return new MultipleRegistrations<TImplementation>(serviceCollection, Scope.Singleton);
+        return new(serviceCollection, Scope.Singleton);
     }
     
     [SuppressMessage("ReSharper", "UnusedTypeParameter")]
