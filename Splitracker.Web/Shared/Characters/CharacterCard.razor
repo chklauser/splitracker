@@ -6,17 +6,16 @@
 
 @implements IDisposable
 @implements ICharacterCommandRouter
-@inject ICharacterRepository repository
+@inject NavigationManager nav
 
-@if (EditMode && Permissions.HasFlag(CharacterPermissions.EditStats) 
-    || !EditMode && Permissions.HasFlag(CharacterPermissions.ViewStats))
+@if (Permissions.HasFlag(CharacterPermissions.ViewStats))
 {
     <CascadingValue
         TValue="ICharacterCommandRouter"
         IsFixed="true"
         Value="@this">
         <MudCard
-            Class="@($"CharacterCard {(EditMode ? "edit-mode" : "")}")">
+            Class="CharacterCard">
             <MudCardHeader
                 Class="pb-0">
                 <CardHeaderAvatar>
@@ -25,142 +24,24 @@
                         Character="@character"/>
                 </CardHeaderAvatar>
                 <CardHeaderContent>
-                    @if (EditMode)
-                    {
-                        <MudTextField
-                            @bind-Value="newName"
-                            Label="Name"
-                            Required
-                            Immediate="@true"
-                            RequiredError="Jeder braucht einen Namen!"/>
-                    }
-                    else
-                    {
-                        <MudText
-                            Typo="Typo.h4">
-                            @character.Name
-                        </MudText>
-                    }
+                    <MudText
+                        Typo="Typo.h4">
+                        @character.Name
+                    </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
-                    @if (EditMode)
+                    @if (Permissions.HasFlag(CharacterPermissions.EditStats))
                     {
                         <MudIconButton
-                            Icon="@Icons.Material.Filled.Delete"
-                            Color="Color.Secondary"
-                            @onclick="deleteAsync"/>
+                            Icon="@Icons.Material.Filled.Edit"
+                            Color="Color.Primary"
+                            @onclick="gotoEdit"/>
                     }
                 </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent
                 Class="pt-0">
-                @if (EditMode)
-                {
-                    var row = 1;
-                    <div
-                        class="editor">
-                        @* LP *@
-                        <div
-                            class="default-control"
-                            style="@($"grid-row: {row}")">
-                            <MudNumericField
-                                Label="LP"
-                                @bind-Value="newLpBaseCapacity"
-                                Min="1"
-                                Max="20"
-                                Required/>
-                        </div>
-                        <MudText
-                            Class="outcome"
-                            Style="@($"grid-row: {row++}")">
-                            =&nbsp;@(newLpBaseCapacity * 5)
-                        </MudText>
-                        @* FO *@
-
-                        <div
-                            class="default-control"
-                            style="@($"grid-row: {row++}")">
-                            <MudNumericField
-                                Label="FO"
-                                @bind-Value="newFoBaseCapacity"
-                                Min="1"
-                                Max="@(12 * 6)"
-                                Required/>
-                        </div>
-
-                        @* Splinter Points *@
-                        
-                        <div class="default-control"
-                            style="@($"grid-row: {row++}")">
-                            <MudNumericField
-                                Label="Splitterpunkte"
-                                @bind-Value="newSplinterPointMaximum"
-                                Min="0"
-                                Max="9"
-                                Required/>
-                        </div>
-
-                        @* Color *@
-
-                        <MudCheckBox
-                            Style="@($"grid-row: {row}; grid-column: 1")"
-                            T="bool"
-                            @bind-Checked="newHasCustomColor"/>
-                        <div
-                            style="@($"grid-row: {row}; grid-column: 2/4")"
-                            @onclick="() => { if (!newHasCustomColor) newHasCustomColor = true; }">
-                            <MudColorPicker
-                                Disabled="@(!newHasCustomColor)"
-                                Label="Avatar Farbe"
-                                @bind-Value="newColor"
-                                DisableAlpha="@true"
-                                PickerVariant="PickerVariant.Inline"
-                                ColorPickerMode="ColorPickerMode.RGB"/>
-                        </div>
-                        <div
-                            class="outcome"
-                            style="grid-row: @(row++)">
-                            <CharacterAvatar
-                                Elevation="2"
-                                Selected="@dummyAvatarPreviewSelected"
-                                OnClick="() => dummyAvatarPreviewSelected = !dummyAvatarPreviewSelected"
-                                Character="@(character with { CustomColor = newHasCustomColor ? newColor?.ToString(MudColorOutputFormats.Hex) : null })"/>
-                        </div>
-
-                        @* Actions *@
-                        <ActionShorthandListEditor
-                            @bind-Shorthands="newShorthands"
-                            StartRow="@(row)"
-                            Type="ActionShorthandType.Melee"/>
-                        @{ row += 3; }
-                        <ActionShorthandListEditor
-                            @bind-Shorthands="newShorthands"
-                            StartRow="@(row)"
-                            Type="ActionShorthandType.Ranged"/>
-                        @{ row += 4; }
-                        <ActionShorthandListEditor
-                            @bind-Shorthands="newShorthands"
-                            StartRow="@(row)"
-                            Type="ActionShorthandType.Spell"/>
-                        @{ row += 4; }
-                        @* Opponent *@
-                        <div
-                            style="@($"grid-row: {row}")"
-                            class="default-control">
-                            <MudTooltip
-                                Text="(Für Spielleiter)">
-                                <MudSwitch
-                                    T="bool"
-                                    UnCheckedColor="Color.Default"
-                                    Color="Color.Error"
-                                    @bind-Checked="newIsOpponent"
-                                    Label="Ist Gegner*in"/>
-                            </MudTooltip>
-                        </div>
-                    </div>
-                }
-                else
-                {
+                
                     @if (character.SplinterPoints.Max > 0)
                     {
                     
@@ -204,34 +85,7 @@
                             Type="@PoolType.Fo"
                             Permissions="@Permissions"/>
                     </MudTabs>
-                }
             </MudCardContent>
-            @if (EditMode)
-            {
-                <MudCardActions>
-                    <MudStack
-                        Row
-                        AlignItems="AlignItems.Center"
-                        Justify="Justify.SpaceEvenly">
-                        @if (character.Id != "")
-                        {
-                            <MudButton
-                                EndIcon="@Icons.Material.Filled.ContentCopy"
-                                Color="@Color.Tertiary"
-                                @onclick="cloneAsync">
-                                Klonen
-                            </MudButton>
-                        }
-                        <MudButton
-                            EndIcon="@Icons.Material.Filled.Save"
-                            Disabled="@(!hasChanges)"
-                            Color="@Color.Primary"
-                            @onclick="saveAsync">
-                            Speichern
-                        </MudButton>
-                    </MudStack>
-                </MudCardActions>
-            }
         </MudCard>
     </CascadingValue>
 }
@@ -253,20 +107,6 @@
 
     Character character => CharacterHandle.Character;
 
-    [Parameter]
-    [EditorRequired]
-    public required bool EditMode { get; set; }
-
-    string newName = string.Empty;
-    int newLpBaseCapacity;
-    int newFoBaseCapacity;
-    int newSplinterPointMaximum;
-    bool newIsOpponent;
-    MudColor? newColor;
-    bool newHasCustomColor;
-
-    bool dummyAvatarPreviewSelected = false;
-
     IImmutableDictionary<string, ActionShorthand> newShorthands = ImmutableDictionary<string, ActionShorthand>.Empty;
 
     protected override void OnParametersSet()
@@ -274,28 +114,9 @@
         clearHandleCallbacks();
 
         base.OnParametersSet();
-        newName = character.Name;
-        newLpBaseCapacity = character.Lp.BaseCapacity;
-        newFoBaseCapacity = character.Fo.BaseCapacity;
-        newSplinterPointMaximum = character.SplinterPoints.Max;
-        newColor = character.CustomColor is not null ? new MudColor(character.CustomColor) : "#000000";
-        newHasCustomColor = character.CustomColor is not null;
-        newIsOpponent = character.IsOpponent;
-        newShorthands = character.ActionShorthands;
         lastHandle = CharacterHandle;
-        CharacterHandle.CharacterUpdated += handleCharacterUpdated;
+        CharacterHandle.Updated += handleUpdated;
     }
-
-    private bool hasChanges =>
-        character.Id == ""
-            || newName != character.Name
-            || newLpBaseCapacity != character.Lp.BaseCapacity
-            || newFoBaseCapacity != character.Fo.BaseCapacity
-            || newSplinterPointMaximum != character.SplinterPoints.Max
-            || newIsOpponent != character.IsOpponent
-            || (newHasCustomColor && newColor?.ToString(MudColorOutputFormats.Hex) != character.CustomColor)
-            || (!newHasCustomColor && character.CustomColor is not null)
-            || !newShorthands.SequenceEqual(character.ActionShorthands);
 
     public void Dispose()
     {
@@ -306,16 +127,16 @@
     {
         if (lastHandle is { } prevHandle)
         {
-            prevHandle.CharacterUpdated -= handleCharacterUpdated;
+            prevHandle.Updated -= handleUpdated;
         }
 
         if (CharacterHandle is { } handle)
         {
-            handle.CharacterUpdated -= handleCharacterUpdated;
+            handle.Updated -= handleUpdated;
         }
     }
 
-    void handleCharacterUpdated(object? sender, EventArgs e)
+    void handleUpdated(object? sender, EventArgs e)
     {
         InvokeAsync(StateHasChanged);
     }
@@ -325,40 +146,13 @@
     {
         command = command switch {
             ApplyPoints applyPoints => applyPoints with{ CharacterId = character.Id},
-            EditCharacter editCharacter => editCharacter with { CharacterId = character.Id},
             Domain.Commands.StopChanneling releaseChanneling => releaseChanneling with { CharacterId = character.Id},
             Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id},
-            DeleteCharacter deleteCharacter => deleteCharacter with { CharacterId = character.Id},
-            CloneCharacter cloneCharacter => cloneCharacter with { CharacterId = character.Id},
             UseSplinterPoints useSplinterPoints => useSplinterPoints with {CharacterId = character.Id },
             ResetSplinterPoints resetSplinterPoints => resetSplinterPoints with {CharacterId = character.Id },
             _ => throw new ArgumentOutOfRangeException(nameof(command))
             };
         await OuterCommandRouter.ApplyAsync(command);
-    }
-
-    async Task saveAsync()
-    {
-        await ApplyAsync(new EditCharacter(
-            null!,
-            newName,
-            newLpBaseCapacity,
-            newFoBaseCapacity, 
-            newSplinterPointMaximum,
-            newHasCustomColor && newColor != null 
-        ? newColor.ToString(MudColorOutputFormats.Hex) 
-        : null, newShorthands, newIsOpponent,
-            []));
-    }
-
-    async Task cloneAsync()
-    {
-        await ApplyAsync(new CloneCharacter(null!));
-    }
-
-    async Task deleteAsync()
-    {
-        await ApplyAsync(new DeleteCharacter(null!));
     }
     
     async Task useSplinterPointAsync()
@@ -369,6 +163,11 @@
     async Task resetSplinterPointsAsync() 
     {
         await ApplyAsync(new ResetSplinterPoints(null!));
+    }
+
+    void gotoEdit()
+    {
+        nav.NavigateTo($"/Characters/{character.ImplicitId}/Edit");
     }
 
 }

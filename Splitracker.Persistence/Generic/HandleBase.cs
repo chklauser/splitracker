@@ -31,11 +31,15 @@ where TSubscription : ISubscription<TValue>
     public event EventHandler? Updated;
 }
 
-interface ISubscription<out T>
+interface ISubscription
 {
-    T CurrentValue { get; }
     void Release();
+    event EventHandler? Disposed;
+}
+interface ISubscription<out T> : ISubscription
+{
     event EventHandler? Updated;
+    T CurrentValue { get; }
 }
 
 interface IHandle<TSelf, TSubscription> where TSelf : IHandle<TSelf, TSubscription>

@@ -33,6 +33,12 @@ class RavenCharacterRepository(
     bool isOwner(string characterId, string userId) =>
         characterId.StartsWith(CharacterDocIdPrefix(userId), StringComparison.Ordinal);
 
+    public async Task<string?> FullCharacterIdFromImplicitAsync(ClaimsPrincipal principal, string implicitId)
+    {
+        var userId = await repository.GetUserIdAsync(principal);
+        return $"{CharacterDocIdPrefix(userId)}{implicitId}";
+    }
+
     [SuppressMessage("ReSharper", "VariableHidesOuterVariable")]
     public async Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand)
     {
@@ -147,6 +153,7 @@ class RavenCharacterRepository(
                     CustomColor = create.CustomColor,
                     IsOpponent = create.IsOpponent,
                     TagIds = create.TagIds.ToList(),
+                    InsertedAt = DateTimeOffset.UtcNow,
                 };
                 await session.StoreAsync(newCharacter);
                 break;
@@ -192,10 +199,11 @@ class RavenCharacterRepository(
                     customColor: model.CustomColor,
                     isOpponent: model.IsOpponent,
                     actionShorthands: model.ActionShorthands.ToImmutableDictionary(
-                        s => s.Id, 
+                        s => s.Id,
                         s => s.ToDomain()
-                        )
-                    ).ToDbModel());
+                    ),
+                    tagIds: model.TagIds.ToImmutableHashSet()
+                ) { InsertedAt = DateTimeOffset.UtcNow }.ToDbModel());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(characterCommand));
@@ -236,6 +244,29 @@ class RavenCharacterRepository(
                 log.Log(LogLevel.Debug, "Trying to join existing character subscription for {UserId}", userId),
             tryGetHandle: s => s.TryGetHandle(),
             onRetry: () => log.Log(LogLevel.Information, "Subscription for {UserId} was disposed of. Retrying.", userId)
+        ) ?? throw new InvalidOperationException("Failed to open a handle.");
+    }
+
+    readonly ConcurrentDictionary<string, Task<RavenSingleCharacterSubscription>> singleHandles = new();
+
+    public async Task<ICharacterHandle?> OpenSingleAsync(ClaimsPrincipal principal, string characterId)
+    {
+        var userId = await repository.GetUserIdAsync(principal);
+        if (!characterId.StartsWith(CharacterDocIdPrefix(userId)))
+        {
+            return null;
+        }
+
+        using var session = store.OpenAsyncSession();
+        return await singleHandles.TryCreateSubscription(characterId,
+            async () => await RavenSingleCharacterSubscription.OpenAsync(store, characterId, log),
+            onExistingSubscription: () => log.Log(LogLevel.Debug,
+                "Trying to join existing single character subscription for {UserId}",
+                userId),
+            tryGetHandle: s => s.TryGetHandle(),
+            onRetry: () => log.Log(LogLevel.Information,
+                "Single character subscription for {UserId} was disposed of. Retrying.",
+                userId)
         ) ?? throw new InvalidOperationException("Failed to open a handle.");
     }
 

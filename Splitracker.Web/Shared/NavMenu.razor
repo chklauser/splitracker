@@ -13,12 +13,15 @@
             Icon="@Icons.Material.Filled.EmojiPeople">
             Charaktere
         </MudNavLink>
-        <MudNavLink
-            Href="/Tags"
-            Match="NavLinkMatch.All"
-            Icon="@Icons.Material.Filled.Tag">
-            Tags
-        </MudNavLink>
+        @if (experimental)
+        {
+            <MudNavLink
+                Href="/Tags"
+                Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.Tag">
+                Tags
+            </MudNavLink>
+        }
         @if (!stageMode && (experimental || groups is {Count: > 0 }))
         {
             <MudNavGroup

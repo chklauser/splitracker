@@ -80,7 +80,9 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
             },
             opts => opts
                 .Excluding(c => c.Id)
-                .Excluding(c => c.UserId));
+                .Excluding(c => c.ImplicitId)
+                .Excluding(c => c.UserId)
+                .Excluding(c => c.InsertedAt));
     }
 
     [Test]
@@ -110,7 +112,9 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
             },
             opts => opts
                 .Excluding(c => c.Id)
-                .Excluding(c => c.UserId));
+                .Excluding(c => c.ImplicitId)
+                .Excluding(c => c.UserId)
+                .Excluding(c => c.InsertedAt));
     }
 
     [Test]
@@ -141,6 +145,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 .Excluding(c => c.UserId)
                 .Excluding(c => c.Lp.Points.Normalized)
                 .Excluding(c => c.Fo.Points.Normalized)
+                .Excluding(c => c.InsertedAt)
+                .Excluding(c => c.ImplicitId)
                 .IgnoringCyclicReferences());
         result[0].UserId.Should().Be(userId);
     }
@@ -183,7 +189,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 otherCharacter.CustomColor,
                 otherCharacter.IsOpponent,
                 otherCharacter.ActionShorthands),
-        });
+        }, opts => opts.Excluding(c => c.InsertedAt));
         edited[0].UserId.Should().Be(userId);
     }
 

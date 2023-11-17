@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Changes;
 using Splitracker.Domain;
+using Splitracker.Persistence.Generic;
 using Splitracker.Persistence.Model;
 using Character = Splitracker.Persistence.Model.Character;
 
@@ -19,7 +20,7 @@ namespace Splitracker.Persistence.Characters;
 /// Instead, clients get a <see cref="RavenCharacterHandle"/> via the <see cref="TryGetHandle"/> method.
 /// </summary>
 [SuppressMessage("ReSharper", "ContextualLoggerProblem")]
-class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
+class RavenCharacterRepositorySubscription : IObserver<DocumentChange>, ISubscription
 {
     readonly ReaderWriterLockSlim @lock = new();
     readonly IDocumentStore store;
@@ -28,7 +29,6 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
     readonly IDisposable characterSubscription;
     int referenceCount;
     bool lifetimeBoundToHandles;
-    
 
     public static async ValueTask<RavenCharacterRepositorySubscription> OpenAsync(
         IDocumentStore store,
@@ -106,7 +106,7 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
             referenceCount -= 1;
             if (referenceCount == 0)
             {
-                characterSubscription.Dispose();
+                disposeWhileLocked();
             }
         }
         finally
@@ -115,28 +115,30 @@ class RavenCharacterRepositorySubscription : IObserver<DocumentChange>
         }
     }
 
-    public ValueTask DisposeAsync()
+    public event EventHandler? Disposed;
+
+    void disposeWhileLocked()
     {
         characterSubscription.Dispose();
-        @lock.EnterWriteLock();
         IImmutableList<RavenCharacterHandle> cs;
-        try
-        {
-            characterAdded = null;
-            characterDeleted = null;
-            cs = Interlocked.Exchange(ref characters, ImmutableList<RavenCharacterHandle>.Empty);
-        }
-        finally
-        {
-            @lock.ExitWriteLock();
-        }
+        characterAdded = null;
+        characterDeleted = null;
+        cs = characters;
+        characters = ImmutableList<RavenCharacterHandle>.Empty;
 
         foreach (var handle in cs)
         {
             handle.Dispose();
         }
 
-        return ValueTask.CompletedTask;
+        try
+        {
+            Disposed?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            Disposed = null;
+        }
     }
 
     volatile IImmutableList<RavenCharacterHandle> characters;

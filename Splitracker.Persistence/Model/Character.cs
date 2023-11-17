@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace Splitracker.Persistence.Model;
@@ -19,6 +20,8 @@ record Character(string Id, string Name, Pool Lp, Pool Fo)
     public bool IsOpponent;
     
     public List<string> TagIds { get; set; } = [];
+    
+    public DateTimeOffset InsertedAt { get; set; } = default;
 }
 
 class SplinterPoints

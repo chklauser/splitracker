@@ -138,9 +138,8 @@ interface IRepositorySubscriptionBase<TValue, TDbModel>
     public static abstract TValue ToDomain(TDbModel model);
 }
 
-interface IRepositorySubscription
+interface IRepositorySubscription : ISubscription
 {
-    void Release();
     event EventHandler? Added;
     event EventHandler? Deleted;
 }
@@ -487,6 +486,36 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
         }
     }
 
+    EventHandler? disposed;
+    
+    public event EventHandler? Disposed
+    {
+        add
+        {
+            @lock.EnterWriteLock();
+            try
+            {
+                disposed += value;
+            }
+            finally
+            {
+                @lock.ExitWriteLock();
+            }
+        }
+        remove
+        {
+            @lock.EnterWriteLock();
+            try
+            {
+                disposed -= value;
+            }
+            finally
+            {
+                @lock.ExitWriteLock();
+            }
+        }
+    }
+
     #endregion
 
     public void Dispose()
@@ -512,6 +541,15 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
         foreach (var handle in hs)
         {
             handle.Dispose();
+        }
+        
+        try
+        {
+            disposed?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            disposed = null;
         }
     }
 

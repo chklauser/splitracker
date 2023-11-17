@@ -8,26 +8,12 @@
 
 @inject ICharacterRepository repository
 @inject ITagRepository tagRepository
+@inject NavigationManager nav
 
 <PageTitle>Charaktere | Splitracker</PageTitle>
 
 <MudBreadcrumbs
     Items="breadcrumbs"/>
-
-<SectionContent
-    Name="top">
-    <MudPaper
-        Elevation="1"
-        Class="mx-6 pl-6">
-        <MudSwitch
-            T="bool"
-            @bind-Checked="editMode">
-            <MudIcon
-                Icon="@Icons.Material.Filled.ModeEdit"
-                Color="@(editMode ? Color.Tertiary : Color.Default)"/>
-        </MudSwitch>
-    </MudPaper>
-</SectionContent>
 
 <div
     class="d-flex flex-row flex-wrap gap-4">
@@ -42,8 +28,7 @@
                 <CharacterCard
                     @key="characterHandle.Character.Id"
                     CharacterHandle="@characterHandle"
-                    Permissions="@characterPermissions[characterHandle.Character.Id]"
-                    EditMode="@editMode"/>
+                    Permissions="@characterPermissions[characterHandle.Character.Id]"/>
             }
         </CascadingValue>
     }
@@ -51,20 +36,8 @@
     {
         <CharacterCardSkeleton/>
     }
-    @if (newCharacter != null)
-    {
-        <CascadingValue
-            TValue="ICharacterCommandRouter"
-            IsFixed="@true"
-            Value="@newCharacterRouter">
-            <CharacterCard
-                EditMode="@true"
-                CharacterHandle="@newCharacterRouter"
-                Permissions="@Permissions.OwnerPermissions"
-                />
-        </CascadingValue>
-    }
-    @if (newCharacter == null && handle is {Characters.Count: 0 })
+
+    @if (handle is {Characters.Count: 0 })
     {
         <MudText>
             Hier werden deine Charaktere angezeigt. Wie es scheint, hast du aber im Moment noch keine Charaktere.
@@ -73,25 +46,17 @@
     }
 </div>
 
-@if (newCharacter == null)
-{
+
     <MudFab
         Class="fixed z-100"
         Style="right: 1.5rem; bottom: 1.5rem;"
         DisableRipple="@true"
         StartIcon="@Icons.Material.Filled.Add"
         Color="@Color.Primary"
-        @onclick="addCharacterForm"/>
-}
+        @onclick="gotoNew"/>
 
 @code {
-
-    public Index()
-    {
-        newCharacterRouter = new(this);
-    }
-    
-    List<BreadcrumbItem> breadcrumbs => [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!)];
+    static List<BreadcrumbItem> breadcrumbs => [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!)];
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
@@ -102,10 +67,6 @@
     ICharacterRepositoryHandle? handle;
     ITagRepositoryHandle? tagHandle;
     IImmutableDictionary<string, CharacterPermissions> characterPermissions = ImmutableDictionary<string, CharacterPermissions>.Empty;
-
-    Character? newCharacter;
-
-    private bool editMode;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -165,50 +126,9 @@
         var state = await AuthenticationState;
         await repository.ApplyAsync(state.User, command);
     }
-
-    void addCharacterForm()
+    
+    void gotoNew()
     {
-        newCharacter = new("", "Dein Name", 5, 10, 
-            actionShorthands: new Dictionary<string, ActionShorthand>() {
-                {"melee", new("melee", "Nahkampf Ang.", null, 7, ActionShorthandType.Melee, null) },
-                {"ranged", new("ranged", "Fernkampf Vorb.", null, 4, ActionShorthandType.Ranged, null) },
-                {"focus", new("focus", "Fokus", null, 4, ActionShorthandType.Spell, null) },
-            }.ToImmutableDictionary());
-    }
-
-    private readonly NewCharacterRouter newCharacterRouter;
-    class NewCharacterRouter(Index inner) : ICharacterCommandRouter, ICharacterHandle
-    {
-        public async Task ApplyAsync(ICharacterCommand command)
-        {
-            switch (command)
-            {
-                case DeleteCharacter:
-                    inner.newCharacter = null;
-                    inner.StateHasChanged();
-                    break;
-                case EditCharacter edit:
-                    await inner.ApplyAsync(new CreateCharacter(
-                        edit.Name,
-                        edit.LpBaseCapacity, 
-                        edit.FoBaseCapacity,
-                        edit.SplinterPointsMax,
-                        edit.CustomColor,
-                        edit.ActionShorthands,
-                        edit.IsOpponent,
-                        []));
-                    inner.newCharacter = null;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(command), "Unexpected command type: " + command.GetType());
-            }
-        }
-
-        public Character Character => inner.newCharacter ?? new Character(null!, "", 1, 1);
-        event EventHandler? ICharacterHandle.CharacterUpdated
-        {
-            add { }
-            remove { }
-        }
+        nav.NavigateTo("/Characters/New");
     }
 }

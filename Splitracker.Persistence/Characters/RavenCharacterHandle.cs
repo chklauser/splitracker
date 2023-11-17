@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Splitracker.Domain;
 
 namespace Splitracker.Persistence.Characters;
 
 /// <summary>
-/// Mutable container for a <see cref="Character"/>. Triggers the <see cref="CharacterUpdated"/> event whenever
+/// Mutable container for a <see cref="Character"/>. Triggers the <see cref="Updated"/> event whenever
 /// anything about the character changes.
 /// </summary>
-class RavenCharacterHandle : ICharacterHandle, IEquatable<RavenCharacterHandle>, IDisposable
+class RavenCharacterHandle(Character character)
+    : ICharacterHandle, IEquatable<RavenCharacterHandle>, IDisposable, IAsyncDisposable
 {
-    volatile Character character;
-
-    public RavenCharacterHandle(Character character)
-    {
-        this.character = character;
-    }
+    volatile Character character = character;
 
     public Character Character
     {
@@ -23,16 +20,22 @@ class RavenCharacterHandle : ICharacterHandle, IEquatable<RavenCharacterHandle>,
         internal set => character = value;
     }
 
-    public event EventHandler? CharacterUpdated;
+    public event EventHandler? Updated;
 
     public void TriggerCharacterUpdated()
     {
-        CharacterUpdated?.Invoke(this, EventArgs.Empty);
+        Updated?.Invoke(this, EventArgs.Empty);
     }
 
     public void Dispose()
     {
-        CharacterUpdated = null;
+        Updated = null;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 
     #region Equality

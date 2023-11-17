@@ -12,7 +12,8 @@ public record Character(
     SplinterPoints SplinterPoints,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
     bool IsOpponent,
-    IImmutableSet<string> TagIds
+    IImmutableSet<string> TagIds,
+    DateTimeOffset InsertedAt
 )
 {
     public Character(
@@ -34,7 +35,8 @@ public record Character(
             new(splinterPointsMax, 0),
             actionShorthands ?? ImmutableDictionary<string, ActionShorthand>.Empty,
             isOpponent,
-            tagIds ?? [])
+            tagIds ?? [],
+            default)
     {
     }
 
@@ -47,6 +49,7 @@ public record Character(
     public int Penalty => PenaltyDueToLowLp(Lp.Points, Lp.BaseCapacity);
 
     public string UserId { get; } = deriveUserId(Id);
+    public string ImplicitId => Id.LastIndexOf('/') is > 0 and var lastSlash ? Id[(lastSlash + 1)..] : "";
 
     static string deriveUserId(string? id)
     {

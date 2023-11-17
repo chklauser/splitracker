@@ -37,7 +37,11 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
     }
     
     public TValue CurrentValue { get; private set; }
-    
+
+    public event EventHandler? Disposed;
+
+    protected void OnDisposed() => Disposed?.Invoke(this, EventArgs.Empty);
+
     public THandle? TryGetHandle()
     {
         Lock.EnterWriteLock();
@@ -111,6 +115,11 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
     public void OnNext(DocumentChange value)
     {
+        if(lifetimeBoundToHandles && referenceCount <= 0)
+        {
+            return;
+        }
+        
         switch (value.Type)
         {
             case DocumentChangeTypes.Put:
@@ -212,6 +221,15 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         {
             Lock.ExitWriteLock();
         }
+
+        try
+        {
+            OnDisposed();
+        }
+        finally
+        {
+            Disposed = null;
+        }
     }
 
     public void Release()
@@ -228,6 +246,15 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         finally
         {
             Lock.ExitWriteLock();
+        }
+
+        try
+        {
+            OnDisposed();
+        }
+        finally
+        {
+            Disposed = null;
         }
     }
 

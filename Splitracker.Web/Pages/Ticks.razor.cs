@@ -165,19 +165,17 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
             });
     }
 
-    class NonSubscribingCharacterHandle : ICharacterHandle
+    class NonSubscribingCharacterHandle(Character character) : ICharacterHandle
     {
-        public NonSubscribingCharacterHandle(Character character)
-        {
-            Character = character;
-        }
+        public Character Character { get; } = character;
 
-        public Character Character { get; }
-        public event EventHandler? CharacterUpdated
+        public event EventHandler? Updated
         {
             add { }
             remove { }
         }
+
+        public ValueTask DisposeAsync() => default;
     }
 
     #region Character editing support

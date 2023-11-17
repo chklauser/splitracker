@@ -17,7 +17,8 @@ static class CharacterModelMapper
             model.SplinterPoints.toDomain(),
             model.ActionShorthands.Select(s => s.ToDomain()).ToImmutableDictionary(s => s.Id),
             model.IsOpponent,
-            []);
+            model.TagIds.ToImmutableHashSet(),
+            model.InsertedAt);
     }
 
     public static LpPool ToDomainLp(this Pool model)
@@ -78,6 +79,8 @@ static class CharacterModelMapper
                 .ToList(),
             CustomColor = character.CustomColor,
             IsOpponent = character.IsOpponent,
+            TagIds = character.TagIds.ToList(),
+            InsertedAt = character.InsertedAt,
         };
     }
     

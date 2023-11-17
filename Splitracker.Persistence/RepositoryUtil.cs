@@ -14,7 +14,7 @@ static class RepositoryUtil
         Action onExistingSubscription,
         Func<TSubscription, THandle> tryGetHandle,
         Action onRetry
-    ) where TKey : notnull where THandle : class?
+    ) where TKey : notnull where THandle : class? where TSubscription : ISubscription
     {
         var remainingTries = 5;
         while (remainingTries-- > 0)
@@ -27,12 +27,16 @@ static class RepositoryUtil
                 try
                 {
                     var subscription = await createSubscription();
+                    subscription.Disposed += (_, _) =>
+                    {
+                        _ = handles.TryRemove(new(key, ourTask.Task));
+                    };
                     ourTask.SetResult(subscription);
                 }
                 catch (Exception ex)
                 {
                     ourTask.SetException(ex);
-                    handles.TryRemove(key, out _);
+                    handles.TryRemove(new(key, ourTask.Task));
                     throw;
                 }
             }

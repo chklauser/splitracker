@@ -57,8 +57,7 @@
                                         <CharacterCard
                                             @key="character.Id"
                                             CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
-                                            Permissions="characterPermissions[character.Id]"
-                                            EditMode="@false"/>
+                                            Permissions="characterPermissions[character.Id]" />
                                     }
                                 </div>
                             </ChildContent>
@@ -105,8 +104,7 @@
                                 <CharacterCard
                                     @key="character.Id"
                                     CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
-                                    Permissions="characterPermissions[character.Id]"
-                                    EditMode="@false"/>
+                                    Permissions="characterPermissions[character.Id]" />
                             }</CascadingValue>
                         </div>
                     </div>

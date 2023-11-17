@@ -67,7 +67,10 @@ static class TimelineModelMapper
             rolesByUserId,
             charactersById,
             effectsById,
-            timeline.ReadyCharacterIds.Select(cid => charactersById[cid]).ToImmutableArray(),
+            timeline.ReadyCharacterIds
+                .Select(cid => CollectionExtensions.GetValueOrDefault(charactersById, cid))
+                .OfType<Domain.Character>()
+                .ToImmutableArray(),
             timeline.Ticks.Select(t => t switch {
                 { Type: TickType.Recovers, CharacterId: { } cid, At: var at } =>
                     charactersById.TryGetValue(cid, out var character) 
