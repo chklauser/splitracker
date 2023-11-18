@@ -10,7 +10,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Queries;
+using Raven.Client.Documents.Session;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Model;
@@ -212,13 +214,31 @@ class RavenCharacterRepository(
         await session.SaveChangesAsync();
     }
 
+    public async Task ApplyAsync(ClaimsPrincipal principal, DeleteTag deleteTagCommand)
+    {
+        var userId = await repository.GetUserIdAsync(principal);
+
+        using var session = store.OpenAsyncSession(new SessionOptions()
+            { TransactionMode = TransactionMode.ClusterWide });
+        var affectedCharacters = await session.Query<Character>()
+            .Where(c => 
+                c.Id.StartsWith(CharacterDocIdPrefix(userId))
+                && c.TagIds.Contains(deleteTagCommand.TagId))
+            .ToListAsync();
+        foreach (var character in affectedCharacters)
+        {
+            character.TagIds.Remove(deleteTagCommand.TagId);
+        }
+        await session.SaveChangesAsync();
+    }
+
     public async Task<IReadOnlyList<Domain.Character>> SearchCharactersAsync(ClaimsPrincipal principal, string searchTerm, CancellationToken cancellationToken)
     {
         var userId = await repository.GetUserIdAsync(principal);
         
         using var session = store.OpenAsyncSession();
         var dbCharacters = await session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
-            .WhereStartsWith(x => x.Id, RavenCharacterRepository.CharacterDocIdPrefix(userId))
+            .WhereStartsWith(x => x.Id, CharacterDocIdPrefix(userId))
             .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
             .Take(100)
             .ToListAsync(cancellationToken);

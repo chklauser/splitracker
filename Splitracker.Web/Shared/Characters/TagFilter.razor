@@ -1,0 +1,179 @@
+﻿@using Splitracker.Domain
+
+@implements IDisposable
+
+<MudExpansionPanels Class="mb-6">
+    <MudExpansionPanel
+        @bind-IsExpanded="expanded"
+        HideIcon="true">
+        <TitleContent>
+            <MudText Typo="Typo.h5">Tags</MudText>
+            @if (!expanded)
+            {
+                if (selectedTags.Count == 0)
+                {
+                    <MudText
+                    Typo="Typo.body2">Hier klicken, um angezeigte Charaktere zu filtern.</MudText>
+                }
+                else
+                {
+                    @foreach (var tag in selectedTags)
+                    {
+                        <MudChip
+                            @key="@tag.Id"
+                            Text="@tag.Name"/>
+                    }
+                }
+            }
+        </TitleContent>
+        <ChildContent>
+            <MudStack>
+                <div>
+                    @foreach (var tag in selectedTags)
+                    {
+                        <MudChip
+                            @key="@tag.Id"
+                            Text="@tag.Name"
+                            Value="@tag"
+                Variant="Variant.Filled"
+                            OnClose="@(ch => removeTag((Tag)ch.Value))"/>
+                    }
+                </div>
+                <MudStack Row>
+                    <MudAutocomplete
+                        T="Tag"
+                        Label="Tag hinzufügen"
+                        @bind-Value="selectedTag"
+                        Clearable="@true"
+                        SearchFunc="@searchTags"
+                        ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
+                        OnKeyUp="@tagSearchKeyUp"
+                        SelectValueOnTab="@true"
+                        @ref="tagSearchField"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@addTag" Disabled="@(selectedTag == null)"/>
+                </MudStack>
+            </MudStack>
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required IReadOnlyCollection<ITagHandle> PossibleTags { get; set; }
+
+    List<ITagHandle> currentSubscriptions = [];
+
+    [Parameter]
+    public List<string> SelectedTagIds { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<List<string>>? SelectedTagIdsChanged { get; set; }
+
+    bool expanded;
+    readonly List<Tag> selectedTags = [];
+    Tag? selectedTag;
+    MudAutocomplete<Tag>? tagSearchField;
+
+    protected override void OnParametersSet()
+    {
+        unsubscribe();
+        base.OnParametersSet();
+        subscribe();
+        
+        var oldSelectedTags = selectedTags.Select(t => t.Id).Order().ToArray();
+        
+        selectedTags.Clear();
+        foreach (var tagId in SelectedTagIds)
+        {
+            var tag = PossibleTags.FirstOrDefault(t => t.Tag.Id == tagId);
+            if (tag != null)
+            {
+                selectedTags.Add(tag.Tag);
+            }
+        }
+
+        if (!selectedTags.Select(t => t.Id).Order().SequenceEqual(oldSelectedTags))
+        {
+        // corner case: an update to the available set of tags has caused a change in the tags that are actually
+        // selected.
+            onSelectedTagsChanged();
+        }
+    }
+
+    void removeTag(Tag t)
+    {
+        if (selectedTags.Remove(t))
+        {
+            onSelectedTagsChanged();
+        }
+    }
+
+    void tagChanged(object? sender, EventArgs args)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    void addTag(ITagHandle t)
+    {
+        selectedTags.Add(t.Tag);
+    }
+
+    Task<IEnumerable<Tag>> searchTags(string? query)
+    {
+        return Task.FromResult(PossibleTags.Select(t => t.Tag).SearchTags(selectedTags, query));
+    }
+
+    void tagSearchKeyUp(KeyboardEventArgs obj)
+    {
+        if (obj.Key == "Enter")
+        {
+            addTag();
+        }
+    }
+
+    void addTag()
+    {
+        if (selectedTag == null || selectedTags.Any(t => t.Id == selectedTag.Id))
+        {
+            return;
+        }
+
+        selectedTags.Add(selectedTag);
+        selectedTag = null;
+        tagSearchField?.Clear();
+        onSelectedTagsChanged();
+    }
+
+    void onSelectedTagsChanged()
+    {
+        if (SelectedTagIdsChanged is { } notify)
+        {
+            InvokeAsync(() => notify.InvokeAsync(selectedTags.Select(t => t.Id).ToList()));
+        }
+    }
+
+    void unsubscribe()
+    {
+        foreach (var handle in currentSubscriptions)
+        {
+            handle.Updated -= tagChanged;
+        }
+        currentSubscriptions.Clear();
+    }
+    
+    void subscribe() {
+        foreach (var handle in PossibleTags)
+        {
+            currentSubscriptions.Add(handle);
+            handle.Updated += tagChanged;
+        }
+    }
+    
+    public void Dispose()
+    {
+        unsubscribe();
+    }
+
+}

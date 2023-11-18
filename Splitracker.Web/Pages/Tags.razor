@@ -4,6 +4,7 @@
 @implements IAsyncDisposable
 
 @inject ITagRepository repository
+@inject IDialogService dialogs
 <PageTitle>Tags | Splitracker</PageTitle>
 
 <MudBreadcrumbs
@@ -44,7 +45,8 @@
                     @bind-Value="newTagName"
                     Immediate
                     Required
-                    Label="Tag Name"/>
+                    Label="Tag Name"
+                    OnKeyUp="@(e => e.Key == "Enter" ? tagCreate() : Task.CompletedTask)"/>
             </MudTh>
             <MudTh>
                 <MudIconButton
@@ -53,7 +55,6 @@
                     Icon="@Icons.Material.Filled.Add"
                     OnClick="tagCreate"
                     Disabled="@(string.IsNullOrWhiteSpace(newTagName))"/>
-                
             </MudTh>
         </MudTHeadRow>
     </HeaderContent>
@@ -68,8 +69,7 @@
             DataLabel="Name">
             <MudTextField
                 T="string"
-                @bind-Value="selectedTagName"
-                Required/>
+                @bind-Value="selectedTagName"/>
         </MudTd>
     </RowEditingTemplate>
     <EditButtonContent
@@ -131,7 +131,7 @@
         foreach (var handleTag in handle.Tags)
         {
             var tagId = handleTag.Tag.Id;
-            if (previouslySubscribedTags.TryGetValue(tagId, out var subscribedTag))
+            if (previouslySubscribedTags.ContainsKey(tagId))
             {
                 // tag is in both the new and the old list
             }
@@ -177,9 +177,29 @@
     async Task tagEditCommit()
     {
         var auth = await AuthenticationState;
-        if (selectedTag != null && !string.IsNullOrWhiteSpace(selectedTagName))
+        if (selectedTag != null)
         {
-            await repository.ApplyAsync(auth.User, new EditTag(selectedTag.Tag.Id, selectedTagName.Trim()));
+            if (string.IsNullOrWhiteSpace(selectedTagName))
+            {
+                if (await dialogs.ShowMessageBox(new() {
+                        Title = $"Tag {selectedTag.Tag.Name} löschen?",
+                        Message = "Das Tag wird von allen Charakteren entfern. Diese Aktion kann nicht rückgängig gemacht werden.",
+                        CancelText = "Abbrechen",
+                        YesText = "Löschen"
+                    }) ?? false)
+                {
+                    await repository.ApplyAsync(auth.User, new DeleteTag(selectedTag.Tag.Id));
+                }
+                else
+                {
+                    // Reset the text to the original value
+                    selectedTagName = selectedTag.Tag.Name;
+                }
+            }
+            else
+            {
+                await repository.ApplyAsync(auth.User, new EditTag(selectedTag.Tag.Id, selectedTagName.Trim()));
+            }
         }
 
         selectedTag = null;

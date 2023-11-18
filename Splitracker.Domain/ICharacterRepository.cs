@@ -12,6 +12,7 @@ public interface ICharacterRepository
     Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal);
     Task<ICharacterHandle?> OpenSingleAsync(ClaimsPrincipal principal, string characterId);
     Task ApplyAsync(ClaimsPrincipal principal, ICharacterCommand characterCommand);
+    Task ApplyAsync(ClaimsPrincipal principal, DeleteTag deleteTagCommand);
     Task<IReadOnlyList<Character>> SearchCharactersAsync(
         ClaimsPrincipal principal,
         string searchTerm,

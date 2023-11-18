@@ -129,36 +129,44 @@
         </MudTooltip>
     </div>
     @* Tags *@
-    <div
-        style="@($"grid-row: {row}")"
-        class="default-control">
-        <MudAutocomplete T="Tag" Label="Tag hinzufügen" @bind-Value="selectedTag"
-                         Clearable="@true" SearchFunc="@searchTags"
-                         ToStringFunc="@(t => t is {Name: {} n} ? n : "")"
-                         OnKeyUp="@tagSearchKeyUp"
-                         @ref="tagSearchField"
-                         />
+    @if (tags is { Tags.Count: > 0 })
+    {
+        <div
+            style="@($"grid-row: {row}")"
+            class="default-control">
+            <MudAutocomplete
+                T="Tag"
+                Label="Tag hinzufügen"
+                @bind-Value="selectedTag"
+                Clearable="@true"
+                SearchFunc="@searchTags"
+                ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
+                OnKeyUp="@tagSearchKeyUp"
+                @ref="tagSearchField"/>
 
-    </div>
-    <div
-        style="@($"grid-row: {row++}")"
-        class="outcome">
-        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@addTag" Disabled="@(selectedTag == null)"/>
-    </div>
-    <div
-        style="@($"grid-row: {row++}")"
-        class="full">
-        @foreach (var tag in newTags)
-        {
-            <MudChip
-                @key="tag.Id"
-                Value="@tag"
-                Text="@tag.Name"
-                Variant="Variant.Filled"
-                OnClose="@(chip => newTags.Remove((Tag)chip.Value))"
-                />
-        }
-    </div>
+        </div>
+        <div
+            style="@($"grid-row: {row++}")"
+            class="outcome">
+            <MudIconButton
+                Icon="@Icons.Material.Filled.Add"
+                OnClick="@addTag"
+                Disabled="@(selectedTag == null)"/>
+        </div>
+        <div
+            style="@($"grid-row: {row++}")"
+            class="full">
+            @foreach (var tag in newTags)
+            {
+                <MudChip
+                    @key="tag.Id"
+                    Value="@tag"
+                    Text="@tag.Name"
+                    Variant="Variant.Filled"
+                    OnClose="@(chip => newTags.Remove((Tag)chip.Value))"/>
+            }
+        </div>
+    }
     <div
         class="full">
         <MudStack
@@ -262,23 +270,7 @@
 
     Task<IEnumerable<Tag>> searchTags(string? query)
     {
-        if (tags == null)
-        {
-            return Task.FromResult(Enumerable.Empty<Tag>());
-        }
-
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return Task.FromResult((IEnumerable<Tag>)tags.Tags.Select(t => t.Tag).OrderBy(t => t.Name));
-        }
-
-        return Task.FromResult(tags.Tags
-            .Where(t => newTags.All(n => n.Id != t.Tag.Id))
-            .Select(t => (t.Tag, t.Tag.Name.IndexOf(query, StringComparison.CurrentCultureIgnoreCase)))
-            .Where(x => x.Item2 >= 0)
-            .OrderBy(x => x.Item2)
-            .ThenBy(x => x.Tag.Name)
-            .Select(x => x.Tag));
+        return Task.FromResult((tags?.Tags.Select(t => t.Tag)).SearchTags(newTags, query));
     }
 
     void tagSearchKeyUp(KeyboardEventArgs obj)

@@ -14,16 +14,22 @@
 
 <MudBreadcrumbs
     Items="breadcrumbs"/>
-
+@if (tagHandle is { Tags.Count: > 0 } || filterTags.Count > 0)
+{
+    <TagFilter
+        PossibleTags="@(tagHandle?.Tags ?? [])"
+        @bind-SelectedTagIds="filterTags"/>
+}
 <div
     class="d-flex flex-row flex-wrap gap-4">
-    @if (handle is {} repositoryHandle)
+    @if (handle is { } repositoryHandle)
     {
         <CascadingValue
             TValue="ICharacterCommandRouter"
             IsFixed="true"
             Value="@this">
-            @foreach (var characterHandle in repositoryHandle.Characters)
+            @foreach (var characterHandle in repositoryHandle.Characters
+                .Where(c => filterTags.Count == 0 || c.Character.TagIds.Overlaps(filterTags)))
             {
                 <CharacterCard
                     @key="characterHandle.Character.Id"
@@ -37,7 +43,7 @@
         <CharacterCardSkeleton/>
     }
 
-    @if (handle is {Characters.Count: 0 })
+    @if (handle is { Characters.Count: 0 })
     {
         <MudText>
             Hier werden deine Charaktere angezeigt. Wie es scheint, hast du aber im Moment noch keine Charaktere.
@@ -46,21 +52,20 @@
     }
 </div>
 
-
-    <MudFab
-        Class="fixed z-100"
-        Style="right: 1.5rem; bottom: 1.5rem;"
-        DisableRipple="@true"
-        StartIcon="@Icons.Material.Filled.Add"
-        Color="@Color.Primary"
-        @onclick="gotoNew"/>
+<MudFab
+    Class="fixed z-100"
+    Style="right: 1.5rem; bottom: 1.5rem;"
+    DisableRipple="@true"
+    StartIcon="@Icons.Material.Filled.Add"
+    Color="@Color.Primary"
+    @onclick="gotoNew"/>
 
 @code {
     static List<BreadcrumbItem> breadcrumbs => [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!)];
 
     [CascadingParameter]
     public required Task<AuthenticationState> AuthenticationState { get; set; }
-    
+
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
 
@@ -68,17 +73,21 @@
     ITagRepositoryHandle? tagHandle;
     IImmutableDictionary<string, CharacterPermissions> characterPermissions = ImmutableDictionary<string, CharacterPermissions>.Empty;
 
+    List<string> filterTags = [];
+
     protected override async Task OnParametersSetAsync()
     {
         if (handle != null)
         {
             await handle.DisposeAsync();
         }
+
         handle = null;
         if (tagHandle != null)
         {
             await tagHandle.DisposeAsync();
         }
+
         tagHandle = null;
         StateHasChanged();
 
@@ -88,7 +97,7 @@
         handle.CharacterAdded += (_, _) => InvokeAsync(onCharacterListUpdated);
         handle.CharacterDeleted += (_, _) => InvokeAsync(onCharacterListUpdated);
         refreshCharacterPermissions();
-        
+
         tagHandle = await tagRepository.OpenAsync(auth.User);
         tagHandle.Added += (_, _) => InvokeAsync(StateHasChanged);
         tagHandle.Deleted += (_, _) => InvokeAsync(StateHasChanged);
@@ -99,7 +108,7 @@
         characterPermissions = handle?.Characters.ToImmutableDictionary(
             c => c.Character.Id,
             c => Permissions.OnTheCharacterScreen(c.Character)
-            ) ?? ImmutableDictionary<string, CharacterPermissions>.Empty;
+        ) ?? ImmutableDictionary<string, CharacterPermissions>.Empty;
     }
 
     void onCharacterListUpdated()
@@ -107,7 +116,7 @@
         refreshCharacterPermissions();
         StateHasChanged();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         if (handle != null)
@@ -126,9 +135,10 @@
         var state = await AuthenticationState;
         await repository.ApplyAsync(state.User, command);
     }
-    
+
     void gotoNew()
     {
         nav.NavigateTo("/Characters/New");
     }
+
 }

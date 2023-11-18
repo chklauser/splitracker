@@ -17,7 +17,7 @@ using Tag = Splitracker.Domain.Tag;
 
 namespace Splitracker.Persistence.Tags;
 
-class RavenTagRepository(IDocumentStore store, ILogger<RavenTagRepository> log, IUserRepository repository)
+class RavenTagRepository(IDocumentStore store, ILogger<RavenTagRepository> log, IUserRepository repository, ICharacterRepository characterRepository)
     : ITagRepository
 {
     const string CollectionName = "Tags";
@@ -76,7 +76,7 @@ class RavenTagRepository(IDocumentStore store, ILogger<RavenTagRepository> log, 
         {
             case DeleteTag deleteTag:
                 session.Delete(model);
-                // TODO: remove tag from characters
+                await characterRepository.ApplyAsync(principal, deleteTag);
                 break;
             case CreateTag create:
                 await session.StoreAsync(new Model.Tag(TagDocIdPrefix(userId), create.Name));
