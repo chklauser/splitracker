@@ -3,6 +3,11 @@
 @using System.Collections.Immutable
 @using System.Timers
 @using Splitracker.Domain.Commands
+@using _Imports = Splitracker.Web._Imports
+
+@implements IAsyncDisposable
+
+@inject ITagRepository tagRepository;
 
 <MudBreadcrumbs
     Items="@( [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!), new(character.Name, null, disabled: true)])"/>
@@ -111,7 +116,7 @@
     @{ row += 4; }
     @* Opponent *@
     <div
-        style="@($"grid-row: {row}")"
+        style="@($"grid-row: {row++}")"
         class="default-control">
         <MudTooltip
             Text="(Für Spielleiter)">
@@ -122,6 +127,37 @@
                 @bind-Checked="newIsOpponent"
                 Label="Ist Gegner*in"/>
         </MudTooltip>
+    </div>
+    @* Tags *@
+    <div
+        style="@($"grid-row: {row}")"
+        class="default-control">
+        <MudAutocomplete T="Tag" Label="Tag hinzufügen" @bind-Value="selectedTag"
+                         Clearable="@true" SearchFunc="@searchTags"
+                         ToStringFunc="@(t => t is {Name: {} n} ? n : "")"
+                         OnKeyUp="@tagSearchKeyUp"
+                         @ref="tagSearchField"
+                         />
+
+    </div>
+    <div
+        style="@($"grid-row: {row++}")"
+        class="outcome">
+        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@addTag" Disabled="@(selectedTag == null)"/>
+    </div>
+    <div
+        style="@($"grid-row: {row++}")"
+        class="full">
+        @foreach (var tag in newTags)
+        {
+            <MudChip
+                @key="tag.Id"
+                Value="@tag"
+                Text="@tag.Name"
+                Variant="Variant.Filled"
+                OnClose="@(chip => newTags.Remove((Tag)chip.Value))"
+                />
+        }
     </div>
     <div
         class="full">
@@ -156,6 +192,10 @@
     </div>
 
 </div>
+@{
+    // avoids "value not used" warnings on the last row++
+    _ = row;
+}
 
 @code {
 
@@ -172,6 +212,9 @@
     [CascadingParameter]
     public required ICharacterCommandRouter OuterCommandRouter { get; set; }
 
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
     string newName = string.Empty;
     int newLpBaseCapacity;
     int newFoBaseCapacity;
@@ -180,13 +223,30 @@
     MudColor? newColor;
     bool newHasCustomColor;
     IImmutableDictionary<string, ActionShorthand> newShorthands = ImmutableDictionary<string, ActionShorthand>.Empty;
+    List<Tag> newTags = [];
 
     bool dummyAvatarPreviewSelected = false;
 
+    MudAutocomplete<Tag>? tagSearchField;
+    ITagRepositoryHandle? tags;
+    Dictionary<string, Tag> tagsById = new();
+    Tag? selectedTag;
+
     protected override async Task OnParametersSetAsync()
     {
+        if (tags != null)
+        {
+            await tags.DisposeAsync();
+            tags = null;
+        }
+
         await base.OnParametersSetAsync();
-        
+        var state = await AuthenticationState;
+        tags = await tagRepository.OpenAsync(state.User);
+        tags.Added += (_, _) => InvokeAsync(refreshTags);
+        tags.Deleted += (_, _) => InvokeAsync(refreshTags);
+        refreshTags();
+
         newName = character.Name;
         newLpBaseCapacity = character.Lp.BaseCapacity;
         newFoBaseCapacity = character.Fo.BaseCapacity;
@@ -195,6 +255,79 @@
         newHasCustomColor = character.CustomColor is not null;
         newIsOpponent = character.IsOpponent;
         newShorthands = character.ActionShorthands;
+        newTags.Clear();
+        newTags.EnsureCapacity(character.TagIds.Count);
+        newTags.AddRange(character.TagIds.Select(t => tagsById.GetValueOrDefault(t)).OfType<Tag>());
+    }
+
+    Task<IEnumerable<Tag>> searchTags(string? query)
+    {
+        if (tags == null)
+        {
+            return Task.FromResult(Enumerable.Empty<Tag>());
+        }
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return Task.FromResult((IEnumerable<Tag>)tags.Tags.Select(t => t.Tag).OrderBy(t => t.Name));
+        }
+
+        return Task.FromResult(tags.Tags
+            .Where(t => newTags.All(n => n.Id != t.Tag.Id))
+            .Select(t => (t.Tag, t.Tag.Name.IndexOf(query, StringComparison.CurrentCultureIgnoreCase)))
+            .Where(x => x.Item2 >= 0)
+            .OrderBy(x => x.Item2)
+            .ThenBy(x => x.Tag.Name)
+            .Select(x => x.Tag));
+    }
+
+    void tagSearchKeyUp(KeyboardEventArgs obj)
+    {
+        if (obj.Key == "Enter")
+        {
+            addTag();
+        }
+    }
+    
+    void addTag()
+    {
+        if (selectedTag == null || newTags.Any(t => t.Id == selectedTag.Id))
+        {
+            return;
+        }
+        
+        newTags.Add(selectedTag);
+        selectedTag = null;
+        tagSearchField?.Clear();
+    }
+    
+    void refreshTags()
+    {
+        StateHasChanged();
+        tagsById.Clear();
+        if (tags == null)
+        {
+            return;
+        }
+
+        foreach (var h in tags.Tags)
+        {
+            tagsById[h.Tag.Id] = h.Tag;
+        }
+
+        // Update references in `newTags`
+        for (var i = 0; i < newTags.Count; i++)
+        {
+            if (tagsById.TryGetValue(newTags[i].Id, out var updatedTag))
+            {
+                newTags[i] = updatedTag;
+            }
+            else
+            {
+                newTags.RemoveAt(i);
+                i -= 1;
+            }
+        }
     }
 
     private bool hasChanges =>
@@ -206,7 +339,8 @@
         || newIsOpponent != character.IsOpponent
         || (newHasCustomColor && newColor?.ToString(MudColorOutputFormats.Hex) != character.CustomColor)
         || (!newHasCustomColor && character.CustomColor is not null)
-        || !newShorthands.SequenceEqual(character.ActionShorthands);
+        || !newShorthands.SequenceEqual(character.ActionShorthands)
+        || !character.TagIds.SetEquals(newTags.Select(t => t.Id));
 
     async Task saveAsync()
     {
@@ -221,7 +355,7 @@
                 : null,
             newShorthands,
             newIsOpponent,
-            []));
+            newTags.Select(t => t.Id).ToImmutableHashSet()));
     }
 
     async Task deleteAsync()
@@ -232,6 +366,15 @@
     async Task cloneAsync()
     {
         await OuterCommandRouter.ApplyAsync(new CloneCharacter(null!));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (tags != null)
+        {
+            await tags.DisposeAsync();
+            tags = null;
+        }
     }
 
 }
