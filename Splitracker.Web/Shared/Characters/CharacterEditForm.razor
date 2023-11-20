@@ -132,26 +132,19 @@
     @if (tags is { Tags.Count: > 0 })
     {
         <div
-            style="@($"grid-row: {row}")"
-            class="default-control">
+            style="@($"grid-row: {row++}")"
+            class="full">
             <MudAutocomplete
-                T="Tag"
+                T="Tag?"
                 Label="Tag hinzufügen"
-                @bind-Value="selectedTag"
+                ValueChanged="@addTag"
                 Clearable="@true"
+                OnClearButtonClick="@(() => tagSearchField!.Value = null!)"
                 SearchFunc="@searchTags"
                 ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
                 OnKeyUp="@tagSearchKeyUp"
                 @ref="tagSearchField"/>
 
-        </div>
-        <div
-            style="@($"grid-row: {row++}")"
-            class="outcome">
-            <MudIconButton
-                Icon="@Icons.Material.Filled.Add"
-                OnClick="@addTag"
-                Disabled="@(selectedTag == null)"/>
         </div>
         <div
             style="@($"grid-row: {row++}")"
@@ -163,7 +156,7 @@
                     Value="@tag"
                     Text="@tag.Name"
                     Variant="Variant.Filled"
-                    OnClose="@(chip => newTags.Remove((Tag)chip.Value))"/>
+                    OnClose="@(deleteTag)"/>
             }
         </div>
     }
@@ -238,7 +231,6 @@
     MudAutocomplete<Tag>? tagSearchField;
     ITagRepositoryHandle? tags;
     Dictionary<string, Tag> tagsById = new();
-    Tag? selectedTag;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -275,13 +267,13 @@
 
     void tagSearchKeyUp(KeyboardEventArgs obj)
     {
-        if (obj.Key == "Enter")
+        if (obj.Key == "Enter" && tagSearchField is { Value: { } selectedTag })
         {
-            addTag();
+            addTag(selectedTag);
         }
     }
     
-    void addTag()
+    void addTag(Tag? selectedTag)
     {
         if (selectedTag == null || newTags.Any(t => t.Id == selectedTag.Id))
         {
@@ -289,7 +281,6 @@
         }
         
         newTags.Add(selectedTag);
-        selectedTag = null;
         tagSearchField?.Clear();
     }
     
@@ -366,6 +357,15 @@
         {
             await tags.DisposeAsync();
             tags = null;
+        }
+    }
+
+    void deleteTag(MudChip chip)
+    {
+        newTags.Remove((Tag)chip.Value);
+        if (tagSearchField != null)
+        {
+            tagSearchField.Value = null!;
         }
     }
 

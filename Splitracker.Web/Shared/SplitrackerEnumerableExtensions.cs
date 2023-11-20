@@ -75,4 +75,30 @@ static class SplitrackerEnumerableExtensions
             step++;
         }
     }
+
+    public static (IList<T>, IList<T>) Partition<T>(this IEnumerable<T> items, Func<T, bool> predicate)
+    {
+        List<T> pos;
+        List<T> neg;
+        if (items is IReadOnlyCollection<T> { Count: var sizeHint })
+        {
+            pos = new(sizeHint);
+            neg = new(sizeHint);
+        }
+        else
+        {
+            pos = new();
+            neg = new();
+        }
+        
+        foreach (var item in items)
+        {
+            if (predicate(item))
+                pos.Add(item);
+            else
+                neg.Add(item);
+        }
+        
+        return (pos, neg);
+    }
 }

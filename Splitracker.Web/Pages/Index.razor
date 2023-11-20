@@ -24,12 +24,46 @@
     class="d-flex flex-row flex-wrap gap-4">
     @if (handle is { } repositoryHandle)
     {
+        var (matching, rest) = repositoryHandle.Characters
+            .OrderByDescending(c => c.Character.InsertedAt)
+            .Partition(c => c.Character.TagIds.Overlaps(filterTags));
         <CascadingValue
             TValue="ICharacterCommandRouter"
             IsFixed="true"
             Value="@this">
-            @foreach (var characterHandle in repositoryHandle.Characters
-                .Where(c => filterTags.Count == 0 || c.Character.TagIds.Overlaps(filterTags)))
+            @if (matching.Count > 0)
+            {
+                @foreach (var characterHandle in matching)
+                {
+                    <CharacterCard
+                        @key="characterHandle.Character.Id"
+                        CharacterHandle="@characterHandle"
+                        Permissions="@characterPermissions[characterHandle.Character.Id]"/>
+                }
+            }
+            else if(filterTags.Count > 0)
+            {
+                <MudText Typo="Typo.body1">Gibt anscheinend keine Charaktere, die diese Tags aufweisen.</MudText>
+            }
+            
+            @if (filterTags.Count > 0 && rest.Count > 0)
+            {
+                <MudStack
+                    Row
+                    Style="width: 100%"
+                    Justify="Justify.SpaceEvenly"
+                    AlignItems="AlignItems.Center">
+                    <MudDivider/>
+                    <MudText
+                        Typo="Typo.h5"
+                        Class="flex-none">
+                        Deine anderen Charaktere
+                    </MudText>
+                    <MudDivider/>
+                </MudStack>
+            }
+            
+            @foreach (var characterHandle in rest)
             {
                 <CharacterCard
                     @key="characterHandle.Character.Id"

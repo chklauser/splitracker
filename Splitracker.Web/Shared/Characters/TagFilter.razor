@@ -43,14 +43,13 @@
                     <MudAutocomplete
                         T="Tag"
                         Label="Tag hinzufügen"
-                        @bind-Value="selectedTag"
+                        ValueChanged="@addTag"
                         Clearable="@true"
                         SearchFunc="@searchTags"
                         ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
                         OnKeyUp="@tagSearchKeyUp"
                         SelectValueOnTab="@true"
                         @ref="tagSearchField"/>
-                    <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@addTag" Disabled="@(selectedTag == null)"/>
                 </MudStack>
             </MudStack>
         </ChildContent>
@@ -73,7 +72,6 @@
 
     bool expanded;
     readonly List<Tag> selectedTags = [];
-    Tag? selectedTag;
     MudAutocomplete<Tag>? tagSearchField;
 
     protected override void OnParametersSet()
@@ -127,13 +125,13 @@
 
     void tagSearchKeyUp(KeyboardEventArgs obj)
     {
-        if (obj.Key == "Enter")
+        if (obj.Key == "Enter" && tagSearchField is { Value: {} selectedTag } )
         {
-            addTag();
+            addTag(selectedTag);
         }
     }
 
-    void addTag()
+    void addTag(Tag? selectedTag)
     {
         if (selectedTag == null || selectedTags.Any(t => t.Id == selectedTag.Id))
         {
@@ -141,7 +139,6 @@
         }
 
         selectedTags.Add(selectedTag);
-        selectedTag = null;
         tagSearchField?.Clear();
         onSelectedTagsChanged();
     }
