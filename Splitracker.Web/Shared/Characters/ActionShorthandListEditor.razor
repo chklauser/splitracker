@@ -1,5 +1,6 @@
 ﻿@using Splitracker.Domain
 @using System.Collections.Immutable
+@inject IDialogService dialogs
 
 @{
     var row = StartRow;
@@ -13,87 +14,22 @@
     <strong>@typeTitle</strong>
 </MudText>
 
-@* input data *@
-<div
-    style="@($"grid-column: 1/3; grid-row: {row}")"
-    class="dense-control">
-    <MudTextField
-        @bind-Value="selectedName"
-        @ref="nameField"
-        Immediate="@true"
-        Label="@($"Name des {typeObject}s")"
-        Required="@true"
-        RequiredError="@($"{typeObject} braucht einen Namen")"
-        HelperText="so kurz wie möglich!"/>
-</div>
-
-<div
-    style="@($"grid-column: 3; grid-row: {row}")"
-    class="dense-control">
-    <MudNumericField
-        T="int"
-        @bind-Value="selectedTicks"
-        Label="@(Type == ActionShorthandType.Spell ? "Ticks" : "WGS")"
-        Min="1"
-        Max="99"/>
-</div>
-
-@if (Type is ActionShorthandType.Ranged or ActionShorthandType.Spell)
-{
-    row += 1;
-    <div
-        style="@($"grid-column: 1/{(Type == ActionShorthandType.Spell ? 3 : 4)}; grid-row: {row}")"
-        class="dense-control">
-        <MudTextField
-            @bind-Value="selectedDescription"
-            Immediate="@true"
-            Label="Beschreibung"/>
-    </div>
-}
-
-@if (Type == ActionShorthandType.Spell)
-{
-    <div
-        style="@($"grid-column: 3; grid-row: {row}")"
-        class="dense-control">
-        <MudTextField
-            T="string"
-            @bind-Text="selectedCost"
-            Label="FO Kosten"
-            HelperText="z.B. K3V1"
-            autocomplete="off"
-            Mask="@costExpressionMask"
-            ErrorText="Kombination von K, E, V und Zahlen"/>
-    </div>
-}
-
-<div
-    style="@($"grid-column: 4; grid-row: {row++}")">
-    <MudTooltip
-        Text="@($"{typeObject} ({(Type == ActionShorthandType.Spell ? "Dauer" : "WGS")} {selectedTicks} ticks) hinzufügen")">
-        <MudIconButton
-            Disabled="@(!isValid)"
-            Icon="@Icons.Material.Filled.Add"
-            Color="Color.Success"
-            Variant="Variant.Filled"
-            OnClick="addShorthandButtonClicked"/>
-    </MudTooltip>
-</div>
-
 @* existing actions *@
 <MudChipSet
     Class="full"
-    Style="@($"grid-row: {row}")"
+    Style="@($"grid-row: {row++}")"
     AllClosable="@true"
     SelectedChip="@null">
     @foreach (var shorthand in Shorthands.Values.Where(s => s.Type == Type).OrderBy(s => s.Name))
     {
         <MudTooltip
+            @key="shorthand.Id"
             Text="@shorthand.Description"
             ShowOnClick="@(shorthand.Description != null)"
             ShowOnFocus="@(shorthand.Description != null)"
             ShowOnHover="@(shorthand.Description != null)">
             <MudChip
+                OnClick="@(_ => editFlow(shorthand))"
                 OnClose="@(_ => removeShorthand(shorthand))">
                 @shorthand.Name
                 @if (shorthand.CostExpression == null)
@@ -113,6 +49,22 @@
     }
 </MudChipSet>
 
+@* add action *@
+<div
+    class="default-control"
+    style="@($"grid-row: {row++}")">
+    <MudButton
+        Icon="@Icons.Material.Filled.Add"
+        Color="Color.Success"
+        OnClick="@addShorthand">
+        @typeObject hinzufügen
+    </MudButton>
+</div>
+
+@{
+    _ = row;
+}
+
 @code {
 
     [Parameter]
@@ -129,16 +81,6 @@
     [Parameter]
     [EditorRequired]
     public required int StartRow { get; set; }
-    
-    public IMask costExpressionMask = new RegexMask("^" + PointsVec.IncrementalExpressionPattern + "$");
-
-    int selectedTicks = 7;
-    string? selectedName;
-    string? selectedDescription;
-    string? selectedCost;
-    bool isValid => !string.IsNullOrWhiteSpace(selectedName) && selectedTicks > 0;
-    
-    MudTextField<string?>? nameField;
 
     string typeTitle => Type switch{
         ActionShorthandType.Melee => "Nahkampf",
@@ -154,27 +96,20 @@
         _ => throw new ArgumentOutOfRangeException(nameof(Type)),
         };
 
-    async Task addShorthandButtonClicked()
-    {
-        if (!isValid)
-        {
-            return;
-        }
+    Task addShorthand() => editFlow(null);
 
-        var id = IdGenerator.RandomId();
-        await ShorthandsChanged.InvokeAsync(Shorthands.Add(id, new(
-            id, 
-            selectedName!, 
-            !string.IsNullOrWhiteSpace(selectedDescription) ? selectedDescription : null, 
-            selectedTicks, 
-            Type,
-            !string.IsNullOrWhiteSpace(selectedCost) ? PointsVec.From(selectedCost, PointType.K).ToString() : null)));
-        selectedName = "";
-        selectedCost = "";
-        selectedDescription = "";
-        if (nameField is {} field)
+    async Task editFlow(ActionShorthand? existingShorthand)
+    {
+        var parameters = new DialogParameters<ActionShorthandDialog> {
+            {x => x.Type, Type},
+            {x => x.Shorthand, existingShorthand},
+        };
+        var dialog = await dialogs.ShowAsync<ActionShorthandDialog>(string.Empty, parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ActionShorthand newShorthand})
         {
-            await field.FocusAsync();
+            await ShorthandsChanged.InvokeAsync(Shorthands.SetItem(newShorthand.Id, newShorthand));
         }
     }
 
