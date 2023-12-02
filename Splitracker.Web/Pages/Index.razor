@@ -102,12 +102,19 @@
 
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
+    
+    [CascadingParameter]
+    public required SessionContext Session { get; set; }
 
     ICharacterRepositoryHandle? handle;
     ITagRepositoryHandle? tagHandle;
     IImmutableDictionary<string, CharacterPermissions> characterPermissions = ImmutableDictionary<string, CharacterPermissions>.Empty;
 
-    List<string> filterTags = [];
+    IImmutableList<string> filterTags
+    {
+        get => Session.FilterTags;
+        set => Session.FilterTags = value;
+    }
 
     protected override async Task OnParametersSetAsync()
     {

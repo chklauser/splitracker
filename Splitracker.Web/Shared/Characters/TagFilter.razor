@@ -1,4 +1,5 @@
 ﻿@using Splitracker.Domain
+@using System.Collections.Immutable
 
 @implements IDisposable
 
@@ -65,10 +66,10 @@
     List<ITagHandle> currentSubscriptions = [];
 
     [Parameter]
-    public List<string> SelectedTagIds { get; set; } = [];
+    public IImmutableList<string> SelectedTagIds { get; set; } = [];
 
     [Parameter]
-    public EventCallback<List<string>>? SelectedTagIdsChanged { get; set; }
+    public EventCallback<IImmutableList<string>>? SelectedTagIdsChanged { get; set; }
 
     bool expanded;
     readonly List<Tag> selectedTags = [];
@@ -147,7 +148,7 @@
     {
         if (SelectedTagIdsChanged is { } notify)
         {
-            InvokeAsync(() => notify.InvokeAsync(selectedTags.Select(t => t.Id).ToList()));
+            InvokeAsync(() => notify.InvokeAsync(selectedTags.Select(t => t.Id).ToImmutableArray()));
         }
     }
 

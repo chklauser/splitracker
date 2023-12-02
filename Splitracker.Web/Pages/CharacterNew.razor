@@ -4,6 +4,7 @@
 @using Splitracker.Domain.Commands
 @using System.Diagnostics.CodeAnalysis
 @using Splitracker.Web.Shared.Characters
+@using System.Collections.Immutable
 
 @implements ICharacterCommandRouter
 @inject ICharacterRepository repository
@@ -28,13 +29,16 @@
 
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
+    
+    [CascadingParameter]
+    public required SessionContext Session { get; set; }
 
     Character? character;
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        character = new("", "", 1, 1);
+        character = new("", "", 1, 1) { TagIds = Session.FilterTags.ToImmutableHashSet() };
     }
 
     [SuppressMessage("ReSharper", "WithExpressionModifiesAllMembers")]
@@ -56,7 +60,7 @@
                         edit.CustomColor,
                         edit.ActionShorthands,
                         edit.IsOpponent,
-                        []));
+                        edit.TagIds));
                 nav.NavigateTo("/");
                 break;
             default:

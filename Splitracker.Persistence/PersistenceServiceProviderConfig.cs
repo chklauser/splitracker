@@ -61,6 +61,8 @@ public static class PersistenceServiceProviderConfig
 
         services.AddSingleton<ITagRepository, RavenTagRepository>();
 
+        services.AddSingleton<RavenDataProtectionRepository>();
+
         services.AddRavenDbMigrations(config =>
         {
             config.SimultaneousMigrationTimeout = TimeSpan.FromMinutes(5);

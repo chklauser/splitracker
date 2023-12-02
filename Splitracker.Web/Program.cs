@@ -1,7 +1,7 @@
 using System.Net;
-using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
 using Splitracker.Domain;
 using Splitracker.Persistence;
+using Splitracker.Web;
 using Splitracker.Web.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +40,6 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 
-builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
 builder.Services.AddServerSideBlazor()
@@ -61,6 +61,9 @@ builder.Services.AddHttpLogging(logging =>
 });
 
 builder.Services.AddPersistenceServices(builder.Configuration);
+builder.Services.AddDataProtection()
+    .SetApplicationName("Splitracker")
+    .PersistKeysToRavenDb();
 builder.Services.AddScoped<FlagContextHolder>();
 builder.Services.AddSingleton<TimelineLogic>();
 builder.Services.AddScoped<ClipboardService>();
@@ -71,6 +74,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Add(new(IPAddress.Any, 0));
     options.KnownNetworks.Add(new(IPAddress.IPv6Any, 0));
 });
+
+builder.Services
+    .AddCascadingAuthenticationState()
+    .AddCascadingValue<FlagContext>(sp => sp.GetRequiredService<FlagContextHolder>().Source)
+    .AddCascadingValue<SessionContext>(_ => new());
+
 var app = builder.Build();
 
 app.UseHttpLogging();

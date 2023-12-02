@@ -1,61 +1,93 @@
-@using Blazored.LocalStorage
-@inject ILocalStorageService localStorage
+@inject ProtectedLocalStorage localStorage
 @inject FlagContextHolder flags
 @inject IJSRuntime js
+@inject ILogger<App> log
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.Extensions.Logging
 @implements IDisposable
 
-<CascadingAuthenticationState>
-    <CascadingValue
-        Value="@flags.Context">
-        <CascadingPermissionService>
-
-            <Router
-                AppAssembly="@typeof(App).Assembly">
-                <Found
-                    Context="routeData">
-                    <AuthorizeRouteView
-                        RouteData="@routeData"
-                        DefaultLayout="@typeof(MainLayout)"/>
-                    <FocusOnNavigate
-                        RouteData="@routeData"
-                        Selector="h1"/>
-                </Found>
-                <NotFound>
-                    <PageTitle>Nicht gefunden</PageTitle>
-                    <LayoutView
-                        Layout="@typeof(MainLayout)">
-                        <MudAlert
-                            Severity="Severity.Warning">
-                            Hoppla, was du suchst gibt's irgendwie nicht 😶
-                        </MudAlert>
-                    </LayoutView>
-                </NotFound>
-            </Router>
-        </CascadingPermissionService>
-    </CascadingValue>
-</CascadingAuthenticationState>
+<CascadingPermissionService>
+    <Router
+        AppAssembly="@typeof(App).Assembly">
+        <Found
+            Context="routeData">
+            <AuthorizeRouteView
+                RouteData="@routeData"
+                DefaultLayout="@typeof(MainLayout)"/>
+            <FocusOnNavigate
+                RouteData="@routeData"
+                Selector="h1"/>
+        </Found>
+        <NotFound>
+            <PageTitle>Nicht gefunden</PageTitle>
+            <LayoutView
+                Layout="@typeof(MainLayout)">
+                <MudAlert
+                    Severity="Severity.Warning">
+                    Hoppla, was du suchst gibt's irgendwie nicht 😶
+                </MudAlert>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingPermissionService>
 
 @code {
-
     protected override void OnInitialized()
     {
         flags.Changed += flagsChanged;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (!firstRender)
-        {
-            return;
-        }
-        
-        var newFlags = await localStorage.GetItemAsync<FlagContext>("flags") ?? flags.Context;
+        await base.OnInitializedAsync();
+        var newFlags = await loadFlagsAsync() ?? flags.Context;
         if (newFlags.DarkMode == null)
         {
             var prefersDarkMode = await js.InvokeAsync<bool>("splitrackerClientPrefersDarkMode");
             newFlags = newFlags with { DarkMode = prefersDarkMode};
         }
         flags.Context = newFlags;
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (!firstRender)
+    //     {
+    //         return;
+    //     }
+    //
+    //     var newFlags = await loadFlagsAsync() ?? flags.Context;
+    //     if (newFlags.DarkMode == null)
+    //     {
+    //         var prefersDarkMode = await js.InvokeAsync<bool>("splitrackerClientPrefersDarkMode");
+    //         newFlags = newFlags with { DarkMode = prefersDarkMode};
+    //     }
+    //     flags.Context = newFlags;
+    // }
+
+    async Task<FlagContext?> loadFlagsAsync()
+    {
+        try
+        {
+            return await localStorage.GetAsync<FlagContext>("flags")
+                is { Success: true, Value: { } localFlags }
+                ? localFlags
+                : null;
+        }
+        catch (Exception e)
+        {
+            log.Log(LogLevel.Information, e, "Failed to read flags from local storage. Resetting.");
+            try
+            {
+                await localStorage.DeleteAsync("flags");
+            }
+            catch (Exception e2)
+            {
+                log.Log(LogLevel.Debug, e2, "Failed to clear flags from local storage after read error.");
+            }
+
+            return null;
+        }
     }
 
     public void Dispose()
@@ -65,8 +97,9 @@
 
     void flagsChanged(object? sender, EventArgs e)
     {
-        localStorage.SetItemAsync("flags", flags.Context);
+        localStorage.SetAsync("flags", flags.Context);
         StateHasChanged();
+        log.Log(LogLevel.Debug, "DarkMode: {DarkMode}", flags.Context.DarkMode);
     }
 
 }

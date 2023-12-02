@@ -1,6 +1,8 @@
+@using Microsoft.Extensions.Logging
 @inherits LayoutComponentBase
 
 @inject FlagContextHolder holder;
+@inject ILogger<MainLayout> log;
 
 @code {
     [CascadingParameter]
@@ -11,12 +13,18 @@
         get => Flag.DarkMode ?? false;
         set => holder.Context = holder.Context with {DarkMode = value};
     }
-    MudThemeProvider? mudThemeProvider;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        log.Log(LogLevel.Debug, "DarkMode: {IsDarkMode}", isDarkMode);
+    }
+
 }
 
 <PageTitle>Splitracker.Web</PageTitle>
 
-<MudThemeProvider @ref="mudThemeProvider" @bind-IsDarkMode="isDarkMode" />
+<MudThemeProvider @bind-IsDarkMode="isDarkMode" />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
