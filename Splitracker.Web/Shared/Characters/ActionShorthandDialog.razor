@@ -4,9 +4,9 @@
         <MudText
             Typo="Typo.h5">
             @typeObject
-            @if (Shorthand is { Name: { } name })
+            @if (Shorthand is { Name: { } shorthandName })
             {
-                <text>@name ändern</text>
+                <text>@shorthandName ändern</text>
             }
             else
             {
@@ -16,7 +16,7 @@
     </TitleContent>
     <DialogContent>
         <div
-            class="editor">
+            class="dialog-editor">
             @{
                 var row = 1;
             }
@@ -25,7 +25,7 @@
                 style="@($"grid-column: 1/3; grid-row: {row}")"
                 class="dense-control">
                 <MudTextField
-                    @bind-Value="selectedName"
+                    @bind-Value="name"
                     Immediate="@true"
                     Label="@($"Name des {typeObject}s")"
                     Required="@true"
@@ -34,7 +34,7 @@
             </div>
 
             <div
-                style="@($"grid-column: 3; grid-row: {row}")"
+                style="@($"grid-column: 3; grid-row: {row++}")"
                 class="dense-control">
                 <MudNumericField
                     T="int"
@@ -46,12 +46,11 @@
 
             @if (Type is ActionShorthandType.Ranged or ActionShorthandType.Spell)
             {
-                row += 1;
                 <div
                     style="@($"grid-column: 1/{(Type == ActionShorthandType.Spell ? 3 : 4)}; grid-row: {row}")"
                     class="dense-control">
                     <MudTextField
-                        @bind-Value="selectedDescription"
+                        @bind-Value="description"
                         Immediate="@true"
                         Label="Beschreibung"/>
                 </div>
@@ -64,13 +63,103 @@
                     class="dense-control">
                     <MudTextField
                         T="string"
-                        @bind-Text="selectedCost"
+                        @bind-Text="cost"
                         Label="FO Kosten"
                         HelperText="z.B. K3V1"
                         autocomplete="off"
                         Mask="@costExpressionMask"
                         ErrorText="Kombination von K, E, V und Zahlen"/>
                 </div>
+            }
+
+            @if (Type is ActionShorthandType.Ranged or ActionShorthandType.Spell)
+            {
+                row++;
+            }
+
+            <div
+                class="full mt-3"
+                style="@($"grid-row: {row++}")">
+                <MudText
+                    Typo="Typo.subtitle1">
+                    Wurf
+                </MudText>
+            </div>
+
+            <div
+                class="default-control"
+                style="@($"grid-row: {row++}")">
+                <MudNumericField
+                    T="int"
+                    @bind-Value="bonus"
+                    Label="Fertigkeitsbonus"
+                    autocomplete="off"/>
+            </div>
+
+            <div
+                class="full mt-3"
+                style="@($"grid-row: {row++}")">
+                <MudText
+                    Typo="Typo.subtitle1">
+                    Schaden
+                </MudText>
+            </div>
+
+            @* Damage expr *@
+            <div
+                class="dense-control"
+                style="@($"grid-column: 1/3; grid-row: {row}")">
+                <MudTextField
+                    T="string"
+                    @bind-Text="damageExpression"
+                    Label="Schadenswurf"
+                    HelperText="z.B. 2W10 + 3"
+                    autocomplete="off"
+                    Mask="@diceExpressionMask"/>
+            </div>
+
+            @* Damage clamp minimum *@
+            <div
+                class="dense-control"
+                style="@($"grid-column: 3; grid-row: {row++}")">
+                <MudTooltip
+                    Text="Jeder Schadenswürfel zählt mindestens so viel.">
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="damageClampMin"
+                        Label="Scharf"
+                        autocomplete="off"/>
+                </MudTooltip>
+            </div>
+
+            @* Damage bonus dice *@
+            <div
+                style="@($"grid-column: 1/3; grid-row: {row}")">
+                <MudTooltip
+                    Text="Wirf so viele Bonuswürfel um schlechte Schadenswürfel zu ersetzen">
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="damageBonusDice"
+                        Label="Exakt"
+                        autocomplete="off"/>
+                </MudTooltip>
+            </div>
+
+            @* Critical (per critical roll damage bonus) *@
+            <div
+                style="@($"grid-column: 3; grid-row: {row++}")">
+                <MudTooltip
+                    Text="Für jeden Würfel, der die höchste Augenzahl zeigt, füge so viel Schaden zusätzlich zu.">
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="perCriticalDamageBonus"
+                        Label="Kritisch"
+                        autocomplete="off"/>
+                </MudTooltip>
+            </div>
+
+            @{
+                _ = row;
             }
         </div>
     </DialogContent>
@@ -102,12 +191,64 @@
     public ActionShorthand? Shorthand { get; set; }
 
     readonly IMask costExpressionMask = new RegexMask("^" + PointsVec.IncrementalExpressionPattern + "$");
+    readonly IMask diceExpressionMask = new RegexMask("^" + DiceExpression.IncrementalExpressionPattern + "$");
 
     int selectedTicks = 7;
-    string? selectedName;
-    string? selectedDescription;
-    string? selectedCost;
-    bool isValid => !string.IsNullOrWhiteSpace(selectedName) && selectedTicks > 0;
+    string? name;
+    string? description;
+    string? cost;
+    int bonus;
+    bool damageExpressionValid;
+
+    string? damageExpression
+    {
+        get => _damageExpression;
+        set
+        {
+            _damageExpression = value;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _damage = null;
+                damageExpressionValid = true;
+            }
+            else if (DiceExpression.Parse(value) is { } expr)
+            {
+                _damage = expr;
+                damageExpressionValid = true;
+            }
+            else
+            {
+                _damage = null;
+                damageExpressionValid = false;
+            }
+        }
+    }
+
+    DiceExpression? damage
+    {
+        get => _damage;
+        set
+        {
+            _damage = value;
+            _damageExpression = value?.ToString();
+            damageExpressionValid = true;
+        }
+    }
+
+    int perCriticalDamageBonus;
+    int damageBonusDice;
+    int damageClampMin;
+    int perSuccessDamageBonus;
+    string? _damageExpression;
+    DiceExpression? _damage;
+
+    bool isValid => !string.IsNullOrWhiteSpace(name)
+        && selectedTicks > 0
+        && perCriticalDamageBonus >= 0
+        && damageBonusDice >= 0
+        && damageClampMin >= 0
+        && perSuccessDamageBonus >= 0
+        && damageExpressionValid;
 
     string typeObject => Type switch {
         ActionShorthandType.Melee => "Nahkampfangriff",
@@ -121,10 +262,20 @@
         base.OnParametersSet();
         if (Shorthand is { } shorthand)
         {
-            selectedName = shorthand.Name;
-            selectedDescription = shorthand.Description;
+            name = shorthand.Name;
+            description = shorthand.Description;
             selectedTicks = shorthand.Ticks;
-            selectedCost = shorthand.CostExpression;
+            cost = shorthand.CostExpression;
+            bonus = shorthand.Bonus;
+            if (shorthand.Damage is { } shorthandDamage)
+            {
+                damage = shorthandDamage;
+                perCriticalDamageBonus = shorthandDamage.PerCriticalBonus;
+                damageBonusDice = shorthandDamage.NumberOfBonusDice;
+                damageClampMin = shorthandDamage.ClampMin;
+            }
+
+            perSuccessDamageBonus = shorthand.PerSuccessDamageBonus;
         }
     }
 
@@ -139,14 +290,24 @@
         {
             return;
         }
-        
+
         MudDialog.Close(DialogResult.Ok(new ActionShorthand(
-            Shorthand?.Id ?? IdGenerator.RandomId(),
-            selectedName!,
-            !string.IsNullOrWhiteSpace(selectedDescription) ? selectedDescription : null,
-            selectedTicks,
-            Type,
-            !string.IsNullOrWhiteSpace(selectedCost) ? PointsVec.From(selectedCost, PointType.K).ToString() : null)
+                Shorthand?.Id ?? IdGenerator.RandomId(),
+                name!,
+                !string.IsNullOrWhiteSpace(description) ? description : null,
+                selectedTicks,
+                Type,
+                !string.IsNullOrWhiteSpace(cost) ? PointsVec.From(cost, PointType.K).ToString() : null,
+                bonus,
+                damage != null
+                    ? damage with {
+                        ClampMin = damageClampMin,
+                        NumberOfBonusDice = damageBonusDice,
+                        PerCriticalBonus = perCriticalDamageBonus,
+                    }
+                    : null,
+                perSuccessDamageBonus
+            )
         ));
     }
 

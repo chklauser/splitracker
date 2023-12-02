@@ -1,4 +1,7 @@
-﻿namespace Splitracker.Domain;
+﻿using System;
+using System.Text.RegularExpressions;
+
+namespace Splitracker.Domain;
 
 public record ActionShorthand(
     string Id,
@@ -6,7 +9,10 @@ public record ActionShorthand(
     string? Description,
     int Ticks,
     ActionShorthandType Type,
-    string? CostExpression
+    string? CostExpression,
+    int Bonus,
+    DiceExpression? Damage,
+    int PerSuccessDamageBonus
 )
 {
     public ActionTemplate ToTemplate()
@@ -35,4 +41,112 @@ public enum ActionShorthandType
     Melee,
     Ranged,
     Spell,
+}
+
+public partial record DiceExpression(
+    int NumberOfDice,
+    int NumberOfSides,
+    int Bonus = 0,
+    int ClampMin = 0,
+    int NumberOfBonusDice = 0,
+    int PerCriticalBonus = 0
+)
+{
+    public const string IncrementalExpressionPattern = @"([dDwW0-9+-]|\s)*";
+    
+    public int Roll(Random random)
+    {
+        var totalNumDice = NumberOfDice + NumberOfBonusDice;
+        var rolls = totalNumDice < 25 ? stackalloc int[totalNumDice] : new int[totalNumDice];
+        for (var i = 0; i < rolls.Length; i++)
+        {
+            rolls[i] = random.Next(1, NumberOfSides + 1);
+        }
+
+        if (NumberOfBonusDice > 0)
+        {
+            // Only keep the highest dice
+            rolls.Sort();
+            rolls = rolls[^NumberOfDice..];
+        }
+
+        var sum = 0;
+        var totalCriticalBonus = 0;
+        foreach (var roll in rolls)
+        {
+            sum += Math.Max(roll, ClampMin);
+            totalCriticalBonus += roll == NumberOfSides ? PerCriticalBonus : 0;
+        }
+
+        return Bonus + sum + totalCriticalBonus;
+    }
+
+    [GeneratedRegex(
+        @"^\s*((?<const>\d+)|((?<numd>\d*)\s*(?<w>[dDwW])\s*(?<nums>\d*))(\s*(?<sign>[+-])\s*(?<bonus>\d+))?)\s*$",
+        RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture,
+        500)]
+    private static partial Regex exprPattern();
+    
+    public static DiceExpression? Parse(string raw)
+    {
+        var m = exprPattern().Match(raw);
+        if (!m.Success)
+        {
+            return null;
+        }
+
+        if (m.Groups["const"] is { Success: true, ValueSpan: var rawConst } && int.TryParse(rawConst, out var @const))
+        {
+            return new(0, 0, @const);
+        }
+
+        var numDice =
+            m.Groups["numd"] is { Success: true, ValueSpan: var rawNumDice } &&
+            int.TryParse(rawNumDice, out var parsedNumDice)
+                ? parsedNumDice
+                : 1;
+        var numSides =
+            m.Groups["nums"] is { Success: true, ValueSpan: var rawNumSides } &&
+            int.TryParse(rawNumSides, out var parsedNumSides)
+                ? parsedNumSides
+                : 6;
+        var sign =
+            m.Groups["sign"] is { Success: true, ValueSpan: ['-'] }
+                ? -1
+                : 1;
+        var bonus =
+            m.Groups["bonus"] is { Success: true, ValueSpan: var rawBonus } &&
+            int.TryParse(rawBonus, out var parsedBonus)
+                ? parsedBonus * sign
+                : 0;
+
+        return new(numDice, numSides, bonus);
+    }
+
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
+        if (NumberOfDice > 0)
+        {
+            sb.Append(NumberOfDice);
+            sb.Append('W');
+            sb.Append(NumberOfSides);
+            if (Bonus > 0)
+            {
+                sb.Append('+');
+                sb.Append(Bonus);
+            }
+            else if (Bonus < 0)
+            {
+                sb.Append('-');
+                sb.Append(Bonus);
+            }
+        }
+        else
+        {
+            sb.Append(Bonus);
+        }
+
+        return sb.ToString();
+    }
 }

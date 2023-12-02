@@ -58,7 +58,21 @@ static class CharacterModelMapper
                 ActionShorthandType.Spell => Domain.ActionShorthandType.Spell,
                 _ => throw new ArgumentOutOfRangeException(),
             },
-            model.CostExpression);
+            model.CostExpression,
+            model.Bonus,
+            model.Damage?.ToDomain(),
+            model.PerSuccessDamageBonus);
+    }
+
+    public static Domain.DiceExpression ToDomain(this DiceExpression model)
+    {
+        return new(
+            NumberOfDice: model.NumberOfDice,
+            NumberOfSides: model.NumberOfSides,
+            Bonus: model.Bonus,
+            ClampMin: model.ClampMin,
+            NumberOfBonusDice: model.NumberOfBonusDice,
+            PerCriticalBonus: model.PerCriticalBonus);
     }
 
     static PointsVec toDomain(this Points points)
@@ -112,6 +126,21 @@ static class CharacterModelMapper
                 _ => throw new ArgumentOutOfRangeException(nameof(shorthand)),
             },
             CostExpression = shorthand.CostExpression,
+            Bonus = shorthand.Bonus,
+            Damage = shorthand.Damage?.toDbModel(),
+            PerSuccessDamageBonus = shorthand.PerSuccessDamageBonus,
+        };
+    }
+
+    static DiceExpression toDbModel(this Domain.DiceExpression model)
+    {
+        return new() {
+            NumberOfDice = model.NumberOfDice,
+            NumberOfSides = model.NumberOfSides,
+            Bonus = model.Bonus,
+            ClampMin = model.ClampMin,
+            NumberOfBonusDice = model.NumberOfBonusDice,
+            PerCriticalBonus = model.PerCriticalBonus,
         };
     }
 }

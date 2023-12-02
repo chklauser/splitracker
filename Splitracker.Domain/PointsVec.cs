@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Splitracker.Domain;
 
-public readonly record struct PointsVec(int Channeled, int Exhausted, int Consumed)
+public readonly partial record struct PointsVec(int Channeled, int Exhausted, int Consumed)
 {
     public const string IncrementalExpressionPattern = @"([KEVkev0-9+-]|\s)*";
     
@@ -47,8 +47,8 @@ public readonly record struct PointsVec(int Channeled, int Exhausted, int Consum
                 _ => ""
             } : "");
 
-    static readonly Regex TokenPattern = new(@"[kev+-]|(\d+)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(500));
+    [GeneratedRegex(@"[kev+-]|(\d+)", RegexOptions.IgnoreCase, 500)]
+    private static partial Regex tokenPattern();
 
     public static PointsVec From(int points, PointType ty) =>
         new() {
@@ -59,7 +59,7 @@ public readonly record struct PointsVec(int Channeled, int Exhausted, int Consum
 
     public static PointsVec From(ReadOnlySpan<char> input, PointType defaultType)
     {
-        var matches = TokenPattern.EnumerateMatches(input);
+        var matches = tokenPattern().EnumerateMatches(input);
         var vec = new PointsVec();
         var factor = 1;
         var currentType = defaultType;

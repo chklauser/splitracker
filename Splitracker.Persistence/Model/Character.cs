@@ -38,6 +38,19 @@ class ActionShorthand
     public required int Ticks { get; set; } = 1;
     public required ActionShorthandType Type { get; set; }
     public string? CostExpression { get; set; }
+    public int Bonus { get; set; }
+    public  DiceExpression? Damage { get; set; }
+    public int PerSuccessDamageBonus { get; set; }
+}
+
+class DiceExpression
+{
+    public required int NumberOfDice { get; set; }
+    public required int NumberOfSides { get; set; }
+    public int Bonus { get; set; }
+    public int ClampMin { get; set; }
+    public int NumberOfBonusDice { get; set; }
+    public int PerCriticalBonus { get; set; }
 }
 
 enum ActionShorthandType

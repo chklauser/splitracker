@@ -555,15 +555,51 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         3,
         "#112233",
         ImmutableDictionary<string, ActionShorthand>.Empty
-            .Add("a1", new("a1", "Action 1", null, 2, ActionShorthandType.Melee, null))
-            .Add("a2", new("a2", "Action 2", "Bogen", 3, ActionShorthandType.Ranged, null))
-            .Add("a3", new("a3", "Action 3", "Feuerball", 4, ActionShorthandType.Spell, "K3v1")),
+            .Add("a1",
+                new("a1",
+                    "Action 1",
+                    null,
+                    2,
+                    ActionShorthandType.Melee,
+                    null,
+                    13,
+                    new(2,
+                        10,
+                        3,
+                        3,
+                        4,
+                        5),
+                    1))
+            .Add("a2",
+                new("a2",
+                    "Action 2",
+                    "Bogen",
+                    3,
+                    ActionShorthandType.Ranged,
+                    null,
+                    0,
+                    new(3,
+                        6,
+                        2,
+                        4,
+                        1,
+                        6),
+                    0))
+            .Add("a3",
+                new("a3",
+                    "Action 3",
+                    "Feuerball",
+                    4,
+                    ActionShorthandType.Spell,
+                    "K3v1",
+                    14,
+                    null,
+                    0)),
         default,
         []);
 
     static EditCharacter editCharacterExample(
-        string docId,
-        ClaimsPrincipal? customPrincipal = null
+        string docId
     ) => new(
         docId,
         "test",
@@ -572,8 +608,28 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
         4,
         "#886633",
         CreateCharacterExample.ActionShorthands
-            .SetItem("a2", new("a2", "Edited Action 2", null, 6, ActionShorthandType.Melee, null))
-            .Add("a4", new("a4", "Action 4", "Armbrust", 5, ActionShorthandType.Ranged, null)),
+            .SetItem("a2", new("a2", "Edited Action 2", null, 6, ActionShorthandType.Melee, null,
+                9, new(4,
+                    8,
+                    1,
+                    3,
+                    0,
+                    2), 1))
+            .Add("a4",
+                new("a4",
+                    "Action 4",
+                    "Armbrust",
+                    5,
+                    ActionShorthandType.Ranged,
+                    null,
+                    3,
+                    new(1,
+                        12,
+                        4,
+                        2,
+                        5,
+                        6),
+                    4)),
         !CreateCharacterExample.IsOpponent,
         []);
 
