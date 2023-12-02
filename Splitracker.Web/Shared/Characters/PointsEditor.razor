@@ -109,9 +109,9 @@
             }
         }
     }
-
+    
     [Parameter]
-    public EventCallback<PointsVec> ValueChanged { get; set; }
+    public PointsVec? InitialValue { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -140,6 +140,15 @@
     private int totalCurrentPoints => CurrentPoints.Channeled + CurrentPoints.Exhausted + CurrentPoints.Consumed;
 
     [SuppressMessage("ReSharper", "InconsistentNaming")] string _expression = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (InitialValue != null)
+        {
+            Value = InitialValue.Value;
+        }
+    }
 
     string expression
     {

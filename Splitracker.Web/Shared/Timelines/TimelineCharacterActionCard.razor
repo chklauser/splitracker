@@ -30,7 +30,7 @@
                             Size="Size.Large"
                             Color="@Color.Success"
                             Icon="@Icons.Material.Filled.CheckCircle"
-                            OnClick="applyActionClicked"/>
+                            OnClick="@applyActionClicked"/>
                     }
                 </CardHeaderActions>
             </MudCardHeader>
@@ -80,7 +80,7 @@
                             HelperText="@(SelectedActionTemplate is { Multiplier: not 1 and var multiplier } ? $"×{multiplier} Ticks" : "Ticks")"/>
                     </MudStack>
                     <MudTextField
-                        T="string"
+                        T="string?"
                         tabindex="1"
                         Variant="@Variant.Outlined"
                         @bind-Value:get="ActionData.Description"
@@ -175,11 +175,11 @@
                             <TimelineActionButton
                                 StartIcon="@Icons.Material.Filled.ArrowCircleUp"
                                 Action="@CommonActionTemplates.BumpBackward"
-                                OnClick="async b => await applyBump(b, -1)"/>
+                                OnClick="@(async b => await applyBump(b, -1))"/>
                             <TimelineActionButton
                                 EndIcon="@Icons.Material.Filled.ArrowCircleDown"
                                 Action="@CommonActionTemplates.BumpForward"
-                                OnClick="async b => await applyBump(b, 1)"/>
+                                OnClick="@(async b => await applyBump(b, 1))"/>
                         }
                     </CascadingValue>
                 </MudCardActions>

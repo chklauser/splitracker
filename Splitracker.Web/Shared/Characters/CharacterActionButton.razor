@@ -1,0 +1,38 @@
+﻿@using Splitracker.Domain
+@inject IDialogService dialogs
+
+<MudTooltip
+    Text="@Action.Description"
+    >
+    <MudButton
+        Variant="@Variant.Filled"
+        Color="@Color.Default"
+        OnClick="@buttonClicked">
+        @Action.Name
+    </MudButton>
+</MudTooltip>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required ActionShorthand Action { get; set; }
+    
+    [Parameter]
+    public EventCallback<PointsVec> OnCostsFocus { get; set; }
+
+    async Task buttonClicked()
+    {
+        DialogParameters<CharacterActionDialog> parameters = new() {
+            { x => x.Action, Action },
+        };
+        var dialog = await dialogs.ShowAsync<CharacterActionDialog>("Character Action", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: string costExpr } && OnCostsFocus is {} onCostsFocus)
+        {
+            await onCostsFocus.InvokeAsync(PointsVec.From(costExpr, PointType.E));
+        }
+    }
+
+}

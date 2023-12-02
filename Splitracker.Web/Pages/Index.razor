@@ -68,7 +68,8 @@
                 <CharacterCard
                     @key="characterHandle.Character.Id"
                     CharacterHandle="@characterHandle"
-                    Permissions="@characterPermissions[characterHandle.Character.Id]"/>
+                    Permissions="@characterPermissions[characterHandle.Character.Id]"
+                    ShowActions="@true"/>
             }
         </CascadingValue>
     }

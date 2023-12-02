@@ -25,6 +25,7 @@
                 CurrentPoints="@points"
                 LineCapacity="@LineCapacity(baseCapacity)"
                 TotalCapacity="@TotalCapacity(baseCapacity)"
+                InitialValue="@EditSuggestion"
                 Type="@Type"/>
             @foreach (var (channeling, idx) in channelings.Enumerated())
             {
@@ -74,6 +75,9 @@
 
     [Parameter]
     public bool ShowPenalties { get; set; }
+    
+    [Parameter]
+    public PointsVec EditSuggestion { get; set; }
     
     [Parameter]
     [EditorRequired]

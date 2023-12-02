@@ -41,51 +41,63 @@
             </MudCardHeader>
             <MudCardContent
                 Class="pt-0">
-                
-                    @if (character.SplinterPoints.Max > 0)
+                @if (character.SplinterPoints.Max > 0)
+                {
+                    for (var i = 0; i < character.SplinterPoints.Max; i++)
                     {
-                    
-                        for(var i = 0; i < character.SplinterPoints.Max; i++)
-                        {
-                            var available = i < character.SplinterPoints.Remaining;
-                            <MudTooltip Text="@(available ? "Splitterpunkt einsetzen" : "Splitterpunkt bereits eingesetzt")">
-                                <MudIconButton
-                                    Icon="@Icons.Material.TwoTone.Brightness3"
-                                    Color="@(available ? Color.Default : Color.Dark)"
-                                    Disabled="@(!available)" 
-                                    OnClick="useSplinterPointAsync"/>
-                            </MudTooltip>
-                        }
-                        <MudTooltip Text="@(character.SplinterPoints.Used == 0 ? "Splitterpunktemaximum erreicht" : "Splitterpunkte zurücksetzen")">
+                        var available = i < character.SplinterPoints.Remaining;
+                        <MudTooltip
+                            Text="@(available ? "Splitterpunkt einsetzen" : "Splitterpunkt bereits eingesetzt")">
                             <MudIconButton
-                                Icon="@Icons.Material.Filled.Loop"
-                                Disabled="@(character.SplinterPoints.Used == 0)"
-                                OnClick="resetSplinterPointsAsync"
-                            />
+                                Icon="@Icons.Material.TwoTone.Brightness3"
+                                Color="@(available ? Color.Default : Color.Dark)"
+                                Disabled="@(!Permissions.HasFlag(CharacterPermissions.EditResources) || !available)"
+                                OnClick="@useSplinterPointAsync"/>
                         </MudTooltip>
                     }
-                    <MudTabs
-                        KeepPanelsAlive="true"
-                        TabPanelClass="CharacterTab">
-                        <PoolEditor
-                            Title="Leben"
-                            Icon="@Icons.Material.Filled.Shield"
-                            TotalCapacity="@(c => c * 5)"
-                            LineCapacity="@(c => c)"
-                            Pool="@character.Lp"
-                            ShowPenalties
-                            Type="@PoolType.Lp"
-                            Permissions="@Permissions"/>
-                        <PoolEditor
-                            Title="Fokus"
-                            Icon="@Icons.Material.Filled.Nightlight"
-                            TotalCapacity="@(c => c)"
-                            LineCapacity="@(_ => 12)"
-                            Pool="@character.Fo"
-                            Type="@PoolType.Fo"
-                            Permissions="@Permissions"/>
-                    </MudTabs>
+
+                    <MudTooltip
+                        Text="@(character.SplinterPoints.Used == 0 ? "Splitterpunktemaximum erreicht" : "Splitterpunkte zurücksetzen")">
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.Loop"
+                            Disabled="@(!Permissions.HasFlag(CharacterPermissions.EditResources) || character.SplinterPoints.Used == 0)"
+                            OnClick="@resetSplinterPointsAsync"/>
+                    </MudTooltip>
+                }
+                <MudTabs
+                    KeepPanelsAlive="true"
+                    TabPanelClass="CharacterTab"
+                    @bind-ActivePanelIndex="activePanelIndex">
+                    <PoolEditor
+                        Title="Leben"
+                        Icon="@Icons.Material.Filled.Shield"
+                        TotalCapacity="@(c => c * 5)"
+                        LineCapacity="@(c => c)"
+                        Pool="@character.Lp"
+                        ShowPenalties
+                        Type="@PoolType.Lp"
+                        Permissions="@Permissions"/>
+                    <PoolEditor
+                        Title="Fokus"
+                        Icon="@Icons.Material.Filled.Nightlight"
+                        TotalCapacity="@(c => c)"
+                        LineCapacity="@(_ => 12)"
+                        Pool="@character.Fo"
+                        Type="@PoolType.Fo"
+                        EditSuggestion="focusEditSuggestion"
+                        Permissions="@Permissions"/>
+                </MudTabs>
             </MudCardContent>
+
+            @if (ShowActions && Permissions.HasFlag(CharacterPermissions.EditResources) && character.ActionShorthands.Count > 0)
+            {
+                <MudCardActions>
+                    @foreach (var shorthand in character.ActionShorthands.Values.OrderBy(v => v.Type))
+                    {
+                        <CharacterActionButton @key="shorthand.Id" Action="@shorthand" OnCostsFocus="costsFocus" />
+                    }
+                </MudCardActions>
+            }
         </MudCard>
     </CascadingValue>
 }
@@ -95,19 +107,24 @@
     [Parameter]
     [EditorRequired]
     public required ICharacterHandle CharacterHandle { get; set; }
-    
+
     [Parameter]
     [EditorRequired]
     public required CharacterPermissions Permissions { get; set; }
 
+    [Parameter]
+    public bool ShowActions { get; set; }
+
     [CascadingParameter]
     public required ICharacterCommandRouter OuterCommandRouter { get; set; }
+    
+    int activePanelIndex = 0;
 
     ICharacterHandle? lastHandle;
 
     Character character => CharacterHandle.Character;
 
-    IImmutableDictionary<string, ActionShorthand> newShorthands = ImmutableDictionary<string, ActionShorthand>.Empty;
+    PointsVec focusEditSuggestion;
 
     protected override void OnParametersSet()
     {
@@ -145,22 +162,22 @@
     public async Task ApplyAsync(ICharacterCommand command)
     {
         command = command switch {
-            ApplyPoints applyPoints => applyPoints with{ CharacterId = character.Id},
-            Domain.Commands.StopChanneling releaseChanneling => releaseChanneling with { CharacterId = character.Id},
-            Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id},
-            UseSplinterPoints useSplinterPoints => useSplinterPoints with {CharacterId = character.Id },
-            ResetSplinterPoints resetSplinterPoints => resetSplinterPoints with {CharacterId = character.Id },
+            ApplyPoints applyPoints => applyPoints with { CharacterId = character.Id },
+            Domain.Commands.StopChanneling releaseChanneling => releaseChanneling with { CharacterId = character.Id },
+            Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id },
+            UseSplinterPoints useSplinterPoints => useSplinterPoints with { CharacterId = character.Id },
+            ResetSplinterPoints resetSplinterPoints => resetSplinterPoints with { CharacterId = character.Id },
             _ => throw new ArgumentOutOfRangeException(nameof(command))
-            };
+        };
         await OuterCommandRouter.ApplyAsync(command);
     }
-    
+
     async Task useSplinterPointAsync()
     {
         await ApplyAsync(new UseSplinterPoints(null!, 1));
     }
-    
-    async Task resetSplinterPointsAsync() 
+
+    async Task resetSplinterPointsAsync()
     {
         await ApplyAsync(new ResetSplinterPoints(null!));
     }
@@ -168,6 +185,14 @@
     void gotoEdit()
     {
         nav.NavigateTo($"/Characters/{character.ImplicitId}/Edit");
+    }
+
+    Task costsFocus(PointsVec focusCost)
+    {
+        activePanelIndex = 1;
+        focusEditSuggestion = focusCost;
+        
+        return Task.CompletedTask;
     }
 
 }
