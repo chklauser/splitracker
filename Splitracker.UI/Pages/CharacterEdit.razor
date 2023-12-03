@@ -1,0 +1,124 @@
+﻿@page "/Characters/{Id}/Edit"
+
+@using Splitracker.Domain
+@using Splitracker.Domain.Commands
+@using System.Diagnostics.CodeAnalysis
+@using Splitracker.UI.Shared.Characters
+
+@implements IAsyncDisposable
+@implements ICharacterCommandRouter
+@inject ICharacterRepository repository
+@inject NavigationManager nav;
+
+<CascadingValue
+    TValue="ICharacterCommandRouter"
+    IsFixed="@true"
+    Value="@this">
+    @if (handle is { Character: { } character })
+    {
+        <CharacterEditForm
+            Character="@character"
+            Permissions="@Permissions.OnTheCharacterScreen(character)"/>
+    }
+</CascadingValue>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public required string Id { get; set; }
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    [CascadingParameter]
+    public required IPermissionService Permissions { get; set; }
+
+    ICharacterHandle? handle;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+            handle = null;
+        }
+
+        await base.OnParametersSetAsync();
+        var state = await AuthenticationState;
+        var fullCharacterId = await repository.FullCharacterIdFromImplicitAsync(state.User, Id);
+        if (fullCharacterId is null)
+        {
+            nav.NavigateTo("/");
+            return;
+        }
+
+        handle = await repository.OpenSingleAsync(state.User, fullCharacterId);
+        if (handle is null)
+        {
+            nav.NavigateTo("/");
+            return;
+        }
+
+        handle.Updated += handleUpdated;
+    }
+
+    [SuppressMessage("ReSharper", "WithExpressionModifiesAllMembers")]
+    public async Task ApplyAsync(ICharacterCommand command)
+    {
+        var state = await AuthenticationState;
+        var fullCharacterId = await repository.FullCharacterIdFromImplicitAsync(state.User, Id);
+        if (fullCharacterId is null)
+        {
+            nav.NavigateTo("/");
+            return;
+        }
+
+        command = command switch {
+            EditCharacter editCharacter => editCharacter with { CharacterId = fullCharacterId },
+            DeleteCharacter deleteCharacter => deleteCharacter with { CharacterId = fullCharacterId },
+            CloneCharacter cloneCharacter => cloneCharacter with { CharacterId = fullCharacterId },
+            _ => throw new ArgumentOutOfRangeException(nameof(command)),
+        };
+
+        if (command is DeleteCharacter && handle != null)
+        {
+            await handle.DisposeAsync();
+            handle = null;
+        }
+
+        await repository.ApplyAsync(state.User, command);
+        string nextUrl;
+        if (command is CloneCharacter)
+        {
+            // Switch to whatever the newest character is. This is not guaranteed to be correct, but should
+            // work in most cases.
+            await using var allHandle = await repository.OpenAsync(state.User);
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            nextUrl = allHandle.Characters.MaxBy(c => c.Character.InsertedAt) is { Character.ImplicitId: { } createdId }
+                ? $"/Characters/{createdId}/Edit"
+                : "/";
+        }
+        else
+        {
+            nextUrl = "/";
+        }
+
+        nav.NavigateTo(nextUrl);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (handle != null)
+        {
+            await handle.DisposeAsync();
+            handle = null;
+        }
+    }
+
+    void handleUpdated(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+}

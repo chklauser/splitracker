@@ -1,0 +1,41 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Splitracker.Domain
+@if (iconPath is {} path)
+{
+    <img src="@path" alt="@Type" class="@pointClasses"/>
+}
+else
+{
+    <div class="@pointClasses">•</div>
+}
+
+@code {
+
+    [Parameter]
+    [Required]
+    public PointType? Type { get; set; }
+
+    [Parameter]
+    public int Value { get; set; } = 1;
+
+    [Parameter]
+    public bool HighlightDelta { get; set; }
+
+    string? iconPath => Type switch
+    {
+        PointType.K => "/_content/Splitracker.UI/K.svg",
+        PointType.E => "/_content/Splitracker.UI/E.svg",
+        PointType.V => "/_content/Splitracker.UI/V.svg",
+        _ => null
+        };
+
+    string pointClasses => CssClass.Rendered(
+        "display",
+        ("harm", HighlightDelta && Value > 0),
+        ("heal", HighlightDelta && Value < 0),
+        ("free", Value == 0),
+        ("channeled", Type == PointType.K),
+        ("exhausted", Type == PointType.E),
+        ("consumed", Type == PointType.V)
+        );
+}

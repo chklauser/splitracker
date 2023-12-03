@@ -1,0 +1,63 @@
+@using Microsoft.Extensions.Logging
+@inherits LayoutComponentBase
+
+@inject FlagContextHolder holder;
+@inject ILogger<MainLayout> log;
+
+@code {
+    [CascadingParameter]
+    public required FlagContext Flag { get; set; }
+
+    bool isDarkMode
+    {
+        get => Flag.DarkMode ?? false;
+        set => holder.Context = holder.Context with {DarkMode = value};
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        log.Log(LogLevel.Debug, "DarkMode: {IsDarkMode}", isDarkMode);
+    }
+
+}
+
+<PageTitle>Splitracker</PageTitle>
+
+<MudThemeProvider @bind-IsDarkMode="isDarkMode" />
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout Class="@CssClass.Rendered(("dark", isDarkMode))">
+    <MudAppBar Fixed="false">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="@Color.Inherit" Edge="@Edge.Start" OnClick="@drawerToggle"/>
+        <MudText
+            Typo="Typo.h5"
+            Class="ml-3">
+            Splitracker
+        </MudText>
+        <MudSpacer/>
+        <SectionOutlet
+            Name="top"/>
+        <LoginDisplay/>
+        <MudToggleIconButton
+            Icon="@Icons.Material.Filled.LightMode"
+            ToggledIcon="@Icons.Material.Filled.DarkMode"
+            @bind-Toggled="isDarkMode"/>
+    </MudAppBar>
+    <MudDrawer @bind-Open="drawerOpen" ClipMode="@DrawerClipMode.Always" Variant="DrawerVariant.Temporary"  >
+        <NavMenu/>
+    </MudDrawer>
+    <MudMainContent Class="pt-0">
+        <MudContainer Class="mb-16 pt-2">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+
+    bool drawerOpen;
+    void drawerToggle() => drawerOpen = !drawerOpen;
+
+}

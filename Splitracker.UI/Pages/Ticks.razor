@@ -1,0 +1,184 @@
+﻿@page "/Groups/{GroupIdRaw}/Ticks"
+@using Splitracker.UI.Shared.Characters
+@using Splitracker.UI.Shared.Timelines
+@using System.Collections.Immutable
+
+<PageTitle>Ticks - Splitracker</PageTitle>
+
+<MudBreadcrumbs
+    Items="breadcrumbs"/>
+
+@if (handle is {} currentHandle)
+{
+    var playerCharacters = PlayerCharacters.ToImmutableArray();
+    <CascadingValue
+        TValue="ITimelineDispatcher"
+        Value="@this"
+        IsFixed="@true">
+        <MudExpansionPanels
+            MultiExpansion="@true">
+            @if (playerCharacters.Length > 0)
+            {
+                <MudHidden
+                    Breakpoint="@PersistentCharacterCardBreakpoint"
+                    Invert="@true">
+                    <CascadingValue
+                        TValue="ICharacterCommandRouter"
+                        IsFixed="true"
+                        Value="@this">
+                        <MudExpansionPanel
+                            @bind-IsExpanded="characterEditPanelOpen">
+                            <TitleContent>
+                                <div
+                                    class="d-flex gap-2 align-center align-content-center justify-start">
+                                    <MudText
+                                        Class="flex-none"
+                                        Typo="@Typo.h6">
+                                        Deine<br/>Charaktere
+                                    </MudText>
+                                    <MudAvatarGroup
+                                        Class="flex-grow-1"
+                                        Max="3"
+                                        Spacing="3">
+                                        @foreach (var c in playerCharacters)
+                                        {
+                                            <CharacterAvatar
+                                                @key="c.Id"
+                                                Character="@c"/>
+                                        }
+                                    </MudAvatarGroup>
+                                </div>
+                            </TitleContent>
+                            <ChildContent>
+                                <div
+                                    class="d-flex flex-row flex-wrap gap-4">
+                                    @foreach (var character in playerCharacters)
+                                    {
+                                        <CharacterCard
+                                            @key="character.Id"
+                                            CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                            Permissions="characterPermissions[character.Id]" />
+                                    }
+                                </div>
+                            </ChildContent>
+                        </MudExpansionPanel>
+                    </CascadingValue>
+                </MudHidden>
+            }
+            @if (currentHandle.Timeline.Ready.Count > 0)
+            {
+                <TimelineReadyCharacters
+                    Characters="@currentHandle.Timeline.Ready"
+                    Permissions="@characterPermissions"
+                    SelectedTick="@selectedTick"/>
+            }
+        </MudExpansionPanels>
+        <div
+            class="d-flex flex-row flex-nowrap justify-start align-content-start align-start gap-10">
+            <TimelinePreview
+                Class="flex-none"
+                Timeline="@currentHandle.Timeline"
+                Permissions="@characterPermissions"
+                OnTickSelected="@tickSelected"/>
+
+            @if (playerCharacters.Length > 0)
+            {
+                <MudHidden
+                    Breakpoint="PersistentCharacterCardBreakpoint">
+                    <div
+                        class="flex-grow-1">
+                        <div class="d-flex justify-end align-content-start align-baseline">
+                            <MudTooltip
+                                Text="@(sortChronologically ? "Nach Position auf der Tickleiste sortiert" : "Alphabetisch sortiert")">
+                                <MudToggleIconButton
+                                    @bind-Toggled="sortChronologically"
+                                    Icon="@Icons.Material.Filled.SortByAlpha"
+                                    ToggledIcon="@Icons.Material.Filled.LinearScale"/>
+                            </MudTooltip>
+                        </div>
+                        <div
+                            class="d-flex flex-row flex-wrap gap-4">
+                            <CascadingValue TValue="ICharacterCommandRouter" IsFixed="@true" Value="@this">
+                            @foreach (var character in playerCharacters)
+                            {
+                                <CharacterCard
+                                    @key="character.Id"
+                                    CharacterHandle="@(new NonSubscribingCharacterHandle(character))"
+                                    Permissions="characterPermissions[character.Id]" />
+                            }</CascadingValue>
+                        </div>
+                    </div>
+                </MudHidden>
+            }
+        </div>
+        @* add character *@
+        <MudBadge
+            Icon="@Icons.Material.Filled.Add"
+            Bordered="@true"
+            Overlap="@true"
+            Color="@Color.Primary"
+            Style="right: 6.5rem; bottom: 1.5rem;"
+            Class="fixed z-100">
+            <MudFab
+                DisableRipple="@true"
+                StartIcon="@Icons.Material.Filled.EmojiPeople"
+                Color="@Color.Primary"
+                @onclick="toggleAddCharacterPanel"/>
+        </MudBadge>
+
+        @* add effect *@
+        <MudBadge
+            Icon="@Icons.Material.Filled.Add"
+            Bordered="@true"
+            Overlap="@true"
+            Color="@Color.Primary"
+            Style="right: 1.5rem; bottom: 1.5rem;"
+            Class="fixed z-100">
+            <MudFab
+                DisableRipple="@true"
+                StartIcon="@Icons.Material.Filled.CrisisAlert"
+                Color="@Color.Primary"
+                @onclick="toggleAddEffectPanel"/>
+            @* Note: all of the popovers are attached to the rightmost FAB *@
+            <MudPopover
+                Open="@addCharacterPanelOpen"
+                AnchorOrigin="@Origin.TopRight"
+                TransformOrigin="@Origin.BottomRight"
+                Fixed="@true"
+                Style="max-width: 320px; z-index: 500">
+                <CascadingValue
+                    TValue="ITimelineDispatcher"
+                    Value="@this"
+                    IsFixed="@true">
+                    <TimelineAddCharacterCard
+                        SelectedTick="@((selectedTick ?? currentHandle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
+                        OnCharacterAdded="() => addCharacterPanelOpen = false"
+                        OnCloseButtonClicked="() => addCharacterPanelOpen = false"/>
+                </CascadingValue>
+            </MudPopover>
+            <MudPopover
+                Open="@(addEffectPanelOpen)"
+                AnchorOrigin="@Origin.TopRight"
+                TransformOrigin="@Origin.BottomRight"
+                Fixed="@true"
+                Style="max-width: 320px; z-index: 500">
+                <CascadingValue
+                    TValue="ITimelineDispatcher"
+                    Value="@this"
+                    IsFixed="@true">
+                    <TimelineCreateEffectCard
+                        TimelineCharacters="@currentHandle.Timeline.Characters.Values.ToImmutableArray()"
+                        SelectedTick="@((selectedTick ?? currentHandle.Timeline.Ticks.FirstOrDefault())?.At ?? 1)"
+                        OnEffectCreated="() => addEffectPanelOpen = false"
+                        OnCloseButtonClicked="() => addEffectPanelOpen = false"/>
+                </CascadingValue>
+            </MudPopover>
+        </MudBadge>
+    </CascadingValue>
+}
+else
+{
+    <MudProgressCircular
+        Size="@Size.Large"
+        Indeterminate="@true"/>
+}

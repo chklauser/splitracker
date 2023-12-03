@@ -21,12 +21,18 @@
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="AspNetCore.SassCompiler" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="SharpAbp.Abp.OpenTelemetry.Exporter.Prometheus.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Splitracker.Domain\Splitracker.Domain.csproj" />
+    <ProjectReference Include="..\Splitracker.UI\Splitracker.UI.csproj" />
     <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\css\global.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\css\global.css.map" />
   </ItemGroup>
 
 </Project>

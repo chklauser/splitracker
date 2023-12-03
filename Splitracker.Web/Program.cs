@@ -14,10 +14,9 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
 using OpenTelemetry.Metrics;
-using Splitracker.Domain;
 using Splitracker.Persistence;
+using Splitracker.UI;
 using Splitracker.Web;
-using Splitracker.Web.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,10 +41,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Observability
-builder.Services.AddOpenTelemetry().WithMetrics(builder =>
+builder.Services.AddOpenTelemetry().WithMetrics(metrics =>
 {
-    builder.AddPrometheusExporter();
-    builder.AddMeter(
+    metrics.AddPrometheusExporter();
+    metrics.AddMeter(
         "Microsoft.AspNetCore.Hosting",
         "Microsoft.AspNetCore.Server.Kestrel",
         "System.Net.NameResolution",
@@ -76,9 +75,6 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 builder.Services.AddDataProtection()
     .SetApplicationName("Splitracker")
     .PersistKeysToRavenDb();
-builder.Services.AddScoped<FlagContextHolder>();
-builder.Services.AddSingleton<TimelineLogic>();
-builder.Services.AddScoped<ClipboardService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -88,9 +84,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services
-    .AddCascadingAuthenticationState()
-    .AddCascadingValue<FlagContext>(sp => sp.GetRequiredService<FlagContextHolder>().Source)
-    .AddCascadingValue<SessionContext>(_ => new());
+    .AddSplitrackerUi()
+    .AddCascadingAuthenticationState();
 
 var app = builder.Build();
 

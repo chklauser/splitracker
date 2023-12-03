@@ -1,0 +1,71 @@
+﻿@page "/Characters/New"
+
+@using Splitracker.Domain
+@using Splitracker.Domain.Commands
+@using System.Diagnostics.CodeAnalysis
+@using Splitracker.UI.Shared.Characters
+@using System.Collections.Immutable
+
+@implements ICharacterCommandRouter
+@inject ICharacterRepository repository
+@inject NavigationManager nav;
+
+<CascadingValue
+    TValue="ICharacterCommandRouter"
+    IsFixed="@true"
+    Value="@this">
+    @if (character != null)
+    {
+        <CharacterEditForm
+            Character="@character"
+            Permissions="@Permissions.OwnerPermissions"/>
+    }
+</CascadingValue>
+
+@code {
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> AuthenticationState { get; set; }
+
+    [CascadingParameter]
+    public required IPermissionService Permissions { get; set; }
+    
+    [CascadingParameter]
+    public required SessionContext Session { get; set; }
+
+    Character? character;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        character = new("", "", 1, 1) { TagIds = Session.FilterTags.ToImmutableHashSet() };
+    }
+
+    [SuppressMessage("ReSharper", "WithExpressionModifiesAllMembers")]
+    public async Task ApplyAsync(ICharacterCommand command)
+    {
+        switch (command)
+        {
+            case DeleteCharacter:
+                nav.NavigateTo("/");
+                break;
+            case EditCharacter edit:
+                var state = await AuthenticationState;
+                await repository.ApplyAsync(state.User,
+                    new CreateCharacter(
+                        edit.Name,
+                        edit.LpBaseCapacity,
+                        edit.FoBaseCapacity,
+                        edit.SplinterPointsMax,
+                        edit.CustomColor,
+                        edit.ActionShorthands,
+                        edit.IsOpponent,
+                        edit.TagIds));
+                nav.NavigateTo("/");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(command), "Unexpected command type: " + command.GetType());
+        }
+    }
+
+}

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="MudBlazor"/>
+        <PackageReference Include="Microsoft.Identity.Web" />
+        <PackageReference Include="Microsoft.Identity.Web.UI" />
+        <PackageReference Include="AspNetCore.SassCompiler" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Splitracker.Domain\Splitracker.Domain.csproj"/>
+    </ItemGroup>
+
+</Project>
