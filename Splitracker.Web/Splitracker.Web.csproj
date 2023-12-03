@@ -30,9 +30,4 @@
     <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\css\global.css" />
-    <_ContentIncludedByDefault Remove="wwwroot\css\global.css.map" />
-  </ItemGroup>
-
 </Project>

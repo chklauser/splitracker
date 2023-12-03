@@ -1,5 +1,0 @@
-﻿{
-  "comment": "Debug compiler settings are managed in appsettings.json",
-  "SourceFolder": "Styles",
-  "TargetFolder": "wwwroot"
-}
