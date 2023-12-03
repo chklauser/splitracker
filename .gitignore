@@ -4,10 +4,8 @@ obj
 node_modules
 *.razor.css
 *.razor.css.map
-Splitracker.Web/wwwroot/css/*.css
-Splitracker.Web/wwwroot/css/*.css.map
-Splitracker.UI/wwwroot/css/*.css
-Splitracker.UI/wwwroot/css/*.css.map
+Splitracker.UI/wwwroot/*.css
+Splitracker.UI/wwwroot/*.css.map
 *.local.*
 *.secret.*
 
