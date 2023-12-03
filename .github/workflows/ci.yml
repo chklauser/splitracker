@@ -52,7 +52,9 @@ jobs:
           path: TestResults/*.trx
           reporter: dotnet-trx
       - name: Publish
-        run: dotnet publish --configuration=Release --no-build --verbosity=normal /p:Version=${{ steps.choose_version.outputs.version }}
+        # there is a weird behavior around publish and the generated global.css. With --no-build, the 
+        # global.css ends up in the Splitracker.Web (?!) directory on the very first build.
+        run: dotnet publish --configuration=Release --no-restore --verbosity=normal /p:Version=${{ steps.choose_version.outputs.version }}
         working-directory: ./Splitracker.Web
       - name: Push docker image
         if: github.event_name != 'pull_request'
