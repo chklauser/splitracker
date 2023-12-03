@@ -13,6 +13,7 @@ using Microsoft.Identity.Web.UI;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MudBlazor.Services;
+using OpenTelemetry.Metrics;
 using Splitracker.Domain;
 using Splitracker.Persistence;
 using Splitracker.Web;
@@ -38,6 +39,17 @@ builder.Services.AddAuthorization(options =>
 {
     // By default, all incoming requests will be authorized according to the default policy
     options.FallbackPolicy = options.DefaultPolicy;
+});
+
+// Observability
+builder.Services.AddOpenTelemetry().WithMetrics(builder =>
+{
+    builder.AddPrometheusExporter();
+    builder.AddMeter(
+        "Microsoft.AspNetCore.Hosting",
+        "Microsoft.AspNetCore.Server.Kestrel",
+        "System.Net.NameResolution",
+        "System.Net.Http");
 });
 
 builder.Services.AddRazorPages();
@@ -102,7 +114,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseStaticFiles();
-
+app.MapPrometheusScrapingEndpoint().AllowAnonymous();
 app.UseRouting();
 
 app.UseAuthorization();

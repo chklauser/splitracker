@@ -20,6 +20,8 @@
     <PackageReference Include="Microsoft.Identity.Web.UI" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="AspNetCore.SassCompiler" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="SharpAbp.Abp.OpenTelemetry.Exporter.Prometheus.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
