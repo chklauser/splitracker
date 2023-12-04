@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using Splitracker.Domain;
+﻿using Splitracker.Domain;
+using Splitracker.Persistence.Generic;
 
 namespace Splitracker.Persistence.Characters;
 
@@ -10,58 +8,13 @@ namespace Splitracker.Persistence.Characters;
 /// anything about the character changes.
 /// </summary>
 class RavenCharacterHandle(Character character)
-    : ICharacterHandle, IEquatable<RavenCharacterHandle>, IDisposable, IAsyncDisposable
+    : PrefixHandleBase<RavenCharacterHandle, Character>(character),
+        IPrefixHandle<RavenCharacterHandle, Character>,
+        ICharacterHandle
 {
-    volatile Character character = character;
+    public static RavenCharacterHandle Create(Character value) => new(value);
 
-    public Character Character
-    {
-        get => character;
-        internal set => character = value;
-    }
+    public override string Id => Value.Id;
 
-    public event EventHandler? Updated;
-
-    public void TriggerCharacterUpdated()
-    {
-        Updated?.Invoke(this, EventArgs.Empty);
-    }
-
-    public void Dispose()
-    {
-        Updated = null;
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return ValueTask.CompletedTask;
-    }
-
-    #region Equality
-
-    public bool Equals(RavenCharacterHandle? other) => other?.Character.Id == Character.Id;
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != GetType()) return false;
-        return Equals((RavenCharacterHandle)obj);
-    }
-
-    [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode", Justification = "Id remains stable")]
-    public override int GetHashCode() => Character.Id.GetHashCode();
-
-    public static bool operator ==(RavenCharacterHandle? left, RavenCharacterHandle? right)
-    {
-        return Equals(left, right);
-    }
-
-    public static bool operator !=(RavenCharacterHandle? left, RavenCharacterHandle? right)
-    {
-        return !Equals(left, right);
-    }
-
-    #endregion
+    public Character Character => Value;
 }

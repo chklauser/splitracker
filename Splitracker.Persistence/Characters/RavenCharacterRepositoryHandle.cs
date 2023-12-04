@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Splitracker.Domain;
+using Splitracker.Persistence.Generic;
 
 namespace Splitracker.Persistence.Characters;
 
@@ -9,39 +9,22 @@ namespace Splitracker.Persistence.Characters;
 /// A wrapper around a <see cref="RavenCharacterRepositorySubscription"/> implement
 /// reference count decrease on <see cref="IAsyncDisposable.DisposeAsync"/>.
 /// </summary>
-class RavenCharacterRepositoryHandle : ICharacterRepositoryHandle
+class RavenCharacterRepositoryHandle(RavenCharacterRepositorySubscription subscription) 
+    : PrefixRepositoryHandle<RavenCharacterRepositoryHandle, RavenCharacterRepositorySubscription>(subscription),
+        IHandle<RavenCharacterRepositoryHandle, RavenCharacterRepositorySubscription>,
+        ICharacterRepositoryHandle
 {
-    readonly RavenCharacterRepositorySubscription subscription;
-
-    public RavenCharacterRepositoryHandle(RavenCharacterRepositorySubscription subscription)
+    public IReadOnlyList<ICharacterHandle> Characters => Subscription.Handles;
+    public event EventHandler? CharacterAdded
     {
-        this.subscription = subscription;
-        subscription.CharacterAdded += OnCharacterAdded;
-        subscription.CharacterDeleted += OnCharacterDeleted;
+        add => Added += value;
+        remove => Added -= value;
     }
 
-    void OnCharacterDeleted(object? sender, EventArgs e)
+    public event EventHandler? CharacterDeleted
     {
-        CharacterDeleted?.Invoke(sender, e);
+        add => Deleted += value;
+        remove => Deleted -= value;
     }
-
-    void OnCharacterAdded(object? sender, EventArgs e)
-    {
-        CharacterAdded?.Invoke(sender, e);
-    }
-
-    public IReadOnlyList<ICharacterHandle> Characters => subscription.Characters;
-
-    public event EventHandler? CharacterAdded;
-    public event EventHandler? CharacterDeleted;
-
-    public ValueTask DisposeAsync()
-    {
-        subscription.CharacterAdded -= OnCharacterAdded;
-        subscription.CharacterDeleted -= OnCharacterDeleted;
-        subscription.Release();
-        CharacterAdded = null;
-        CharacterDeleted = null;
-        return ValueTask.CompletedTask;
-    }
+    public static RavenCharacterRepositoryHandle Create(RavenCharacterRepositorySubscription subscription) => new(subscription);
 }

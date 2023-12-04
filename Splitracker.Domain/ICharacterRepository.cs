@@ -34,7 +34,7 @@ public interface ICharacterRepositoryHandle : IAsyncDisposable
     event EventHandler CharacterDeleted;
 }
 
-public interface ICharacterHandle : IAsyncDisposable
+public interface ICharacterHandle : IDisposable
 {
     Character Character { get; }
     event EventHandler Updated;

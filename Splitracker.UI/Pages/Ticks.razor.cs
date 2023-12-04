@@ -175,7 +175,9 @@ partial class Ticks : IAsyncDisposable, ITimelineDispatcher, ICharacterCommandRo
             remove { }
         }
 
-        public ValueTask DisposeAsync() => default;
+        public void Dispose()
+        { 
+        }
     }
 
     #region Character editing support

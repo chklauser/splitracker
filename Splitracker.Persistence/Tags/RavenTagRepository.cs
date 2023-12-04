@@ -28,7 +28,7 @@ class RavenTagRepository(IDocumentStore store, ILogger<RavenTagRepository> log, 
                 {
                     var prefix = tagDocIdPrefix(userId);
                     var tags = await RavenTagRepositorySubscription.FetchInitialAsync(store, prefix);
-                    return new RavenTagRepositorySubscription(store, prefix, tags, log);
+                    return new(store, prefix, tags, log);
                 },
                 onExistingSubscription: () =>
                 {

@@ -5,7 +5,7 @@
 @using System.Diagnostics.CodeAnalysis
 @using Splitracker.UI.Shared.Characters
 
-@implements IAsyncDisposable
+@implements IDisposable
 @implements ICharacterCommandRouter
 @inject ICharacterRepository repository
 @inject NavigationManager nav;
@@ -40,7 +40,7 @@
     {
         if (handle != null)
         {
-            await handle.DisposeAsync();
+            handle.Dispose();
             handle = null;
         }
 
@@ -83,7 +83,7 @@
 
         if (command is DeleteCharacter && handle != null)
         {
-            await handle.DisposeAsync();
+            handle.Dispose();
             handle = null;
         }
 
@@ -107,11 +107,11 @@
         nav.NavigateTo(nextUrl);
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
         if (handle != null)
         {
-            await handle.DisposeAsync();
+            handle.Dispose();
             handle = null;
         }
     }

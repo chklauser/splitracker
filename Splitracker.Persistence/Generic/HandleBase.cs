@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Splitracker.Persistence.Generic;
 
-abstract class HandleBase<TSubscription, TValue> : IAsyncDisposable
+abstract class HandleBase<TSubscription, TValue> : IAsyncDisposable, IDisposable
 where TSubscription : ISubscription<TValue>
 {
     readonly TSubscription subscription;
@@ -21,10 +21,15 @@ where TSubscription : ISubscription<TValue>
 
     public ValueTask DisposeAsync()
     {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    public void Dispose()
+    {
         subscription.Updated -= OnUpdated;
         subscription.Release();
         Updated = null;
-        return ValueTask.CompletedTask;
     }
 
     internal TValue Value => subscription.CurrentValue;
