@@ -6,9 +6,9 @@ namespace Splitracker.Persistence.Model;
 [UsedImplicitly]
 class Pool
 {
-    public int BaseCapacity { get; set; } = 1;
-    public Points Points { get; set; } = new(0, 0, 0);
-    public List<Channeling> Channelings { get; set; } = new();
+    public int? BaseCapacity { get; set; }
+    public Points? Points { get; set; }
+    public List<Channeling>? Channelings { get; set; }
 }
 
 class Channeling

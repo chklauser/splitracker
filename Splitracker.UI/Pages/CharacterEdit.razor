@@ -3,12 +3,14 @@
 @using Splitracker.Domain
 @using Splitracker.Domain.Commands
 @using System.Diagnostics.CodeAnalysis
+@using Microsoft.Extensions.Logging
 @using Splitracker.UI.Shared.Characters
 
 @implements IDisposable
 @implements ICharacterCommandRouter
 @inject ICharacterRepository repository
 @inject NavigationManager nav;
+@inject ILogger<CharacterEdit> log;
 
 <CascadingValue
     TValue="ICharacterCommandRouter"
@@ -18,7 +20,13 @@
     {
         <CharacterEditForm
             Character="@character"
+            Template="@templateHandle?.Character"
             Permissions="@Permissions.OnTheCharacterScreen(character)"/>
+    }
+    else
+    {
+        <MudSkeleton
+            SkeletonType="SkeletonType.Rectangle"/>
     }
 </CascadingValue>
 
@@ -35,6 +43,7 @@
     public required IPermissionService Permissions { get; set; }
 
     ICharacterHandle? handle;
+    ICharacterHandle? templateHandle;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -44,11 +53,18 @@
             handle = null;
         }
 
+        if (templateHandle != null)
+        {
+            templateHandle.Dispose();
+            templateHandle = null;
+        }
+
         await base.OnParametersSetAsync();
         var state = await AuthenticationState;
         var fullCharacterId = await repository.FullCharacterIdFromImplicitAsync(state.User, Id);
         if (fullCharacterId is null)
         {
+            log.Log(LogLevel.Warning, "Cannot resolve implicit character ID {Id} for user.", Id);
             nav.NavigateTo("/");
             return;
         }
@@ -56,8 +72,21 @@
         handle = await repository.OpenSingleAsync(state.User, fullCharacterId);
         if (handle is null)
         {
+            log.Log(LogLevel.Warning, "Cannot open character {Id}.", fullCharacterId);
             nav.NavigateTo("/");
             return;
+        }
+
+        if (handle.Character.TemplateId is { } templateId)
+        {
+            templateHandle = await repository.OpenSingleAsync(state.User, templateId);
+            if (templateHandle == null)
+            {
+                log.Log(LogLevel.Warning, "Cannot open template {Id}.", templateId);
+                nav.NavigateTo("/");
+                return;
+            }
+            templateHandle.Updated += handleUpdated;
         }
 
         handle.Updated += handleUpdated;
@@ -76,8 +105,11 @@
 
         command = command switch {
             EditCharacter editCharacter => editCharacter with { CharacterId = fullCharacterId },
+            EditCharacterInstance editCharacter => editCharacter with { CharacterId = fullCharacterId },
             DeleteCharacter deleteCharacter => deleteCharacter with { CharacterId = fullCharacterId },
             CloneCharacter cloneCharacter => cloneCharacter with { CharacterId = fullCharacterId },
+            CreateCharacterInstance createCharacterInstance => createCharacterInstance,
+            UnlinkFromTemplate unlink => unlink with { CharacterId = fullCharacterId },
             _ => throw new ArgumentOutOfRangeException(nameof(command)),
         };
 
@@ -99,6 +131,10 @@
                 ? $"/Characters/{createdId}/Edit"
                 : "/";
         }
+        else if (command is UnlinkFromTemplate && handle != null)
+        {
+            nextUrl = $"/Characters/{handle.Character.ImplicitId}/Edit";
+        }
         else
         {
             nextUrl = "/";
@@ -114,11 +150,25 @@
             handle.Dispose();
             handle = null;
         }
+
+        if (templateHandle != null)
+        {
+            templateHandle.Dispose();
+            templateHandle = null;
+        }
     }
 
     void handleUpdated(object? sender, EventArgs e)
     {
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(() =>
+        {
+            if (handle is { Character.TemplateId: null } && templateHandle != null)
+            {
+                templateHandle.Dispose();
+                templateHandle = null;
+            }
+            StateHasChanged();
+        });
     }
 
 }

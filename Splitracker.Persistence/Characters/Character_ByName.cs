@@ -18,7 +18,7 @@ class Character_ByName : AbstractIndexCreationTask<Character>
             from character in characters
             select new IndexEntry {
                 Name = character.Name,
-                IsOpponent = character.IsOpponent,
+                IsOpponent = character.IsOpponent ?? false,
             };
         
         // undocumented https://issues.hibernatingrhinos.com/issue/RDoc-1525, but available in the studio

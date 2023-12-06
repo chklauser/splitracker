@@ -15,6 +15,7 @@ using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Session;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
+using Splitracker.Persistence.Generic;
 using Splitracker.Persistence.Model;
 using Character = Splitracker.Persistence.Model.Character;
 using Pool = Splitracker.Persistence.Model.Pool;
@@ -49,6 +50,7 @@ class RavenCharacterRepository(
         log.LogInformation("Applying character {Command} to {Oid}", characterCommand, userId);
         using var session = store.OpenAsyncSession();
         Character? model;
+        Character? template = null;
         var id = characterCommand.CharacterId;
         if (id != null)
         {
@@ -63,6 +65,17 @@ class RavenCharacterRepository(
                 log.Log(LogLevel.Warning, "Character {Id} not found.", id);
                 return;
             }
+
+            if (model.TemplateId is { } templateId)
+            {
+                template = await session.LoadAsync<Character>(templateId);
+                if (template == null)
+                {
+                    log.Log(LogLevel.Warning, "Character {Id} has template {TemplateId} which was not found.", id,
+                        templateId);
+                    return;
+                }
+            }
         }
         else
         {
@@ -71,6 +84,7 @@ class RavenCharacterRepository(
 
         static void applyPointsTo(Pool model, Domain.Pool domain, PointsVec points, string? description)
         {
+            model.Points ??= new();
             var channeledBefore = model.Points.Channeled;
             // First apply point removal ("healing")
             if (points.Channeled < 0)
@@ -111,6 +125,7 @@ class RavenCharacterRepository(
             var effectivelyChanneled = model.Points.Channeled - channeledBefore;
             if (effectivelyChanneled > 0)
             {
+                model.Channelings ??= [];
                 model.Channelings.Add(new()
                 {
                     Id = IdGenerator.RandomId(),
@@ -122,14 +137,14 @@ class RavenCharacterRepository(
 
         void stopChanneling(Pool model, Domain.Pool domain, string channelingId)
         {
-            var channeling = model.Channelings.FirstOrDefault(ch => ch.Id == channelingId);
+            var channeling = model.Channelings?.FirstOrDefault(ch => ch.Id == channelingId);
             if (channeling == null)
             {
                 log.Log(LogLevel.Warning, "Character {Id} doesn't have an Lp channeling with ID {ChannelingId}", id, channelingId);
             }
             else
             {
-                model.Channelings.Remove(channeling);
+                model.Channelings?.Remove(channeling);
                 var points = channeling.Value;
                 applyPointsTo(model, domain, new(-points, points, 0), null);
             }
@@ -138,10 +153,10 @@ class RavenCharacterRepository(
         switch (characterCommand)
         {
             case ApplyPoints { Pool: PoolType.Lp, Points: var points, Description: var description }:
-                applyPointsTo(model!.Lp, model.Lp.ToDomainLp(), points, description);
+                applyPointsTo(model!.Lp, model.Lp.ToDomainLp(template?.Lp.BaseCapacity ?? 1), points, description);
                 break;
             case ApplyPoints { Pool: PoolType.Fo, Points: var points, Description: var description }:
-                applyPointsTo(model!.Fo, model.Fo.ToDomainFo(), points, description);
+                applyPointsTo(model!.Fo, model.Fo.ToDomainFo(template?.Fo.BaseCapacity ?? 1), points, description);
                 break;
             case CreateCharacter create:
                 var newCharacter = new Character(CharacterDocIdPrefix(userId), create.Name,
@@ -173,39 +188,65 @@ class RavenCharacterRepository(
                     .ToList();
                 model.TagIds = edit.TagIds.Order().ToList();
                 break;
+            case EditCharacterInstance edit:
+                model!.Name = edit.Name;
+                break;
+            case CreateCharacterInstance create:
+                if (!isOwner(create.TemplateId, userId))
+                {
+                    log.Log(LogLevel.Warning, "Template {TemplateId} does not belong to user {UserId}.", create.TemplateId, userId);
+                    return;
+                }
+
+                await session.StoreAsync(new Character(CharacterDocIdPrefix(userId), create.Name, new(), new()) {
+                    TemplateId = create.TemplateId,
+                    InsertedAt = DateTimeOffset.UtcNow,
+                });
+                break;
+            case UnlinkFromTemplate unlink:
+                var flattened = model!.ToDomain(template!).ToDbModel();
+                flattened.TemplateId = null;
+                flattened.Name = unlink.Name;
+                session.Advanced.Evict(model);
+                await session.StoreAsync(flattened);
+                break;
             case StopChanneling { Pool: PoolType.Lp, Id: var channelingId }:
-                stopChanneling(model!.Lp, model.Lp.ToDomainLp(), channelingId);
+                stopChanneling(model!.Lp, model.Lp.ToDomainLp(template?.Lp.BaseCapacity ?? 1), channelingId);
                 break;
             case StopChanneling { Pool: PoolType.Fo, Id: var channelingId }:
-                stopChanneling(model!.Fo, model.Fo.ToDomainFo(), channelingId);
+                stopChanneling(model!.Fo, model.Fo.ToDomainFo(template?.Fo.BaseCapacity ?? 1), channelingId);
                 break;
             case UseSplinterPoints { Amount: var amount }:
-                model!.SplinterPoints.Used = Math.Max(0, Math.Min(model.SplinterPoints.Max, model.SplinterPoints.Used + amount));
+                model!.SplinterPoints.Used = Math.Max(
+                    0, Math.Min(
+                        model.SplinterPoints.Max ?? template?.SplinterPoints.Max ?? 0, 
+                        model.SplinterPoints.Used + amount));
                 break;
             case ResetSplinterPoints:
                 model!.SplinterPoints.Used = 0;
                 break;
             case ShortRest:
-                model!.Lp.Points.Exhausted = 0;
+                model!.Lp.Points ??= new();
+                model.Lp.Points.Exhausted = 0;
+                model.Fo.Points ??= new();
                 model.Fo.Points.Exhausted = 0;
                 break;
             case DeleteCharacter:
                 session.Delete(model);
                 break;
             case CloneCharacter:
-                await session.StoreAsync(new Domain.Character(
-                    id: CharacterDocIdPrefix(userId),
-                    name: model!.Name,
-                    lpBaseCapacity: model.Lp.BaseCapacity,
-                    foBaseCapacity: model.Fo.BaseCapacity,
-                    customColor: model.CustomColor,
-                    isOpponent: model.IsOpponent,
-                    actionShorthands: model.ActionShorthands.ToImmutableDictionary(
-                        s => s.Id,
-                        s => s.ToDomain()
-                    ),
-                    tagIds: model.TagIds.ToImmutableHashSet()
-                ) { InsertedAt = DateTimeOffset.UtcNow }.ToDbModel());
+                await session.StoreAsync(
+                    new Character(CharacterDocIdPrefix(userId), model!.Name, 
+                        new() {BaseCapacity = model.Lp.BaseCapacity},
+                        new() {BaseCapacity = model.Fo.BaseCapacity}) {
+                        CustomColor = model.CustomColor,
+                        IsOpponent = model.IsOpponent,
+                        ActionShorthands = model.ActionShorthands,
+                        SplinterPoints = model.SplinterPoints,
+                        TagIds = model.TagIds,
+                        TemplateId = model.TemplateId,
+                        InsertedAt = DateTimeOffset.UtcNow,
+                    });
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(characterCommand));
@@ -250,7 +291,19 @@ class RavenCharacterRepository(
 
         log.Log(LogLevel.Debug, "Searching for characters returned {Count} results. UserId={UserId}",
             dbCharacters.Count, userId);
-        return dbCharacters.Select(c => c.ToDomain()).OrderBy(c => c.Name).ToImmutableArray();
+        var templates = await FetchTemplatesAsync(session, dbCharacters);
+        return dbCharacters.Select(c => c.ToDomain(templates)).OrderBy(c => c.Name).ToImmutableArray();
+    }
+
+    internal static async Task<IReadOnlyDictionary<string, Character>> FetchTemplatesAsync(IAsyncDocumentSession session, IEnumerable<Character> characters)
+    {
+        var templateIds = characters.Select(c => c.TemplateId).OfType<string>().ToHashSet();
+        if (templateIds.Count == 0)
+        {
+            return ImmutableDictionary<string, Character>.Empty;
+        }
+        return (await session.LoadAsync<Character>(templateIds))?.AsReadOnly()
+            ?? (IReadOnlyDictionary<string, Character>)ImmutableDictionary<string, Character>.Empty;
     }
 
     public async Task<ICharacterRepositoryHandle> OpenAsync(ClaimsPrincipal principal)
@@ -259,7 +312,16 @@ class RavenCharacterRepository(
 
         return await handles.TryCreateSubscription(
             userId,
-            createSubscription: async () => await RavenCharacterRepositorySubscription.OpenAsync(store, userId, log),
+            createSubscription: async () =>
+            {
+                var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
+                var characters = (await RepositorySubscriptionBase<RavenCharacterRepositorySubscription, Domain.Character, RavenCharacterHandle, Character, RavenCharacterRepositoryHandle>.FetchInitialAsync(store, docIdPrefix));
+
+                log.Log(LogLevel.Information, 
+                    "Initialized character repository subscription for {Oid}", 
+                    userId);
+                return new(store, docIdPrefix, characters, log);
+            },
             onExistingSubscription: () =>
                 log.Log(LogLevel.Debug, "Trying to join existing character subscription for {UserId}", userId),
             tryGetHandle: s => s.TryGetHandle(),

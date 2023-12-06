@@ -26,6 +26,11 @@ sealed class RavenSingleCharacterSubscription(IDocumentStore store, string chara
     
     protected override IEnumerable<string> DocumentIdsToSubscribeToFor(Character value)
     {
+        if (value.TemplateId is { } templateId)
+        {
+            yield return templateId;
+        }
+        
         yield return value.Id;
     }
 
@@ -43,6 +48,21 @@ sealed class RavenSingleCharacterSubscription(IDocumentStore store, string chara
         {
             throw new InvalidOperationException("Character with ID " + id + " cannot be refreshed.");
         }
-        return model.ToDomain();
+
+        Model.Character? templateCharacter;
+        if (model.TemplateId is { } templateId)
+        {
+            templateCharacter = await session.LoadAsync<Model.Character>(templateId);
+            if (templateCharacter == null)
+            {
+                throw new InvalidOperationException("Cannot find template character " + id);
+            }
+        }
+        else
+        {
+            templateCharacter = null;
+        }
+        
+        return model.ToDomain(templateCharacter);
     }
 }

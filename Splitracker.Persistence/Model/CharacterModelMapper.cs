@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Splitracker.Domain;
@@ -7,28 +8,67 @@ namespace Splitracker.Persistence.Model;
 
 static class CharacterModelMapper
 {
-    public static Domain.Character ToDomain(this Character model)
+    public static Domain.Character ToDomain(this Character model, IReadOnlyDictionary<string,Character> templates)
     {
+        return model.ToDomain(model.TemplateId is { } templateId ? templates.GetValueOrDefault(templateId) : null);
+    }
+
+    static readonly Domain.Character Prototype = new(
+        null!,
+        string.Empty,
+        null,
+        new(5),
+        new(5),
+        new(0, 0),
+        ImmutableDictionary<string, Domain.ActionShorthand>.Empty,
+        false,
+        ImmutableHashSet<string>.Empty,
+        null,
+        DateTimeOffset.MinValue);
+    
+    public static Domain.Character ToDomain(this Character model, Character? templateModel)
+    {
+        if(model.TemplateId is { } templateId && (templateModel is null || templateModel.Id != templateId))
+        {
+            throw new InvalidOperationException($"Character {model.Id} requires template id {templateId}.");
+        }
+
+        var template = templateModel?.ToDomain((Character?)null) ?? Prototype;
+        var actionShorthands = model.ActionShorthands
+            .Select(s => s.ToDomain())
+            .ToDictionary(s => s.Id);
+        foreach (var templateActionShorthand in template.ActionShorthands.Values)
+        {
+            actionShorthands.TryAdd(templateActionShorthand.Id, templateActionShorthand);
+        }
+
         return new(model.Id,
-            model.Name,
-            model.CustomColor,
-            model.Lp.ToDomainLp(),
-            model.Fo.ToDomainFo(),
-            model.SplinterPoints.toDomain(),
-            model.ActionShorthands.Select(s => s.ToDomain()).ToImmutableDictionary(s => s.Id),
-            model.IsOpponent,
-            model.TagIds.ToImmutableHashSet(),
+            model.Name.Replace("\uFFFC", template.Name),
+            model.CustomColor ?? template.CustomColor,
+            model.Lp.ToDomainLp(template.Lp.BaseCapacity),
+            model.Fo.ToDomainFo(template.Fo.BaseCapacity),
+            model.SplinterPoints.toDomain(template.SplinterPoints.Max),
+            actionShorthands.ToImmutableDictionary(),
+            model.IsOpponent ?? template.IsOpponent,
+            model.TagIds.Concat(template.TagIds).ToImmutableHashSet(),
+            model.TemplateId,
             model.InsertedAt);
     }
 
-    public static LpPool ToDomainLp(this Pool model)
+    public static LpPool ToDomainLp(this Pool model, int templateBaseCapacity)
     {
-        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.Select(toDomain).ToImmutableArray());
+        return new(
+            model.BaseCapacity ?? templateBaseCapacity,
+            model.Points?.toDomain() ?? new(),
+            model.Channelings?.Select(toDomain).ToImmutableArray() ?? ImmutableArray<Domain.Channeling>.Empty);
     }
 
-    public static FoPool ToDomainFo(this Pool model)
+    public static FoPool ToDomainFo(this Pool model, int templateBaseCapacity)
     {
-        return new(model.BaseCapacity, model.Points.toDomain(), model.Channelings.Select(toDomain).ToImmutableArray());
+        return new(
+            model.BaseCapacity ?? templateBaseCapacity,
+            model.Points?.toDomain() ?? new(),
+            model.Channelings?.Select(toDomain).ToImmutableArray() ?? ImmutableArray<Domain.Channeling>.Empty);
     }
     
     static Domain.Channeling toDomain(this Channeling model)
@@ -36,9 +76,9 @@ static class CharacterModelMapper
         return new(model.Id, model.Value, model.Description);
     }
 
-    static Domain.SplinterPoints toDomain(this SplinterPoints model)
+    static Domain.SplinterPoints toDomain(this SplinterPoints model, int templateMax)
     {
-        return new(model.Max, model.Used);
+        return new(model.Max ?? templateMax, model.Used);
     }
 
     static Channeling toDbModel(this Domain.Channeling channeling)
@@ -56,7 +96,7 @@ static class CharacterModelMapper
                 ActionShorthandType.Melee => Domain.ActionShorthandType.Melee,
                 ActionShorthandType.Ranged => Domain.ActionShorthandType.Ranged,
                 ActionShorthandType.Spell => Domain.ActionShorthandType.Spell,
-                _ => throw new ArgumentOutOfRangeException(),
+                _ => throw new InvalidOperationException($"Unknown action shorthand type {model.Type}."),
             },
             model.CostExpression,
             model.Bonus,
@@ -123,7 +163,7 @@ static class CharacterModelMapper
                 Domain.ActionShorthandType.Melee => ActionShorthandType.Melee,
                 Domain.ActionShorthandType.Ranged => ActionShorthandType.Ranged,
                 Domain.ActionShorthandType.Spell => ActionShorthandType.Spell,
-                _ => throw new ArgumentOutOfRangeException(nameof(shorthand)),
+                _ => throw new InvalidOperationException($"Unknown action shorthand type {shorthand.Type}."),
             },
             CostExpression = shorthand.CostExpression,
             Bonus = shorthand.Bonus,

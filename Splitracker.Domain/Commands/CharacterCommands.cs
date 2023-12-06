@@ -24,7 +24,7 @@ public abstract record UpsertCharacter(
     int SplinterPointsMax,
     string? CustomColor,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-    bool IsOpponent,
+    bool? IsOpponent,
     IImmutableSet<string> TagIds
 ) : ICharacterCommand
 {
@@ -33,14 +33,14 @@ public abstract record UpsertCharacter(
 }
 
 public record CreateCharacter(
-        string Name,
-        int LpBaseCapacity,
-        int FoBaseCapacity,
-        int SplinterPointsMax,
-        string? CustomColor,
-        IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-        bool IsOpponent,
-        IImmutableSet<string> TagIds
+    string Name,
+    int LpBaseCapacity,
+    int FoBaseCapacity,
+    int SplinterPointsMax,
+    string? CustomColor,
+    IImmutableDictionary<string, ActionShorthand> ActionShorthands,
+    bool? IsOpponent,
+    IImmutableSet<string> TagIds
 )
     : UpsertCharacter(Name,
         LpBaseCapacity,
@@ -62,7 +62,7 @@ public record EditCharacter(
     int SplinterPointsMax,
     string? CustomColor,
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
-    bool IsOpponent,
+    bool? IsOpponent,
     IImmutableSet<string> TagIds
 )
     : UpsertCharacter(Name,
@@ -76,6 +76,26 @@ public record EditCharacter(
 {
     protected override string OptionalCharacterId => CharacterId;
 }
+
+public abstract record UpsertCharacterInstance(
+    string Name
+) : ICharacterCommand
+{
+    protected abstract string? OptionalCharacterId { get; }
+    string? ICharacterCommand.CharacterId => OptionalCharacterId;
+}
+
+public record EditCharacterInstance(string CharacterId, string Name) : UpsertCharacterInstance(Name)
+{
+    protected override string OptionalCharacterId => CharacterId;
+}
+
+public record CreateCharacterInstance(string TemplateId, string Name) : UpsertCharacterInstance(Name)
+{
+    protected override string? OptionalCharacterId => null;
+}
+
+public record UnlinkFromTemplate(string CharacterId, string Name) : ICharacterCommand;
 
 public record DeleteCharacter(string CharacterId) : ICharacterCommand;
 

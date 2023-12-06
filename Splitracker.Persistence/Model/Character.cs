@@ -8,6 +8,7 @@ namespace Splitracker.Persistence.Model;
 record Character(string Id, string Name, Pool Lp, Pool Fo)
 {
     public string Id { get; set; } = Id;
+    public string? TemplateId { get; set; }
     public string Name { get; set; } = Name;
     public Pool Lp { get; set; } = Lp;
     public Pool Fo { get; set; } = Fo;
@@ -17,7 +18,7 @@ record Character(string Id, string Name, Pool Lp, Pool Fo)
     };
     public List<ActionShorthand> ActionShorthands { get; set; } = [];
     public string? CustomColor;
-    public bool IsOpponent;
+    public bool? IsOpponent;
     
     public List<string> TagIds { get; set; } = [];
     
@@ -26,7 +27,7 @@ record Character(string Id, string Name, Pool Lp, Pool Fo)
 
 class SplinterPoints
 {
-    public required int Max { get; set; }
+    public int? Max { get; set; }
     public int Used { get; set; }
 }
 

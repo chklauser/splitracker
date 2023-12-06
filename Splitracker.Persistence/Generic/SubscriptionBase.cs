@@ -142,14 +142,14 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
 
     protected abstract Task<TValue> RefreshValueAsync();
 
-    void synchronizeSubscriptions(TValue group)
+    void synchronizeSubscriptions(TValue value)
     {
         Lock.EnterWriteLock();
         try
         {
             var existingSubscriptions = ravenSubscriptions;
             var existingKeys = existingSubscriptions.Keys.ToHashSet();
-            var requiredKeys = DocumentIdsToSubscribeToFor(group)
+            var requiredKeys = DocumentIdsToSubscribeToFor(value)
                 .ToHashSet();
             foreach (var key in requiredKeys.ToList())
             {

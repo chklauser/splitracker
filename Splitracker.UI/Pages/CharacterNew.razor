@@ -1,11 +1,10 @@
 ﻿@page "/Characters/New"
 
+@using System.Collections.Immutable
+@using System.Diagnostics.CodeAnalysis
 @using Splitracker.Domain
 @using Splitracker.Domain.Commands
-@using System.Diagnostics.CodeAnalysis
 @using Splitracker.UI.Shared.Characters
-@using System.Collections.Immutable
-
 @implements ICharacterCommandRouter
 @inject ICharacterRepository repository
 @inject NavigationManager nav;
@@ -18,6 +17,7 @@
     {
         <CharacterEditForm
             Character="@character"
+            Template="@templateHandle?.Character"
             Permissions="@Permissions.OwnerPermissions"/>
     }
 </CascadingValue>
@@ -29,28 +29,59 @@
 
     [CascadingParameter]
     public required IPermissionService Permissions { get; set; }
-    
+
     [CascadingParameter]
     public required SessionContext Session { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "tid")]
+    public string? TemplateId { get; set; }
+
     Character? character;
+
+    ICharacterHandle? templateHandle;
 
     protected override async Task OnParametersSetAsync()
     {
+        if (templateHandle != null)
+        {
+            templateHandle.Dispose();
+            templateHandle = null;
+        }
+
         await base.OnParametersSetAsync();
-        character = new("", "", 1, 1) { TagIds = Session.FilterTags.ToImmutableHashSet() };
+
+        if (!string.IsNullOrWhiteSpace(TemplateId))
+        {
+            var auth = await AuthenticationState;
+            var templateFullId = await repository.FullCharacterIdFromImplicitAsync(auth.User, TemplateId);
+            if (templateFullId == null)
+            {
+                nav.NavigateTo("/");
+                return;
+            }
+
+            templateHandle = await repository.OpenSingleAsync(auth.User, templateFullId);
+        }
+
+        character = new("", templateHandle == null ? "" : "\uFFFC", 1, 1) { TagIds = Session.FilterTags.ToImmutableHashSet() };
     }
 
     [SuppressMessage("ReSharper", "WithExpressionModifiesAllMembers")]
     public async Task ApplyAsync(ICharacterCommand command)
     {
+        AuthenticationState state;
         switch (command)
         {
             case DeleteCharacter:
                 nav.NavigateTo("/");
                 break;
+            case EditCharacterInstance edit:
+                state = await AuthenticationState;
+                await repository.ApplyAsync(state.User, new CreateCharacterInstance(templateHandle!.Character.Id, edit.Name));
+                break;
             case EditCharacter edit:
-                var state = await AuthenticationState;
+                state = await AuthenticationState;
                 await repository.ApplyAsync(state.User,
                     new CreateCharacter(
                         edit.Name,

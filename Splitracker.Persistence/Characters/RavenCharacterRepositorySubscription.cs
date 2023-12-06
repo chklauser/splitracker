@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Session;
 using Splitracker.Persistence.Generic;
 using Splitracker.Persistence.Model;
 using Character = Splitracker.Persistence.Model.Character;
@@ -25,29 +29,32 @@ class RavenCharacterRepositorySubscription(
             Character, RavenCharacterRepositoryHandle>(store, docIdPrefix, initialHandles, log),
         IRepositorySubscriptionBase<Domain.Character, Character>
 {
-    public static Domain.Character ToDomain(Character model) => model.ToDomain();
-
-    public static async ValueTask<RavenCharacterRepositorySubscription> OpenAsync(
-        IDocumentStore store,
-        string userId,
-        ILogger<RavenCharacterRepository> log
+    public static async Task<IEnumerable<Domain.Character>> ToDomainAsync(
+        IAsyncDocumentSession session,
+        IReadOnlyList<Character> models
     )
     {
-        using var session = store.OpenAsyncSession();
-        var docIdPrefix = RavenCharacterRepository.CharacterDocIdPrefix(userId);
-        var characters = new List<RavenCharacterHandle>();
-        await using var characterEnumerator = await session.Advanced.StreamAsync<Character>(docIdPrefix);
-        while (await characterEnumerator.MoveNextAsync())
-        {
-            var character = characterEnumerator.Current.Document.ToDomain();
-            var handle = new RavenCharacterHandle(character);
-            characters.Add(handle);
-        }
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, models);
+        return models.ToImmutableArray().Select(m => m.ToDomain(templates));
+    }
 
-        log.Log(LogLevel.Information, 
-            "Initialized character repository subscription for {Oid} with {Count} characters", 
-            userId, characters.Count);
-        
-        return new(store, docIdPrefix, characters, log);
+    protected override async ValueTask OnPutUpdatesExistingAsync(IAsyncDocumentSession session, Character updated)
+    {
+        await base.OnPutUpdatesExistingAsync(session, updated);
+        var affectedHandles = Handles.Where(c => c.Value.TemplateId == updated.Id).ToImmutableArray();
+        if (affectedHandles.Length > 0)
+        {
+            var affectedCharacters = await session.LoadAsync<Character>(affectedHandles.Select(h => h.Id));
+            foreach (var affectedHandle in affectedHandles)
+            {
+                if (!affectedCharacters.TryGetValue(affectedHandle.Id, out var affectedCharacter))
+                {
+                    continue;
+                }
+
+                affectedHandle.Value = affectedCharacter.ToDomain(updated);
+                affectedHandle.TriggerUpdated();
+            }
+        }
     }
 }

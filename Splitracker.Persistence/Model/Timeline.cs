@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Splitracker.Domain;
 
 namespace Splitracker.Persistence.Model;
 
@@ -47,14 +46,15 @@ static class TimelineModelMapper
     public static Domain.Timeline ToDomain(
         this Timeline timeline,
         Group group,
-        IEnumerable<Character?> characters
+        IEnumerable<Character?> characters,
+        IReadOnlyDictionary<string, Character> templates
     )
     {
         var charactersById = characters
             .Where(c => c != null)
             .ToImmutableDictionary(
             c => c!.Id,
-            c => c!.ToDomain());
+            c => c!.ToDomain(templates));
         var effectsById = timeline.Effects.ToImmutableDictionary(
             e => e.Id,
             e => e.toDomain(charactersById));

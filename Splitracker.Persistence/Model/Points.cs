@@ -2,6 +2,8 @@
 
 record Points(int Channeled, int Exhausted, int Consumed)
 {
+    public Points() : this(0, 0, 0) { }
+    
     public int Channeled { get; set; } = Channeled;
     public int Exhausted { get; set; } = Exhausted;
     public int Consumed { get; set; } = Consumed;

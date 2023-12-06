@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Changes;
+using Raven.Client.Documents.Session;
 
 namespace Splitracker.Persistence.Generic;
 
@@ -37,7 +38,7 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
     {
         this.store = store;
         this.log = log;
-        handles = initialHandles.ToImmutableList();
+        handles = initialHandles.ToImmutableArray();
         subscription = store.Changes().ForDocumentsStartingWith(docIdPrefix).Subscribe(this);
     }
 
@@ -45,16 +46,14 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
     public static async Task<IEnumerable<TValueHandle>> FetchInitialAsync(IDocumentStore store, string docIdPrefix)
     {
         using var session = store.OpenAsyncSession();
-        var handles = new List<TValueHandle>();
+        var models = new List<TDbModel>();
         await using var valueEnumerator = await session.Advanced.StreamAsync<TDbModel>(docIdPrefix);
         while (await valueEnumerator.MoveNextAsync())
         {
-            var value = TSelf.ToDomain(valueEnumerator.Current.Document);
-            var handle = TValueHandle.Create(value);
-            handles.Add(handle);
+            models.Add(valueEnumerator.Current.Document);
         }
 
-        return handles;
+        return (await TSelf.ToDomainAsync(session, models)).Select(TValueHandle.Create);
     }
 
     public TRepositoryHandle? TryGetHandle()
@@ -145,8 +144,9 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
                 break;
             case DocumentChangeTypes.Put:
                 log.Log(LogLevel.Debug, "{Type} {Id} created or updated.", typeof(TValue).Name, value.Id);
-                var newValue = await session.LoadAsync<TDbModel>(value.Id) is { } dbModel
-                    ? (TValue?)TSelf.ToDomain(dbModel)
+                var dbModel = await session.LoadAsync<TDbModel>(value.Id);
+                var newValue = dbModel != null
+                    ? (await TSelf.ToDomainAsync(session, [dbModel])).FirstOrDefault()
                     : default;
                 if (newValue != null)
                 {
@@ -170,6 +170,7 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
                     {
                         handle.Value = newValue;
                         handle.TriggerUpdated();
+                        await OnPutUpdatesExistingAsync(session, dbModel!);
                     }
                 }
                 else
@@ -186,6 +187,8 @@ class RepositorySubscriptionBase<TSelf, TValue, TValueHandle, TDbModel, TReposit
                 break;
         }
     }
+    
+    protected virtual ValueTask OnPutUpdatesExistingAsync(IAsyncDocumentSession session, TDbModel updated) => ValueTask.CompletedTask;
 
     #endregion
 

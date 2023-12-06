@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -94,7 +95,8 @@ class RavenGroupRepository(
             groupId,
             dbCharacters.Count,
             userId);
-        return dbCharacters.Select(c => c.ToDomain()).OrderBy(c => c.Name).ToImmutableArray();
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, dbCharacters);
+        return dbCharacters.Select(c => c.ToDomain(templates)).OrderBy(c => c.Name).ToImmutableArray();
     }
 
     public async Task<JoinResult> GetByJoinCodeAsync(ClaimsPrincipal principal, string joinCode)
@@ -116,7 +118,8 @@ class RavenGroupRepository(
         }
 
         var characters = await session.LoadAsync<Model.Character>(groupToJoin.CharacterIds);
-        var domainGroup = GroupModelMapper.ToDomain(groupToJoin, characters.Values, false);
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, characters.Values);
+        var domainGroup = GroupModelMapper.ToDomain(groupToJoin, characters.Values, templates, false);
 
         if (groupToJoin.Members.Any(m => m.UserId == userId))
         {
@@ -305,6 +308,7 @@ class RavenGroupRepository(
             .Select(s => s.Id)
             .Distinct()
             .SingleOrDefaultAsync();
-        return GroupModelMapper.ToDomain(dbGroup, characters.Values, timelineId != null);
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, characters.Values);
+        return GroupModelMapper.ToDomain(dbGroup, characters.Values, templates, timelineId != null);
     }
 }

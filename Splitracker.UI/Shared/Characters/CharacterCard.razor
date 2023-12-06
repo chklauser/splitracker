@@ -35,7 +35,7 @@
                         <MudIconButton
                             Icon="@Icons.Material.Filled.Edit"
                             Color="Color.Primary"
-                            @onclick="gotoEdit"/>
+                            Href="@($"/Characters/{character.ImplicitId}/Edit")"/>
                     }
                 </CardHeaderActions>
             </MudCardHeader>
@@ -180,11 +180,6 @@
     async Task resetSplinterPointsAsync()
     {
         await ApplyAsync(new ResetSplinterPoints(null!));
-    }
-
-    void gotoEdit()
-    {
-        nav.NavigateTo($"/Characters/{character.ImplicitId}/Edit");
     }
 
     Task costsFocus(PointsVec focusCost)

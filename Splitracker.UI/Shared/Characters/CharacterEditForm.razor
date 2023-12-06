@@ -17,6 +17,29 @@
 
 <div
     class="editor">
+    @* Template *@
+    @if (Template is { } template)
+    {
+        <div
+            class="default-control"
+            style="@($"grid-row: {row}")">
+            <MudText
+                Typo="Typo.body1">
+                Abgeleitet von "<strong>@Template.Name</strong>"
+            </MudText>
+        </div>
+        <div
+            class="outcome"
+            style="@($"grid-row: {row++}")">
+            <MudTooltip
+                Text="@($"{Template.Name} editieren")">
+                <MudIconButton
+                    Icon="@Icons.Material.Filled.Edit"
+                    Href="@($"/Characters/{template.ImplicitId}/Edit")"/>
+            </MudTooltip>
+        </div>
+    }
+
     @* Name *@
     <div
         class="full"
@@ -28,139 +51,146 @@
             Immediate="@true"
             RequiredError="Jeder braucht einen Namen!"/>
     </div>
-    @* LP *@
-    <div
-        class="default-control"
-        style="@($"grid-row: {row}")">
-        <MudNumericField
-            Label="LP"
-            @bind-Value="newLpBaseCapacity"
-            Min="1"
-            Max="20"
-            Required/>
-    </div>
-    <MudText
-        Class="outcome"
-        Style="@($"grid-row: {row++}")">
-        =&nbsp;@(newLpBaseCapacity * 5)
-    </MudText>
-    @* FO *@
 
-    <div
-        class="default-control"
-        style="@($"grid-row: {row++}")">
-        <MudNumericField
-            Label="FO"
-            @bind-Value="newFoBaseCapacity"
-            Min="1"
-            Max="@(12 * 6)"
-            Required/>
-    </div>
-
-    @* Splinter Points *@
-
-    <div
-        class="default-control"
-        style="@($"grid-row: {row++}")">
-        <MudNumericField
-            Label="Splitterpunkte"
-            @bind-Value="newSplinterPointMaximum"
-            Min="0"
-            Max="9"
-            Required/>
-    </div>
-
-    @* Color *@
-
-    <MudCheckBox
-        Style="@($"grid-row: {row}; grid-column: 1")"
-        T="bool"
-        @bind-Checked="newHasCustomColor"/>
-    <div
-        style="@($"grid-row: {row}; grid-column: 2/4")"
-        @onclick="() => { if (!newHasCustomColor) newHasCustomColor = true; }">
-        <MudColorPicker
-            Disabled="@(!newHasCustomColor)"
-            Label="Avatar Farbe"
-            @bind-Value="newColor"
-            DisableAlpha="@true"
-            PickerVariant="PickerVariant.Inline"
-            ColorPickerMode="ColorPickerMode.RGB"/>
-    </div>
-    <div
-        class="outcome"
-        style="grid-row: @(row++)">
-        <CharacterAvatar
-            Elevation="2"
-            Selected="@dummyAvatarPreviewSelected"
-            OnClick="@(() => dummyAvatarPreviewSelected = !dummyAvatarPreviewSelected)"
-            Character="@(character with { CustomColor = newHasCustomColor ? newColor?.ToString(MudColorOutputFormats.Hex) : null })"/>
-    </div>
-
-    @* Actions *@
-    <ActionShorthandListEditor
-        @bind-Shorthands="newShorthands"
-        StartRow="@(row)"
-        Type="ActionShorthandType.Melee"/>
-    @{ row += 3; }
-    <ActionShorthandListEditor
-        @bind-Shorthands="newShorthands"
-        StartRow="@(row)"
-        Type="ActionShorthandType.Ranged"/>
-    @{ row += 3; }
-    <ActionShorthandListEditor
-        @bind-Shorthands="newShorthands"
-        StartRow="@(row)"
-        Type="ActionShorthandType.Spell"/>
-    @{ row += 3; }
-    @* Opponent *@
-    <div
-        style="@($"grid-row: {row++}")"
-        class="default-control">
-        <MudTooltip
-            Text="(Für Spielleiter)">
-            <MudSwitch
-                T="bool"
-                UnCheckedColor="Color.Default"
-                Color="Color.Error"
-                @bind-Checked="newIsOpponent"
-                Label="Ist Gegner*in"/>
-        </MudTooltip>
-    </div>
-    @* Tags *@
-    @if (tags is { Tags.Count: > 0 })
+    @if (Template is null)
     {
+        @* LP *@
         <div
-            style="@($"grid-row: {row++}")"
-            class="full">
-            <MudAutocomplete
-                T="Tag?"
-                Label="Tag hinzufügen"
-                ValueChanged="@addTag"
-                Clearable="@true"
-                OnClearButtonClick="@(() => tagSearchField!.Value = null!)"
-                SearchFunc="@searchTags"
-                ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
-                OnKeyUp="@tagSearchKeyUp"
-                @ref="tagSearchField"/>
+            class="default-control"
+            style="@($"grid-row: {row}")">
+            <MudNumericField
+                Label="LP"
+                @bind-Value="newLpBaseCapacity"
+                Min="1"
+                Max="20"
+                Required/>
+        </div>
+        <MudText
+            Class="outcome"
+            Style="@($"grid-row: {row++}")">
+            =&nbsp;@(newLpBaseCapacity * 5)
+        </MudText>
 
+        @* FO *@
+        <div
+            class="default-control"
+            style="@($"grid-row: {row++}")">
+            <MudNumericField
+                Label="FO"
+                @bind-Value="newFoBaseCapacity"
+                Min="1"
+                Max="@(12 * 6)"
+                Required/>
+        </div>
+
+        @* Splinter Points *@
+
+        <div
+            class="default-control"
+            style="@($"grid-row: {row++}")">
+            <MudNumericField
+                Label="Splitterpunkte"
+                @bind-Value="newSplinterPointMaximum"
+                Min="0"
+                Max="9"
+                Required/>
+        </div>
+
+        @* Color *@
+
+        <MudCheckBox
+            Style="@($"grid-row: {row}; grid-column: 1")"
+            T="bool"
+            @bind-Checked="newHasCustomColor"/>
+        <div
+            style="@($"grid-row: {row}; grid-column: 2/4")"
+            @onclick="() => { if (!newHasCustomColor) newHasCustomColor = true; }">
+            <MudColorPicker
+                Disabled="@(!newHasCustomColor)"
+                Label="Avatar Farbe"
+                @bind-Value="newColor"
+                DisableAlpha="@true"
+                PickerVariant="PickerVariant.Inline"
+                ColorPickerMode="ColorPickerMode.RGB"/>
         </div>
         <div
-            style="@($"grid-row: {row++}")"
-            class="full">
-            @foreach (var tag in newTags)
-            {
-                <MudChip
-                    @key="tag.Id"
-                    Value="@tag"
-                    Text="@tag.Name"
-                    Variant="Variant.Filled"
-                    OnClose="@(deleteTag)"/>
-            }
+            class="outcome"
+            style="grid-row: @(row++)">
+            <CharacterAvatar
+                Elevation="2"
+                Selected="@dummyAvatarPreviewSelected"
+                OnClick="@(() => dummyAvatarPreviewSelected = !dummyAvatarPreviewSelected)"
+                Character="@(character with { CustomColor = newHasCustomColor ? newColor?.ToString(MudColorOutputFormats.Hex) : null })"/>
         </div>
+
+        @* Actions *@
+        <ActionShorthandListEditor
+            @bind-Shorthands="newShorthands"
+            StartRow="@(row)"
+            Type="ActionShorthandType.Melee"/>
+        row += 3;
+        <ActionShorthandListEditor
+            @bind-Shorthands="newShorthands"
+            StartRow="@(row)"
+            Type="ActionShorthandType.Ranged"/>
+        row += 3;
+        <ActionShorthandListEditor
+            @bind-Shorthands="newShorthands"
+            StartRow="@(row)"
+            Type="ActionShorthandType.Spell"/>
+        row += 3;
+        @* Opponent *@
+        <div
+            style="@($"grid-row: {row++}")"
+            class="default-control">
+            <MudTooltip
+                Text="(Für Spielleiter)">
+                <MudCheckBox
+                    T="bool?"
+                    UnCheckedColor="Color.Default"
+                    Color="Color.Error"
+                    @bind-Checked="newIsOpponent"
+                    TriState="@(Template != null)"
+                    Label="Ist Gegner*in"/>
+            </MudTooltip>
+        </div>
+        @* Tags *@
+        @if (tags is { Tags.Count: > 0 })
+        {
+            <div
+                style="@($"grid-row: {row++}")"
+                class="full">
+                <MudAutocomplete
+                    T="Tag?"
+                    Label="Tag hinzufügen"
+                    ValueChanged="@addTag"
+                    Clearable="@true"
+                    OnClearButtonClick="@(() => tagSearchField!.Value = null!)"
+                    SearchFunc="@searchTags"
+                    ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
+                    OnKeyUp="@tagSearchKeyUp"
+                    @ref="tagSearchField"/>
+
+            </div>
+            <div
+                style="@($"grid-row: {row++}")"
+                class="full">
+                @foreach (var tag in newTags)
+                {
+                    <MudChip
+                        @key="tag.Id"
+                        Value="@tag"
+                        Text="@tag.Name"
+                        Variant="Variant.Filled"
+                        OnClose="@(deleteTag)"/>
+                }
+            </div>
+        }
     }
+
     <div
-        class="full">
+        class="full"
+        style="@($"grid-row: {row++}")">
         <MudStack
             Row
             AlignItems="AlignItems.Center"
@@ -191,6 +221,40 @@
         </MudStack>
     </div>
 
+    @if (Character.Id != "")
+    {
+        <div
+            class="full"
+            style="@($"grid-row: {row++}")">
+            <MudStack
+                Row
+                AlignItems="AlignItems.Center"
+                Justify="Justify.SpaceEvenly">
+                @if (Template == null)
+                {
+                    <MudTooltip Text="Instanzen eines Charakters teilen Statistiken und Aktionen, aber haben unabhängige Ressourcen (LP, FO, etc.)">
+                        <MudButton
+                            EndIcon="@Icons.Material.Filled.AddLink"
+                            Color="@Color.Default"
+                            @onclick="instantiateAsync">
+                            Instanz erstellen
+                        </MudButton>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="Instanzen eines Charakters teilen Statistiken und Aktionen, aber haben unabhängige Ressourcen (LP, FO, etc.)">
+                        <MudButton
+                            EndIcon="@Icons.Material.Filled.LinkOff"
+                            Color="@Color.Default"
+                            @onclick="unlinkAsync">
+                            Zu eigenständigem Charakter machen
+                        </MudButton>
+                    </MudTooltip>
+                }
+            </MudStack>
+        </div>
+    }
 </div>
 @{
     // avoids "value not used" warnings on the last row++
@@ -202,6 +266,9 @@
     [Parameter]
     [EditorRequired]
     public required Character Character { get; set; }
+
+    [Parameter]
+    public Character? Template { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -219,7 +286,7 @@
     int newLpBaseCapacity;
     int newFoBaseCapacity;
     int newSplinterPointMaximum;
-    bool newIsOpponent;
+    bool? newIsOpponent;
     MudColor? newColor;
     bool newHasCustomColor;
     IImmutableDictionary<string, ActionShorthand> newShorthands = ImmutableDictionary<string, ActionShorthand>.Empty;
@@ -271,18 +338,18 @@
             addTag(selectedTag);
         }
     }
-    
+
     void addTag(Tag? selectedTag)
     {
         if (selectedTag == null || newTags.Any(t => t.Id == selectedTag.Id))
         {
             return;
         }
-        
+
         newTags.Add(selectedTag);
         tagSearchField?.Clear();
     }
-    
+
     void refreshTags()
     {
         StateHasChanged();
@@ -314,7 +381,7 @@
 
     private bool hasChanges =>
         character.Id == ""
-        || newName != character.Name
+        || reverseMappedNewName() != character.Name
         || newLpBaseCapacity != character.Lp.BaseCapacity
         || newFoBaseCapacity != character.Fo.BaseCapacity
         || newSplinterPointMaximum != character.SplinterPoints.Max
@@ -324,20 +391,37 @@
         || !newShorthands.SequenceEqual(character.ActionShorthands)
         || !character.TagIds.SetEquals(newTags.Select(t => t.Id));
 
+    string reverseMappedNewName() =>
+        Template is { } template
+            ? reverseMappedNewName(template)
+            : newName.Trim();
+
+    string reverseMappedNewName(Character template)
+    {
+        return newName.Trim().Replace(template.Name, "\uFFFC");
+    }
+
     async Task saveAsync()
     {
-        await OuterCommandRouter.ApplyAsync(new EditCharacter(
-            null!,
-            newName,
-            newLpBaseCapacity,
-            newFoBaseCapacity,
-            newSplinterPointMaximum,
-            newHasCustomColor && newColor != null
-                ? newColor.ToString(MudColorOutputFormats.Hex)
-                : null,
-            newShorthands,
-            newIsOpponent,
-            newTags.Select(t => t.Id).ToImmutableHashSet()));
+        if (Template == null)
+        {
+            await OuterCommandRouter.ApplyAsync(new EditCharacter(
+                null!,
+                reverseMappedNewName(),
+                newLpBaseCapacity,
+                newFoBaseCapacity,
+                newSplinterPointMaximum,
+                newHasCustomColor && newColor != null
+                    ? newColor.ToString(MudColorOutputFormats.Hex)
+                    : null,
+                newShorthands,
+                newIsOpponent,
+                newTags.Select(t => t.Id).ToImmutableHashSet()));
+        }
+        else
+        {
+            await OuterCommandRouter.ApplyAsync(new EditCharacterInstance(null!, reverseMappedNewName()));
+        }
     }
 
     async Task deleteAsync()
@@ -366,6 +450,16 @@
         {
             tagSearchField.Value = null!;
         }
+    }
+
+    async Task instantiateAsync()
+    {
+        await OuterCommandRouter.ApplyAsync(new CreateCharacterInstance(Character.Id, reverseMappedNewName(Character)));
+    }
+
+    async Task unlinkAsync()
+    {
+        await OuterCommandRouter.ApplyAsync(new UnlinkFromTemplate(null!, newName.Trim()));
     }
 
 }

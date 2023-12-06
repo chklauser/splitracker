@@ -13,6 +13,7 @@ public record Character(
     IImmutableDictionary<string, ActionShorthand> ActionShorthands,
     bool IsOpponent,
     IImmutableSet<string> TagIds,
+    string? TemplateId,
     DateTimeOffset InsertedAt
 )
 {
@@ -36,6 +37,7 @@ public record Character(
             actionShorthands ?? ImmutableDictionary<string, ActionShorthand>.Empty,
             isOpponent,
             tagIds ?? [],
+            null,
             default)
     {
     }

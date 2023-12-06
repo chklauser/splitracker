@@ -75,7 +75,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     create.FoBaseCapacity,
                     create.SplinterPointsMax,
                     create.CustomColor,
-                    create.IsOpponent,
+                    create.IsOpponent ?? false,
                     create.ActionShorthands),
             },
             opts => opts
@@ -107,7 +107,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     ownCreate.FoBaseCapacity,
                     ownCreate.SplinterPointsMax,
                     ownCreate.CustomColor,
-                    ownCreate.IsOpponent,
+                    ownCreate.IsOpponent ?? false,
                     ownCreate.ActionShorthands),
             },
             opts => opts
@@ -137,7 +137,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     create.FoBaseCapacity,
                     create.SplinterPointsMax,
                     create.CustomColor,
-                    create.IsOpponent,
+                    create.IsOpponent ?? false,
                     create.ActionShorthands),
             },
             opts => opts
@@ -179,7 +179,7 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                 edit.FoBaseCapacity,
                 edit.SplinterPointsMax,
                 edit.CustomColor,
-                edit.IsOpponent,
+                edit.IsOpponent ?? false,
                 edit.ActionShorthands),
             new Character(otherCharacter.Id,
                 otherCharacter.Name,

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Session;
 using Splitracker.Domain;
 using Splitracker.Domain.Commands;
 using Splitracker.Persistence.Generic;
@@ -109,7 +112,8 @@ class RavenTagRepositorySubscription(
 ) : RepositorySubscriptionBase<RavenTagRepositorySubscription, Tag, RavenTagHandle, Model.Tag,
     RavenTagRepositoryHandle>(store, docIdPrefix, initialHandles, log), IRepositorySubscriptionBase<Tag, Model.Tag>
 {
-    public static Tag ToDomain(Model.Tag model) => model.ToDomain();
+    public static Task<IEnumerable<Tag>> ToDomainAsync(IAsyncDocumentSession session, IReadOnlyList<Model.Tag> models)
+        => Task.FromResult(models.ToImmutableArray().Select(m => m.ToDomain()));
 }
 
 class RavenTagRepositoryHandle(RavenTagRepositorySubscription subscription)

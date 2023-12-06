@@ -8,7 +8,6 @@
 
 @inject ICharacterRepository repository
 @inject ITagRepository tagRepository
-@inject NavigationManager nav
 
 <PageTitle>Charaktere | Splitracker</PageTitle>
 
@@ -94,7 +93,7 @@
     DisableRipple="@true"
     StartIcon="@Icons.Material.Filled.Add"
     Color="@Color.Primary"
-    @onclick="gotoNew"/>
+    Href="/Characters/New"/>
 
 @code {
     static List<BreadcrumbItem> breadcrumbs => [new("Charaktere", "/", icon: Icons.Material.Filled.EmojiPeople!)];
@@ -178,10 +177,4 @@
         var state = await AuthenticationState;
         await repository.ApplyAsync(state.User, command);
     }
-
-    void gotoNew()
-    {
-        nav.NavigateTo("/Characters/New");
-    }
-
 }

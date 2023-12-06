@@ -103,7 +103,8 @@ class RavenTimelineRepository(
 
         log.Log(LogLevel.Debug, "Searching for characters for timeline {TimelineId} returned {Count} results. UserId={UserId}",
             timelineId, dbCharacters.Count, userId);
-        return dbCharacters.Select(c => c.ToDomain()).OrderBy(c => c.Name).ToImmutableArray();
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, dbCharacters);
+        return dbCharacters.Select(c => c.ToDomain(templates)).OrderBy(c => c.Name).ToImmutableArray();
     }
     
     #endregion
@@ -464,6 +465,7 @@ class RavenTimelineRepository(
                 .Select(k => k.CharacterId)
                 .Where(cid => cid != null)
                 .Concat(dbTimeline.ReadyCharacterIds));
-        return dbTimeline.ToDomain(group, characters.Values);
+        var templates = await RavenCharacterRepository.FetchTemplatesAsync(session, characters.Values);
+        return dbTimeline.ToDomain(group, characters.Values, templates);
     }
 }

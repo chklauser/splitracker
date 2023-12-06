@@ -77,7 +77,7 @@
 
         var permissions = CharacterPermissions.ViewInfo;
 
-        if (!Flags.StageMode || !character.IsOpponent)
+        if (!Flags.StageMode || !(character.IsOpponent))
         {
             permissions |= CharacterPermissions.ViewStats;
             permissions |= CharacterPermissions.EditResources;
@@ -103,14 +103,14 @@
         if (gmOfTheSameGroup)
         {
             // Allow timeline interactions for all friendly characters
-            if (!Flags.StageMode || !character.IsOpponent)
+            if (!Flags.StageMode || !(character.IsOpponent))
             {
                 permissions |= CharacterPermissions.ViewStats;
                 permissions |= CharacterPermissions.InteractOnTimeline;
             }
             
             // Allow resource editing (LP/FO) for all friendly NPCs (GM-owned)
-            if(!Flags.StageMode || (!character.IsOpponent && userId == character.UserId))
+            if(!Flags.StageMode || (!(character.IsOpponent) && userId == character.UserId))
             {
                 permissions |= CharacterPermissions.EditResources;
             }
