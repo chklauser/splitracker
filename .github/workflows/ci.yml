@@ -42,7 +42,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration=Release --no-restore --verbosity=normal /p:Version=${{ steps.choose_version.outputs.version }}
       - name: Test
-        run: dotnet test --configuration=Release --no-restore --no-build --verbosity=normal /p:Version=${{ steps.choose_version.outputs.version }}
+        run: dotnet test --configuration=Release --no-restore --no-build --verbosity=normal --results-directory ./TestResults /p:Version=${{ steps.choose_version.outputs.version }}
       - name: Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()
