@@ -18,9 +18,9 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2 
+      - uses: actions/checkout@v4
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           # NET 6 for Raven tests
           dotnet-version: |
@@ -91,7 +91,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install helm
         uses: azure/setup-helm@v3
         with:
@@ -127,7 +127,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install helm
         uses: azure/setup-helm@v3
         with:
