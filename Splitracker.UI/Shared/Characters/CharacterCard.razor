@@ -7,6 +7,7 @@
 @implements IDisposable
 @implements ICharacterCommandRouter
 @inject NavigationManager nav
+@inject IDialogService dialogs
 
 @if (Permissions.HasFlag(CharacterPermissions.ViewStats))
 {
@@ -32,10 +33,42 @@
                 <CardHeaderActions>
                     @if (Permissions.HasFlag(CharacterPermissions.EditStats))
                     {
-                        <MudIconButton
-                            Icon="@Icons.Material.Filled.Edit"
-                            Color="Color.Primary"
-                            Href="@($"/Characters/{character.ImplicitId}/Edit")"/>
+                        <MudMenu
+                            Icon="@Icons.Material.Filled.MoreVert">
+                            <MudMenuItem
+                                Icon="@Icons.Material.Filled.Edit"
+                                IconColor="Color.Primary"
+                                Href="@($"/Characters/{character.ImplicitId}/Edit")">
+                                Editieren
+                            </MudMenuItem>
+                            @if (character.TemplateId == null)
+                            {
+                                <MudMenuItem
+                                    Icon="@Icons.Material.Filled.AddLink"
+                                    OnAction="quickInstantiate">
+                                    Instanz erstellen
+                                </MudMenuItem>
+                            }
+                            else
+                            {
+                                <MudMenuItem
+                                    Icon="@Icons.Material.Filled.LinkOff"
+                                    OnAction="quickUnlink">
+                                    Unabhängig machen
+                                </MudMenuItem>
+                            }
+                            <MudMenuItem
+                                Icon="@Icons.Material.Filled.ContentCopy"
+                                OnAction="@quickClone">
+                                Klonen
+                            </MudMenuItem>
+                            <MudMenuItem
+                                Icon="@Icons.Material.Filled.DeleteForever"
+                                IconColor="Color.Secondary"
+                                OnAction="@quickDelete">
+                                Löschen
+                            </MudMenuItem>
+                        </MudMenu>
                     }
                 </CardHeaderActions>
             </MudCardHeader>
@@ -94,7 +127,10 @@
                 <MudCardActions>
                     @foreach (var shorthand in character.ActionShorthands.Values.OrderBy(v => v.Type))
                     {
-                        <CharacterActionButton @key="shorthand.Id" Action="@shorthand" OnCostsFocus="costsFocus" />
+                        <CharacterActionButton
+                            @key="shorthand.Id"
+                            Action="@shorthand"
+                            OnCostsFocus="costsFocus"/>
                     }
                 </MudCardActions>
             }
@@ -117,7 +153,7 @@
 
     [CascadingParameter]
     public required ICharacterCommandRouter OuterCommandRouter { get; set; }
-    
+
     int activePanelIndex = 0;
 
     ICharacterHandle? lastHandle;
@@ -167,7 +203,11 @@
             Domain.Commands.ShortRest shortRest => shortRest with { CharacterId = character.Id },
             UseSplinterPoints useSplinterPoints => useSplinterPoints with { CharacterId = character.Id },
             ResetSplinterPoints resetSplinterPoints => resetSplinterPoints with { CharacterId = character.Id },
-            _ => throw new ArgumentOutOfRangeException(nameof(command))
+            CloneCharacter clone => clone with { CharacterId = character.Id },
+            CreateCharacterInstance createInstance => createInstance,
+            DeleteCharacter delete => delete with { CharacterId = character.Id },
+            UnlinkFromTemplate unlink => unlink with { CharacterId = character.Id },
+            _ => throw new ArgumentOutOfRangeException(nameof(command)),
         };
         await OuterCommandRouter.ApplyAsync(command);
     }
@@ -186,8 +226,39 @@
     {
         activePanelIndex = 1;
         focusEditSuggestion = focusCost;
-        
+
         return Task.CompletedTask;
+    }
+
+    async Task quickInstantiate()
+    {
+        var template = character.TemplateId ?? character.Id;
+        await ApplyAsync(new CreateCharacterInstance(template, null));
+    }
+
+    async Task quickClone()
+    {
+        await ApplyAsync(new CloneCharacter(null!));
+    }
+
+    async Task quickDelete()
+    {
+        var result = await dialogs.ShowMessageBox(new() {
+            Title = "Charakter löschen",
+            Message = $"Willst du {character.Name} wirklich löschen?",
+            CancelText = "Abbrechen",
+            YesText = "Löschen",
+        });
+
+        if (result is true)
+        {
+            await ApplyAsync(new DeleteCharacter(null!));
+        }
+    }
+
+    Task quickUnlink()
+    {
+        return ApplyAsync(new UnlinkFromTemplate(null!, character.Name));
     }
 
 }
