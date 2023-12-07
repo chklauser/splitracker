@@ -111,7 +111,9 @@
     }
     
     [Parameter]
-    public PointsVec? InitialValue { get; set; }
+    public PointsVec EditSuggestion { get; set; }
+    [Parameter]
+    public EventCallback<PointsVec> EditSuggestionChanged { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -141,12 +143,13 @@
 
     [SuppressMessage("ReSharper", "InconsistentNaming")] string _expression = string.Empty;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        base.OnParametersSet();
-        if (InitialValue != null)
+        await base.OnParametersSetAsync();
+        if (EditSuggestion != default)
         {
-            Value = InitialValue.Value;
+            Value = EditSuggestion;
+            await EditSuggestionChanged.InvokeAsync(default);
         }
     }
 

@@ -69,7 +69,7 @@
     public IImmutableList<string> SelectedTagIds { get; set; } = [];
 
     [Parameter]
-    public EventCallback<IImmutableList<string>>? SelectedTagIdsChanged { get; set; }
+    public EventCallback<IImmutableList<string>> SelectedTagIdsChanged { get; set; }
 
     bool expanded;
     readonly List<Tag> selectedTags = [];
@@ -146,7 +146,7 @@
 
     void onSelectedTagsChanged()
     {
-        if (SelectedTagIdsChanged is { } notify)
+        if (SelectedTagIdsChanged is { HasDelegate: true } notify)
         {
             InvokeAsync(() => notify.InvokeAsync(selectedTags.Select(t => t.Id).ToImmutableArray()));
         }

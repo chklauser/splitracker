@@ -25,7 +25,8 @@
                 CurrentPoints="@points"
                 LineCapacity="@LineCapacity(baseCapacity)"
                 TotalCapacity="@TotalCapacity(baseCapacity)"
-                InitialValue="@EditSuggestion"
+                @bind-EditSuggestion:get="EditSuggestion"
+                @bind-EditSuggestion:set="EditSuggestionChanged"
                 Type="@Type"/>
             @foreach (var (channeling, idx) in channelings.Enumerated())
             {
@@ -78,6 +79,9 @@
     
     [Parameter]
     public PointsVec EditSuggestion { get; set; }
+    
+    [Parameter]
+    public EventCallback<PointsVec> EditSuggestionChanged { get; set; }
     
     [Parameter]
     [EditorRequired]
