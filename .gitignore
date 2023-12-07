@@ -39,6 +39,7 @@ bld/
 TestResult.xml
 nunit-*.xml
 TestResults/
+!TestResults/.gitkeep
 
 # Benchmark Results
 BenchmarkDotNet.Artifacts/
