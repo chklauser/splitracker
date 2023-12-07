@@ -2,6 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <VSTestLogger>trx;LogFileName=$(MSBuildProjectName).trx</VSTestLogger>
+    <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
   </PropertyGroup>
 </Project>
