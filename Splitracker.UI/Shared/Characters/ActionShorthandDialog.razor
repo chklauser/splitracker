@@ -4,13 +4,14 @@
         <MudText
             Typo="Typo.h5">
             @typeObject
+            <text> </text>
             @if (Shorthand is { Name: { } shorthandName })
             {
-                <text>@shorthandName ändern</text>
+                <text>@(shorthandName) ändern</text>
             }
             else
             {
-                <text> hinzufügen</text>
+                <text>hinzufügen</text>
             }
         </MudText>
     </TitleContent>
@@ -174,7 +175,8 @@
     </DialogContent>
     <DialogActions>
         <MudButton
-            OnClick="@cancel">
+            OnClick="@cancel"
+            tabindex="500">
             Abbrechen
         </MudButton>
         <MudButton
