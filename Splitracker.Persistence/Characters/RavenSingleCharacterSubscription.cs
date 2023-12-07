@@ -14,14 +14,20 @@ sealed class RavenSingleCharacterSubscription(IDocumentStore store, string chara
     : SubscriptionBase<RavenSingleCharacterSubscription, Character,
         RavenSingleCharacterHandle>(log, character, store, [characterId])
 {
-    public static async ValueTask<RavenSingleCharacterSubscription> OpenAsync(
+    public static async ValueTask<RavenSingleCharacterSubscription?> OpenAsync(
         IDocumentStore store,
         string characterId,
         ILogger<RavenCharacterRepository> log
     )
     {
         using var session = store.OpenAsyncSession();
-        return new(store, characterId, await loadCharacter(session, characterId), log);
+        var character = await loadCharacter(session, characterId);
+        if (character == null)
+        {
+            return null;
+        }
+        
+        return new(store, characterId, character, log);
     }
     
     protected override IEnumerable<string> DocumentIdsToSubscribeToFor(Character value)
@@ -38,15 +44,15 @@ sealed class RavenSingleCharacterSubscription(IDocumentStore store, string chara
     {
         var id = characterId;
         using var session = Store.OpenAsyncSession();
-        return await loadCharacter(session, id);
+        return await loadCharacter(session, id) ?? throw new InvalidOperationException("Character " + id + " cannot be refreshed. Not found.");
     }
 
-    static async Task<Character> loadCharacter(IAsyncDocumentSession session, string id)
+    static async Task<Character?> loadCharacter(IAsyncDocumentSession session, string id)
     {
         var model = await session.LoadAsync<Model.Character>(id);
         if (model == null)
         {
-            throw new InvalidOperationException("Character with ID " + id + " cannot be refreshed.");
+            return null;
         }
 
         Model.Character? templateCharacter;

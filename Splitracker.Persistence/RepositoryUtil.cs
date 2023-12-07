@@ -10,7 +10,7 @@ static class RepositoryUtil
     public static async Task<THandle?> TryCreateSubscription<TKey, TSubscription, THandle>(
         this ConcurrentDictionary<TKey, Task<TSubscription>> handles,
         TKey key,
-        Func<Task<TSubscription>> createSubscription,
+        Func<Task<TSubscription?>> createSubscription,
         Action onExistingSubscription,
         Func<TSubscription, THandle> tryGetHandle,
         Action onRetry
@@ -27,6 +27,11 @@ static class RepositoryUtil
                 try
                 {
                     var subscription = await createSubscription();
+                    if (subscription == null)
+                    {
+                        return null;
+                    }
+                    
                     subscription.Disposed += (_, _) =>
                     {
                         _ = handles.TryRemove(new(key, ourTask.Task));

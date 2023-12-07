@@ -90,7 +90,7 @@ public record EditCharacterInstance(string CharacterId, string Name) : UpsertCha
     protected override string OptionalCharacterId => CharacterId;
 }
 
-public record CreateCharacterInstance(string TemplateId, string Name) : UpsertCharacterInstance(Name)
+public record CreateCharacterInstance(string TemplateId, string? Name) : UpsertCharacterInstance(Name)
 {
     protected override string? OptionalCharacterId => null;
 }

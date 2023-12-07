@@ -10,6 +10,7 @@ public static class UiServiceProviderConfig
         .AddScoped<FlagContextHolder>()
         .AddSingleton<TimelineLogic>()
         .AddScoped<ClipboardService>()
+        .AddSingleton<NameGenerationService>()
         .AddCascadingValue(sp => sp.GetRequiredService<FlagContextHolder>().Source)
         .AddCascadingValue<SessionContext>(_ => new());
 }

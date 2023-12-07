@@ -19,14 +19,15 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
     {
         var repo = new RavenCharacterRepository(CurrentStore,
             NullLogger<RavenCharacterRepository>.Instance,
-            UserRepository);
+            UserRepository,
+            new());
         await repo.StartAsync(default);
     }
 
     [SetUp]
     public async Task SetUp()
     {
-        repository = new(CurrentStore, NullLogger<RavenCharacterRepository>.Instance, UserRepository);
+        repository = new(CurrentStore, NullLogger<RavenCharacterRepository>.Instance, UserRepository, new());
         principal = FakeUserPrincipal("u1", "CharUser");
         await WipeCollectionAsync<Model.Character>();
         WaitForIndexing();

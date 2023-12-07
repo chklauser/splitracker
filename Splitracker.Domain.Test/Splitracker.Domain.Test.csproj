@@ -2,8 +2,8 @@
 
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
-        <IsTestProject>true</IsTestProject>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,12 +13,8 @@
         <PackageReference Include="NUnit3TestAdapter" />
         <PackageReference Include="NUnit.Analyzers" />
         <PackageReference Include="coverlet.collector" />
-        <PackageReference Include="RavenDB.Embedded" />
-        <PackageReference Include="RavenDB.TestDriver" />
     </ItemGroup>
-
     <ItemGroup>
-      <ProjectReference Include="..\Splitracker.Persistence\Splitracker.Persistence.csproj" />
+        <ProjectReference Include="..\Splitracker.Domain\Splitracker.Domain.csproj" />
     </ItemGroup>
-
 </Project>

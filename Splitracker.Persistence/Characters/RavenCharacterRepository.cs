@@ -25,7 +25,8 @@ namespace Splitracker.Persistence.Characters;
 class RavenCharacterRepository(
     IDocumentStore store,
     ILogger<RavenCharacterRepository> log,
-    IUserRepository repository
+    IUserRepository repository,
+    NameGenerationService nameGeneration
 )
     : ICharacterRepository, IHostedService
 {
@@ -198,17 +199,25 @@ class RavenCharacterRepository(
                     return;
                 }
 
-                await session.StoreAsync(new Character(CharacterDocIdPrefix(userId), create.Name, new(), new()) {
+                if (create is not { Name: { } instanceName })
+                {
+                    var otherInstanceNames = await session.Query<Character, Character_ByTemplateId>()
+                        .Customize(opt => opt.NoTracking())
+                        .Where(c => c.TemplateId == create.TemplateId)
+                        .Select(c => c.Name)
+                        .ToListAsync();
+                    var scheme = nameGeneration.InferNamingScheme(otherInstanceNames ?? []);
+                    instanceName = scheme.GenerateNext();
+                }
+                
+                await session.StoreAsync(new Character(CharacterDocIdPrefix(userId), instanceName, new(), new()) {
                     TemplateId = create.TemplateId,
                     InsertedAt = DateTimeOffset.UtcNow,
                 });
                 break;
             case UnlinkFromTemplate unlink:
-                var flattened = model!.ToDomain(template!).ToDbModel();
-                flattened.TemplateId = null;
-                flattened.Name = unlink.Name;
                 session.Advanced.Evict(model);
-                await session.StoreAsync(flattened);
+                await unlinkAsync(session, model, unlink.Name, template);
                 break;
             case StopChanneling { Pool: PoolType.Lp, Id: var channelingId }:
                 stopChanneling(model!.Lp, model.Lp.ToDomainLp(template?.Lp.BaseCapacity ?? 1), channelingId);
@@ -232,11 +241,41 @@ class RavenCharacterRepository(
                 model.Fo.Points.Exhausted = 0;
                 break;
             case DeleteCharacter:
+                await foreach (var instance in session.Query<Character, Character_ByTemplateId>()
+                    .Customize(opt => opt.NoTracking())
+                    .Where(c => c.TemplateId == model!.Id)
+                    .AsAsyncEnumerable())
+                {
+                    await unlinkAsync(session, instance, null, model);
+                }
                 session.Delete(model);
                 break;
             case CloneCharacter:
+                // Generate new name
+                string newInstanceName;
+                if (model!.TemplateId == null)
+                {
+                    var relatedNames = await byNameSearch(session, nameGeneration.InferTemplateName(model.Name), userId)
+                        .SelectFields<string>(nameof(Character.Name))
+                        .Take(100)
+                        .ToListAsync();
+                    var baseName = nameGeneration.InferTemplateName(model.Name);
+                    var scheme = nameGeneration.InferNamingScheme(relatedNames ?? []);
+                    newInstanceName = scheme.GenerateNext().Replace("\uFFFC", baseName);
+                }
+                else
+                {
+                    var existingNames = await session.Query<Character>()
+                        .Customize(opt => opt.NoTracking())
+                        .Where(c => c.Id.StartsWith(CharacterDocIdPrefix(userId)))
+                        .Select(c => c.Name)
+                        .ToListAsync();
+                    var scheme = nameGeneration.InferNamingScheme(existingNames ?? []);
+                    newInstanceName = scheme.GenerateNext();
+                }
+                
                 await session.StoreAsync(
-                    new Character(CharacterDocIdPrefix(userId), model!.Name, 
+                    new Character(CharacterDocIdPrefix(userId), newInstanceName, 
                         new() {BaseCapacity = model.Lp.BaseCapacity},
                         new() {BaseCapacity = model.Fo.BaseCapacity}) {
                         CustomColor = model.CustomColor,
@@ -253,6 +292,23 @@ class RavenCharacterRepository(
         }
 
         await session.SaveChangesAsync();
+    }
+
+    static async Task unlinkAsync(
+        IAsyncDocumentSession session,
+        Character? model,
+        string? newName,
+        Character? template
+    )
+    {
+        var flattened = model!.ToDomain(template!).ToDbModel();
+        flattened.TemplateId = null;
+        if (newName != null)
+        {
+            flattened.Name = newName;
+        }
+
+        await session.StoreAsync(flattened);
     }
 
     public async Task ApplyAsync(ClaimsPrincipal principal, DeleteTag deleteTagCommand)
@@ -278,10 +334,7 @@ class RavenCharacterRepository(
         var userId = await repository.GetUserIdAsync(principal);
         
         using var session = store.OpenAsyncSession();
-        var dbCharacters = await session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
-            .WhereStartsWith(x => x.Id, CharacterDocIdPrefix(userId))
-            .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
-            .Take(100)
+        var dbCharacters = await byNameSearch(session, searchTerm, userId)
             .ToListAsync(cancellationToken);
         if (dbCharacters == null)
         {
@@ -293,6 +346,14 @@ class RavenCharacterRepository(
             dbCharacters.Count, userId);
         var templates = await FetchTemplatesAsync(session, dbCharacters);
         return dbCharacters.Select(c => c.ToDomain(templates)).OrderBy(c => c.Name).ToImmutableArray();
+    }
+
+    static IAsyncDocumentQuery<Character> byNameSearch(IAsyncDocumentSession session, string searchTerm, string userId)
+    {
+        return session.Advanced.AsyncDocumentQuery<Character, Character_ByName>()
+            .WhereStartsWith(x => x.Id, CharacterDocIdPrefix(userId))
+            .Search(c => c.Name, $"{searchTerm}*", SearchOperator.And)
+            .Take(100);
     }
 
     internal static async Task<IReadOnlyDictionary<string, Character>> FetchTemplatesAsync(IAsyncDocumentSession session, IEnumerable<Character> characters)
@@ -349,7 +410,7 @@ class RavenCharacterRepository(
             onRetry: () => log.Log(LogLevel.Information,
                 "Single character subscription for {UserId} was disposed of. Retrying.",
                 userId)
-        ) ?? throw new InvalidOperationException("Failed to open a handle.");
+        );
     }
 
     internal static string CharacterDocIdPrefix(string userId)
@@ -360,6 +421,7 @@ class RavenCharacterRepository(
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await new Character_ByName().ExecuteAsync(store, token: cancellationToken);
+        await new Character_ByTemplateId().ExecuteAsync(store, token: cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
