@@ -1,8 +1,6 @@
 ﻿@using Splitracker.Domain
 @using Splitracker.Domain.Commands
 @using System.Diagnostics.CodeAnalysis
-@using System.Collections.Immutable
-@using MudBlazor.Utilities
 
 @implements IDisposable
 @implements ICharacterCommandRouter
@@ -124,7 +122,7 @@
 
             @if (ShowActions && Permissions.HasFlag(CharacterPermissions.EditResources) && character.ActionShorthands.Count > 0)
             {
-                <MudCardActions>
+                <MudCardActions Class="flex-wrap">
                     @foreach (var shorthand in character.ActionShorthands.Values.OrderBy(v => v.Type))
                     {
                         <CharacterActionButton
