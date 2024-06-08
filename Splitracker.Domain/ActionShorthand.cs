@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Splitracker.Domain;
@@ -95,19 +96,19 @@ public partial record DiceExpression(
             return null;
         }
 
-        if (m.Groups["const"] is { Success: true, ValueSpan: var rawConst } && int.TryParse(rawConst, out var @const))
+        if (m.Groups["const"] is { Success: true, ValueSpan: var rawConst } && int.TryParse(rawConst, provider: CultureInfo.InvariantCulture, out var @const))
         {
             return new(0, 0, @const);
         }
 
         var numDice =
             m.Groups["numd"] is { Success: true, ValueSpan: var rawNumDice } &&
-            int.TryParse(rawNumDice, out var parsedNumDice)
+            int.TryParse(rawNumDice, provider: CultureInfo.InvariantCulture, out var parsedNumDice)
                 ? parsedNumDice
                 : 1;
         var numSides =
             m.Groups["nums"] is { Success: true, ValueSpan: var rawNumSides } &&
-            int.TryParse(rawNumSides, out var parsedNumSides)
+            int.TryParse(rawNumSides, provider: CultureInfo.InvariantCulture, out var parsedNumSides)
                 ? parsedNumSides
                 : 6;
         var sign =
@@ -116,7 +117,7 @@ public partial record DiceExpression(
                 : 1;
         var bonus =
             m.Groups["bonus"] is { Success: true, ValueSpan: var rawBonus } &&
-            int.TryParse(rawBonus, out var parsedBonus)
+            int.TryParse(rawBonus, provider: CultureInfo.InvariantCulture, out var parsedBonus)
                 ? parsedBonus * sign
                 : 0;
 

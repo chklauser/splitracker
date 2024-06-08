@@ -1,13 +1,15 @@
-﻿using Splitracker.Domain;
+﻿using System.Diagnostics.CodeAnalysis;
+using Splitracker.Domain;
 using Splitracker.Persistence.Generic;
 
 namespace Splitracker.Persistence.Characters;
 
 /// <summary>
-/// Mutable container for a <see cref="Character"/>. Triggers the <see cref="Updated"/> event whenever
+/// Mutable container for a <see cref="Character"/>. Triggers the <c>Updated</c> event whenever
 /// anything about the character changes.
 /// </summary>
-class RavenCharacterHandle(Character character)
+[SuppressMessage("Design", "MA0095:A class that implements IEquatable<T> should override Equals(object)")]
+sealed class RavenCharacterHandle(Character character)
     : PrefixHandleBase<RavenCharacterHandle, Character>(character),
         IPrefixHandle<RavenCharacterHandle, Character>,
         ICharacterHandle

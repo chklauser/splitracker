@@ -165,7 +165,7 @@
                     Label="Tag hinzufügen"
                     ValueChanged="@addTag"
                     Clearable="@true"
-                    OnClearButtonClick="@(() => tagSearchField!.Value = null!)"
+                    OnClearButtonClick="@(async () => await tagSearchField!.Clear())"
                     SearchFunc="@searchTags"
                     ToStringFunc="@(t => t is { Name: { } n } ? n : "")"
                     OnKeyUp="@tagSearchKeyUp"
@@ -448,7 +448,7 @@
         newTags.Remove((Tag)chip.Value);
         if (tagSearchField != null)
         {
-            tagSearchField.Value = null!;
+            _ = tagSearchField.Clear(); 
         }
     }
 

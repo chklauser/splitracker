@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -137,7 +138,7 @@ partial class TimelinePreview
     
     #region Action Card Data
 
-    readonly Dictionary<string, CharacterActionData> characterActionData = new();
+    readonly Dictionary<string, CharacterActionData> characterActionData = new(StringComparer.Ordinal);
 
     CharacterActionData getCharacterActionData(Character character) =>
         characterActionData.TryGetValue(character.Id, out var data) ? data : CharacterActionData.Default;
@@ -189,7 +190,7 @@ partial class TimelinePreview
             if(tick.At != currentTick)
             {
                 currentTick = tick.At;
-                yield return currentTick.ToString();
+                yield return currentTick.ToString(CultureInfo.InvariantCulture);
             }
             else
             {
@@ -211,7 +212,7 @@ partial class TimelinePreview
         var currentTick = startTick - 1;
         var nextOffset = 0;
         var nextTrack = 1;
-        var effectTracks = new Dictionary<string, int>();
+        var effectTracks = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var tick in timeline)
         {
             if (tick.At > currentTick + 1)

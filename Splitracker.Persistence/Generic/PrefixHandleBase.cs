@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Splitracker.Persistence.Generic;
 
+[SuppressMessage("Design", "MA0077:A class that provides Equals(T) should implement IEquatable<T>")]
 abstract class PrefixHandleBase<TSelf, TValue>(TValue value) : IDisposable, IEquatable<TSelf>
     where TSelf : PrefixHandleBase<TSelf, TValue>
     where TValue : class
@@ -47,7 +49,7 @@ abstract class PrefixHandleBase<TSelf, TValue>(TValue value) : IDisposable, IEqu
 
     public override int GetHashCode()
     {
-        return Id.GetHashCode();
+        return Id.GetHashCode(StringComparison.Ordinal);
     }
 
     public static bool operator ==(PrefixHandleBase<TSelf, TValue>? left, PrefixHandleBase<TSelf, TValue>? right)

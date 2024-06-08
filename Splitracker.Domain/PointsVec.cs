@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Splitracker.Domain;
@@ -87,7 +88,7 @@ public readonly partial record struct PointsVec(int Channeled, int Exhausted, in
                     currentType = PointType.V;
                     break;
                 default:
-                    if (int.TryParse(input.Slice(match.Index, match.Length), out var numericValue))
+                    if (int.TryParse(input.Slice(match.Index, match.Length), provider: CultureInfo.InvariantCulture, out var numericValue))
                     {
                         vec = currentType switch
                         {

@@ -77,7 +77,7 @@ public static class PersistenceServiceProviderConfig
         store.Conventions.FindCollectionName = type =>
         {
             var defaultName = DocumentConventions.DefaultGetCollectionName(type);
-            return defaultName.EndsWith("Models") ? $"{defaultName[..^6]}s" : defaultName;
+            return defaultName.EndsWith("Models", StringComparison.Ordinal) ? $"{defaultName[..^6]}s" : defaultName;
         };
     }
 

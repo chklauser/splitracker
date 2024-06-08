@@ -23,13 +23,13 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
     bool lifetimeBoundToHandles;
     IImmutableDictionary<string, IDisposable> ravenSubscriptions;
 
-    public SubscriptionBase(ILogger log, TValue initialValue, IDocumentStore store, IEnumerable<string> documentIdsToSubscribeTo)
+    protected SubscriptionBase(ILogger log, TValue initialValue, IDocumentStore store, IEnumerable<string> documentIdsToSubscribeTo)
     {
         Log = log;
         Store = store;
         CurrentValue = initialValue;
         ravenSubscriptions = documentIdsToSubscribeTo
-            .Distinct()
+            .Distinct(StringComparer.Ordinal)
             .ToImmutableDictionary(
                 id => id,
                 id => store.Changes().ForDocument(id).Subscribe(this)
@@ -148,9 +148,9 @@ where TSelf : SubscriptionBase<TSelf, TValue, THandle>
         try
         {
             var existingSubscriptions = ravenSubscriptions;
-            var existingKeys = existingSubscriptions.Keys.ToHashSet();
+            var existingKeys = existingSubscriptions.Keys.ToHashSet(StringComparer.Ordinal);
             var requiredKeys = DocumentIdsToSubscribeToFor(value)
-                .ToHashSet();
+                .ToHashSet(StringComparer.Ordinal);
             foreach (var key in requiredKeys.ToList())
             {
                 if (existingKeys.Remove(key))

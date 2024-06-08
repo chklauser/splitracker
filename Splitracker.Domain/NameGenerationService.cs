@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -53,7 +54,9 @@ public partial class NameGenerationService
           static (string Name, Scheme? Scheme, int Parsed) parsed(string name)
           {
                var match = suffixPattern().Match(name);
-               if (match.Groups["num"] is { Success: true } num && int.TryParse(num.ValueSpan, out var parsed))
+               if (match.Groups["num"] is { Success: true } num && int.TryParse(num.ValueSpan,
+                    provider: CultureInfo.InvariantCulture,
+                    out var parsed))
                {
                     return (name, Scheme.Number, parsed);
                }

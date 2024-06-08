@@ -30,7 +30,7 @@ class RavenGroupRepository(
 
     #region Reading
 
-    readonly ConcurrentDictionary<string, Task<RavenGroupSubscription>> handles = new();
+    readonly ConcurrentDictionary<string, Task<RavenGroupSubscription>> handles = new(StringComparer.Ordinal);
 
     public async Task<IGroupHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
@@ -157,7 +157,7 @@ class RavenGroupRepository(
     {
         var userId = await repository.GetUserIdAsync(principal);
 
-        if (!character.Id.StartsWith(RavenCharacterRepository.CharacterDocIdPrefix(userId)))
+        if (!character.Id.StartsWith(RavenCharacterRepository.CharacterDocIdPrefix(userId), StringComparison.Ordinal))
         {
             throw new DataAccessControlException(character.Id, userId);
         }
@@ -218,7 +218,7 @@ class RavenGroupRepository(
             group.Members.Add(new() { UserId = userId, Role = Model.GroupRole.Member });
         }
         
-        if (group.CharacterIds.Contains(characterId))
+        if (group.CharacterIds.Contains(characterId, StringComparer.Ordinal))
         {
             log.Log(LogLevel.Warning, "Character {CharacterId} is already a member of group {GroupId}", characterId, groupId);
         }
@@ -246,7 +246,7 @@ class RavenGroupRepository(
             throw new DataAccessControlException("User is not a member of the group.", group.Id, userId);
         }
 
-        if (role != Model.GroupRole.GameMaster && !character.Id.StartsWith(characterDocIdPrefix))
+        if (role != Model.GroupRole.GameMaster && !character.Id.StartsWith(characterDocIdPrefix, StringComparison.Ordinal))
         {
             throw new DataAccessControlException($"User is not allowed to remove character {character.Id} from group.", group.Id, userId);
         }
@@ -270,7 +270,7 @@ class RavenGroupRepository(
     {
         // List of character IDs does not contain duplicates
         var characterIds = dbGroup.CharacterIds;
-        if (characterIds.Count != characterIds.Distinct().Count())
+        if (characterIds.Count != characterIds.Distinct(StringComparer.Ordinal).Count())
         {
             throw new InvalidOperationException(
                 $"Group {dbGroup.Id} has duplicate character IDs in list of characters.");

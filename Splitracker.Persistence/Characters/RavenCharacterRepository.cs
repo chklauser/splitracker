@@ -32,7 +32,7 @@ class RavenCharacterRepository(
 {
     internal const string CollectionName = "Characters";
 
-    readonly ConcurrentDictionary<string, Task<RavenCharacterRepositorySubscription>> handles = new();
+    readonly ConcurrentDictionary<string, Task<RavenCharacterRepositorySubscription>> handles = new(StringComparer.Ordinal);
 
     bool isOwner(string characterId, string userId) =>
         characterId.StartsWith(CharacterDocIdPrefix(userId), StringComparison.Ordinal);
@@ -261,7 +261,7 @@ class RavenCharacterRepository(
                         .ToListAsync();
                     var baseName = nameGeneration.InferTemplateName(model.Name);
                     var scheme = nameGeneration.InferNamingScheme(relatedNames ?? []);
-                    newInstanceName = scheme.GenerateNext().Replace("\uFFFC", baseName);
+                    newInstanceName = scheme.GenerateNext().Replace("\uFFFC", baseName, StringComparison.Ordinal);
                 }
                 else
                 {
@@ -320,7 +320,7 @@ class RavenCharacterRepository(
         var affectedCharacters = await session.Query<Character>()
             .Where(c => 
                 c.Id.StartsWith(CharacterDocIdPrefix(userId))
-                && c.TagIds.Contains(deleteTagCommand.TagId))
+                && c.TagIds.Contains(deleteTagCommand.TagId, StringComparer.Ordinal))
             .ToListAsync();
         foreach (var character in affectedCharacters)
         {
@@ -358,7 +358,7 @@ class RavenCharacterRepository(
 
     internal static async Task<IReadOnlyDictionary<string, Character>> FetchTemplatesAsync(IAsyncDocumentSession session, IEnumerable<Character> characters)
     {
-        var templateIds = characters.Select(c => c.TemplateId).OfType<string>().ToHashSet();
+        var templateIds = characters.Select(c => c.TemplateId).OfType<string>().ToHashSet(StringComparer.Ordinal);
         if (templateIds.Count == 0)
         {
             return ImmutableDictionary<string, Character>.Empty;
@@ -390,12 +390,12 @@ class RavenCharacterRepository(
         ) ?? throw new InvalidOperationException("Failed to open a handle.");
     }
 
-    readonly ConcurrentDictionary<string, Task<RavenSingleCharacterSubscription>> singleHandles = new();
+    readonly ConcurrentDictionary<string, Task<RavenSingleCharacterSubscription>> singleHandles = new(StringComparer.Ordinal);
 
     public async Task<ICharacterHandle?> OpenSingleAsync(ClaimsPrincipal principal, string characterId)
     {
         var userId = await repository.GetUserIdAsync(principal);
-        if (!characterId.StartsWith(CharacterDocIdPrefix(userId)))
+        if (!characterId.StartsWith(CharacterDocIdPrefix(userId), StringComparison.Ordinal))
         {
             return null;
         }

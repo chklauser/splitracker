@@ -9,7 +9,7 @@ internal class SectionRegistry
 {
     static readonly ConditionalWeakTable<Dispatcher, SectionRegistry> Registries = new();
 
-    readonly Dictionary<string, List<Action<RenderFragment?>>> subscriptions = new();
+    readonly Dictionary<string, List<Action<RenderFragment?>>> subscriptions = new(StringComparer.Ordinal);
 
     public static SectionRegistry GetRegistry(RenderHandle renderHandle)
     {

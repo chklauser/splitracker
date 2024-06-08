@@ -36,14 +36,14 @@ static class CharacterModelMapper
         var template = templateModel?.ToDomain((Character?)null) ?? Prototype;
         var actionShorthands = model.ActionShorthands
             .Select(s => s.ToDomain())
-            .ToDictionary(s => s.Id);
+            .ToDictionary(s => s.Id, comparer: StringComparer.Ordinal);
         foreach (var templateActionShorthand in template.ActionShorthands.Values)
         {
             actionShorthands.TryAdd(templateActionShorthand.Id, templateActionShorthand);
         }
 
         return new(model.Id,
-            model.Name.Replace("\uFFFC", template.Name),
+            model.Name.Replace("\uFFFC", template.Name, StringComparison.Ordinal),
             model.CustomColor ?? template.CustomColor,
             model.Lp.ToDomainLp(template.Lp.BaseCapacity),
             model.Fo.ToDomainFo(template.Fo.BaseCapacity),

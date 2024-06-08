@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ class RavenTagRepository(IDocumentStore store, ILogger<RavenTagRepository> log, 
     : ITagRepository
 {
     const string CollectionName = "Tags";
-    readonly ConcurrentDictionary<string, Task<RavenTagRepositorySubscription>> handles = new();
+    readonly ConcurrentDictionary<string, Task<RavenTagRepositorySubscription>> handles = new(StringComparer.Ordinal);
 
     public async Task<ITagRepositoryHandle> OpenAsync(ClaimsPrincipal principal)
     {
@@ -125,7 +126,8 @@ class RavenTagRepositoryHandle(RavenTagRepositorySubscription subscription)
     public IReadOnlyList<ITagHandle> Tags => Subscription.Handles;
 }
 
-class RavenTagHandle(Tag value) : PrefixHandleBase<RavenTagHandle, Tag>(value), IPrefixHandle<RavenTagHandle, Tag>, ITagHandle
+[SuppressMessage("Design", "MA0095:A class that implements IEquatable<T> should override Equals(object)")]
+sealed class RavenTagHandle(Tag value) : PrefixHandleBase<RavenTagHandle, Tag>(value), IPrefixHandle<RavenTagHandle, Tag>, ITagHandle
 {
     public static RavenTagHandle Create(Tag value) => new(value);
 

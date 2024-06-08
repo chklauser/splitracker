@@ -1,0 +1,28 @@
+﻿# noinspection EditorConfigKeyCorrectness
+[*.{cs,cshtml,razor}]
+# MA0048: File may only contain a single top-level type
+dotnet_diagnostic.MA0048.severity = none
+
+# MA0008: Structs must have struct layout
+dotnet_diagnostic.MA0008.severity = none
+
+# MA0006: Use string.Equals instead of ==
+dotnet_diagnostic.MA0006.severity = none
+
+# MA0004: synchronization context (always needed in Blazor)
+dotnet_diagnostic.MA0004.severity = none
+
+# MA0015 - Specify the parameter name in ArgumentException
+dotnet_diagnostic.MA0015.severity = none
+
+# MA0051 - Method is too long
+dotnet_diagnostic.MA0051.severity = none
+# MA0051.maximum_lines_per_method = 60
+# MA0051.maximum_statements_per_method = 40
+# MA0051.skip_local_functions = false # skip local functions when counting statements
+
+# MA0045 - sync in async
+dotnet_diagnostic.MA0045.severity = info
+
+# MA0080 - cancellation token AsyncEnumerable iteration
+dotnet_diagnostic.MA0080.severity = info

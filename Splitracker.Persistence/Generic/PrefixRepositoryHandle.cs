@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Splitracker.Persistence.Generic;
@@ -9,7 +10,7 @@ abstract class PrefixRepositoryHandle<TSelf, TSubscription> : IAsyncDisposable, 
 {
     protected readonly TSubscription Subscription;
 
-    public PrefixRepositoryHandle(TSubscription subscription)
+    protected PrefixRepositoryHandle(TSubscription subscription)
     {
         Subscription = subscription;
         subscription.Added += OnAdded;
@@ -19,11 +20,13 @@ abstract class PrefixRepositoryHandle<TSelf, TSubscription> : IAsyncDisposable, 
     public event EventHandler? Added;
     public event EventHandler? Deleted;
 
+    [SuppressMessage("Usage", "MA0091:Sender should be \'this\' for instance events")]
     void OnAdded(object? sender, EventArgs e)
     {
         Added?.Invoke(sender, e);
     }
 
+    [SuppressMessage("Usage", "MA0091:Sender should be \'this\' for instance events")]
     void OnDeleted(object? sender, EventArgs e)
     {
         Deleted?.Invoke(sender, e);

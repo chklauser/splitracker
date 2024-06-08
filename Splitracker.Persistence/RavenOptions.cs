@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace Splitracker.Persistence;
 
 [UsedImplicitly(ImplicitUseTargetFlags.Itself)]
+[SuppressMessage("Design", "MA0016:Prefer returning collection abstraction instead of implementation")]
 public class RavenOptions
 {
     [Required]

@@ -32,7 +32,7 @@ class RavenTimelineRepository(
 
     #region Reading
 
-    readonly ConcurrentDictionary<string, Task<RavenTimelineSubscription>> handles = new();
+    readonly ConcurrentDictionary<string, Task<RavenTimelineSubscription>> handles = new(StringComparer.Ordinal);
 
     public async Task<ITimelineHandle?> OpenSingleAsync(ClaimsPrincipal principal, string groupId)
     {
@@ -383,7 +383,7 @@ class RavenTimelineRepository(
             .Where(t => t.CharacterId is not null)
             .Select(t => t.CharacterId)
             .Concat(dbTimeline.ReadyCharacterIds)
-            .GroupBy(t => t)
+            .GroupBy(t => t, StringComparer.Ordinal)
             .Where(g => g.Count() > 1);
         foreach (var offendingCharacterId in offendingCharacterIds)
         {
@@ -395,7 +395,7 @@ class RavenTimelineRepository(
         // Each effect must only have a single EffectEnds Tick in the timeline
         var offendingEffectTicks = dbTimeline.Ticks
             .Where(t => t.EffectId is not null)
-            .GroupBy(t => t.EffectId)
+            .GroupBy(t => t.EffectId, StringComparer.Ordinal)
             .Where(g => g.Count(t => t.Type == TickType.EffectEnds) > 1);
         foreach (var offendingEffectTick in offendingEffectTicks)
         {

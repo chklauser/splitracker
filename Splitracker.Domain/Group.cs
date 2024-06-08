@@ -14,7 +14,9 @@ string? JoinCode = null
 
 public record GroupMembership(string UserId, GroupRole Role);
 
+#pragma warning disable MA0048
 public enum GroupRole
+#pragma warning restore MA0048
 {
     Member,
     GameMaster,

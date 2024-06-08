@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
@@ -25,7 +26,7 @@ public sealed partial class MultiTimelineItem : MudComponentBase, IDisposable
     string dotClassnames =>
         new CssBuilder("multi-timeline-item-dot")
             .AddClass($"multi-timeline-dot-size-{Size.ToDescriptionString()}")
-            .AddClass($"multi-elevation-{Elevation.ToString()}")
+            .AddClass($"multi-elevation-{Elevation.ToString(CultureInfo.InvariantCulture)}")
             .Build();
 
     string dotInnerClassnames =>

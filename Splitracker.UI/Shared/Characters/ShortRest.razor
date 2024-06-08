@@ -22,7 +22,6 @@
     public required int ExhaustedPoints { get; set; }
     
     [CascadingParameter]
-    [EditorRequired]
     public required ICharacterCommandRouter Router { get; set; }
 
     async Task OnShortRest()

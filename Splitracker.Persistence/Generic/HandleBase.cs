@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Splitracker.Persistence.Generic;
@@ -8,12 +9,13 @@ where TSubscription : ISubscription<TValue>
 {
     readonly TSubscription subscription;
 
-    public HandleBase(TSubscription subscription)
+    protected HandleBase(TSubscription subscription)
     {
         this.subscription = subscription;
         subscription.Updated += OnUpdated;
     }
     
+    [SuppressMessage("Usage", "MA0091:Sender should be \'this\' for instance events")]
     void OnUpdated(object? sender, EventArgs e)
     {
         Updated?.Invoke(sender, e);
