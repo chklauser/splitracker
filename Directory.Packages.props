@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="2.16.0" />
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="2.16.0" />
-    <PackageVersion Include="MudBlazor" Version="6.15.0" />
+    <PackageVersion Include="MudBlazor" Version="6.20.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
     <PackageVersion Include="RavenDB.Client" Version="6.0.103" />
     <PackageVersion Include="RavenDB.Embedded" Version="6.0.103" />
