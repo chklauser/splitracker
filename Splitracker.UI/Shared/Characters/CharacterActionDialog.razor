@@ -3,7 +3,16 @@
 @using Splitracker.UI.Shared.Rolls
 
 <MudDialog>
-    <TitleContent>@Action.Name</TitleContent>
+    <TitleContent>
+        <MudText Typo="Typo.h3">
+            @Action.Name
+        </MudText>
+        <MudText
+            Typo="Typo.body2">
+            @Action.Description
+            @(string.Join(", ", MiniStats().Select(s => $"{s.Label}: {s.Value}")) is var block and not "" ? $" ({block})" : "")
+        </MudText>
+    </TitleContent>
     <DialogContent>
         <MudStack>
             @* Bonus *@
@@ -319,4 +328,16 @@
         }
     }
 
+    IEnumerable<(string Label, int Value)> MiniStats()
+    {
+        if (Action.Bonus > 0)
+        {
+            yield return ("Bonus", Action.Bonus);
+        }
+
+        if (Action.Ticks > 0)
+        {
+            yield return ("Ticks", Action.Ticks);
+        }
+    }
 }
