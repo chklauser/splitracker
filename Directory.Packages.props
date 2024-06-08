@@ -38,7 +38,7 @@
     </PackageVersion>
     <PackageReference Include="Meziantou.Analyzer" Version="1.0.742">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 </Project>
