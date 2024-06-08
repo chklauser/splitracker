@@ -570,7 +570,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                         3,
                         4,
                         5),
-                    1))
+                    1,
+                    15))
             .Add("a2",
                 new("a2",
                     "Action 2",
@@ -585,7 +586,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                         4,
                         1,
                         6),
-                    0))
+                    0,
+                    16))
             .Add("a3",
                 new("a3",
                     "Action 3",
@@ -595,7 +597,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     "K3v1",
                     14,
                     null,
-                    0)),
+                    0,
+                    17)),
         default,
         []);
 
@@ -615,7 +618,9 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                     1,
                     3,
                     0,
-                    2), 1))
+                    2),
+                1,
+                15))
             .Add("a4",
                 new("a4",
                     "Action 4",
@@ -630,7 +635,8 @@ public class CharacterRepositoryTest : RavenIntegrationTestBase
                         2,
                         5,
                         6),
-                    4)),
+                    4,
+                    16)),
         !CreateCharacterExample.IsOpponent,
         []);
 

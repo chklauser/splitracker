@@ -42,6 +42,7 @@ class ActionShorthand
     public int Bonus { get; set; }
     public  DiceExpression? Damage { get; set; }
     public int PerSuccessDamageBonus { get; set; }
+    public int TargetValue { get; set; }
 }
 
 class DiceExpression

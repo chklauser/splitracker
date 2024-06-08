@@ -78,7 +78,7 @@ public record EditCharacter(
 }
 
 public abstract record UpsertCharacterInstance(
-    string Name
+    string? Name
 ) : ICharacterCommand
 {
     protected abstract string? OptionalCharacterId { get; }

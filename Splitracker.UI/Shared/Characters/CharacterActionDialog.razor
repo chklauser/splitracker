@@ -10,7 +10,7 @@
         <MudText
             Typo="Typo.body2">
             @Action.Description
-            @(string.Join(", ", MiniStats().Select(s => $"{s.Label}: {s.Value}")) is var block and not "" ? $" ({block})" : "")
+            @(string.Join(", ", miniStats().Select(s => $"{s.Label}: {s.Value}")) is var block and not "" ? $" ({block})" : "")
         </MudText>
     </TitleContent>
     <DialogContent>
@@ -286,7 +286,7 @@
     {
         base.OnParametersSet();
         bonus = Action.Bonus;
-        target = Session.RollTarget;
+        target = Action.TargetValue > 0 ? Action.TargetValue : Session.RollTarget;
     }
 
     void close()
@@ -328,7 +328,7 @@
         }
     }
 
-    IEnumerable<(string Label, int Value)> MiniStats()
+    IEnumerable<(string Label, int Value)> miniStats()
     {
         if (Action.Bonus > 0)
         {
@@ -338,6 +338,11 @@
         if (Action.Ticks > 0)
         {
             yield return ("Ticks", Action.Ticks);
+        }
+
+        if (Action.TargetValue > 0)
+        {
+            yield return ("Zielwert", Action.TargetValue);
         }
     }
 }

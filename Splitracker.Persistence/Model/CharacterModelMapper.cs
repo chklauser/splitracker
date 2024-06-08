@@ -101,7 +101,8 @@ static class CharacterModelMapper
             model.CostExpression,
             model.Bonus,
             model.Damage?.ToDomain(),
-            model.PerSuccessDamageBonus);
+            model.PerSuccessDamageBonus,
+            model.TargetValue);
     }
 
     public static Domain.DiceExpression ToDomain(this DiceExpression model)
@@ -169,6 +170,7 @@ static class CharacterModelMapper
             Bonus = shorthand.Bonus,
             Damage = shorthand.Damage?.toDbModel(),
             PerSuccessDamageBonus = shorthand.PerSuccessDamageBonus,
+            TargetValue = shorthand.TargetValue,
         };
     }
 
