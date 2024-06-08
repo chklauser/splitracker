@@ -4,4 +4,7 @@
     <Nullable>enable</Nullable>
     <VSTestLogger>trx%3bLogFileName=$(MSBuildProjectName).trx</VSTestLogger>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" />
+  </ItemGroup>
 </Project>
