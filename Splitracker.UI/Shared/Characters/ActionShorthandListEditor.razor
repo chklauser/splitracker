@@ -24,7 +24,7 @@
     {
         <MudTooltip
             @key="shorthand.Id"
-            Text="@shorthand.Description"
+            Text="@(shorthand.Description + (shorthand.TargetValue > 0 ? $"(Zielwert: {shorthand.TargetValue})" : null))"
             ShowOnClick="@(shorthand.Description != null)"
             ShowOnFocus="@(shorthand.Description != null)"
             ShowOnHover="@(shorthand.Description != null)">

@@ -22,7 +22,7 @@ dotnet_diagnostic.MA0051.severity = none
 # MA0051.skip_local_functions = false # skip local functions when counting statements
 
 # MA0045 - sync in async
-dotnet_diagnostic.MA0045.severity = info
+dotnet_diagnostic.MA0045.severity = suggestion
 
 # MA0080 - cancellation token AsyncEnumerable iteration
-dotnet_diagnostic.MA0080.severity = info
+dotnet_diagnostic.MA0080.severity = suggestion

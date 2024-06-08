@@ -190,7 +190,11 @@ class RavenCharacterRepository(
                 model.TagIds = edit.TagIds.Order().ToList();
                 break;
             case EditCharacterInstance edit:
-                model!.Name = edit.Name;
+                if (edit.Name is { } newName)
+                {
+                    model!.Name = newName;
+                }
+
                 break;
             case CreateCharacterInstance create:
                 if (!isOwner(create.TemplateId, userId))

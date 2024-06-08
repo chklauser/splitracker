@@ -13,7 +13,8 @@ public record ActionShorthand(
     string? CostExpression,
     int Bonus,
     DiceExpression? Damage,
-    int PerSuccessDamageBonus
+    int PerSuccessDamageBonus,
+    int TargetValue
 )
 {
     public ActionTemplate ToTemplate()

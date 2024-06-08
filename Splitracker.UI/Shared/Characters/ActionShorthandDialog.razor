@@ -88,14 +88,34 @@
             </div>
 
             <div
-                class="default-control"
-                style="@($"grid-row: {row++}")">
+                class="@(Type is ActionShorthandType.Spell ? "dense-control" : "default-control")"
+                style="@($"{(Type is ActionShorthandType.Spell ? "grid-column: 1/3;" : "")} grid-row: {row}")">
                 <MudNumericField
                     T="int"
                     @bind-Value="bonus"
                     Label="Fertigkeitsbonus"
                     autocomplete="off"/>
             </div>
+            
+            @if (Type is ActionShorthandType.Spell)
+            {
+                <div
+                    class="dense-control"
+                    style="@($"grid-column: 3; grid-row: {row}")">
+                    <MudTooltip
+                        Text="Voreingestellter Zielwert">
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="targetValue"
+                            Label="Zielwert"
+                            autocomplete="off"/>
+                    </MudTooltip>
+                </div>
+            }
+            
+            @{
+                row++;
+            }
 
             <div
                 class="full mt-3"
@@ -164,7 +184,7 @@
                 style="@($"grid-column: 1/3; grid-row: {row++}")">
                 <MudTooltip
                     Text="Jeder Erfolg, der für Schaden verwendet wird, verursacht 2 statt 1 zusätzlichen Schaden.">
-                    <MudCheckBox T="int" @bind-Checked="perSuccessDamageBonus">Wuchtig</MudCheckBox>
+                    <MudCheckBox T="int" @bind-Value="perSuccessDamageBonus">Wuchtig</MudCheckBox>
                 </MudTooltip>
             </div>
 
@@ -250,6 +270,7 @@
     int damageBonusDice;
     int damageClampMin;
     int perSuccessDamageBonus;
+    int targetValue;
     string? _damageExpression;
     DiceExpression? _damage;
 
@@ -259,6 +280,7 @@
         && damageBonusDice >= 0
         && damageClampMin >= 0
         && perSuccessDamageBonus >= 0
+        && targetValue >= 0
         && damageExpressionValid;
 
     string typeObject => Type switch {
@@ -278,6 +300,7 @@
             selectedTicks = shorthand.Ticks;
             cost = shorthand.CostExpression;
             bonus = shorthand.Bonus;
+            targetValue = shorthand.TargetValue;
             if (shorthand.Damage is { } shorthandDamage)
             {
                 damage = shorthandDamage;
@@ -317,7 +340,8 @@
                         PerCriticalBonus = perCriticalDamageBonus,
                     }
                     : null,
-                perSuccessDamageBonus
+                perSuccessDamageBonus,
+                targetValue
             )
         ));
     }
