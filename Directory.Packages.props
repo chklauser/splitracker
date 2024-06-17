@@ -14,7 +14,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Identity.Web" Version="2.19.0" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="2.19.1" />
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="2.19.0" />
     <PackageVersion Include="MudBlazor" Version="6.20.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
