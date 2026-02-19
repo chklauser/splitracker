@@ -22,11 +22,8 @@ metadata:
   name: {{ include "..fullname" . }}
   labels:
     {{- include "..labels" . | nindent 4 }}
-  annotations:
-    "nginx.ingress.kubernetes.io/proxy-buffers-number": "8"
-    "nginx.ingress.kubernetes.io/proxy-buffer-size": "16k"
 spec:
-  ingressClassName: nginx  
+  ingressClassName: traefik
   tls:
     - hosts:
         - {{ include "host" . }}
